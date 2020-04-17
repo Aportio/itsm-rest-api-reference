@@ -193,11 +193,30 @@ class Root(flask_restful.Resource, ApiResource):
 
     def _get(self):
         return {
-            "_links" : self.make_links({"users" : UserList.URL})
+            "_links" : self.make_links({
+                "users"     : UserList.URL,
+                "customers" : CustomerList.URL,
+            })
         }
 
 
-class UserList(flask_restful.Resource, ApiResourceList):
+class _UserDataEmbedder:
+    """
+    A mixin that provides a function to embed a user list in a result.
+    """
+
+    def embed_user_data_in_result(self, res, user_data):
+        for user in user_data:
+            res['_embedded']['users'].append(
+                {
+                    "id"     : user.doc_id,
+                    "email"  : user['email'],
+                    "_links" : self.make_links({"self" : User.get_self_url(user.doc_id)})
+                }
+            )
+
+
+class UserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedder):
     """
     A list of users.
     """
@@ -221,14 +240,7 @@ class UserList(flask_restful.Resource, ApiResourceList):
                               })
         }
 
-        for user in user_data:
-            res['_embedded']['users'].append(
-                {
-                    "id"     : user.doc_id,
-                    "email"  : user['email'],
-                    "_links" : self.make_links({"self" : User.get_self_url(user.doc_id)})
-                }
-            )
+        self.embed_user_data_in_result(res, user_data)
         return res
 
 
@@ -255,7 +267,23 @@ class User(flask_restful.Resource, ApiResource):
         return res
 
 
-class UserCustomerList(flask_restful.Resource, ApiResourceList):
+class _CustomerDataEmbedder:
+    """
+    A mixin that provides a function to embed a customer list in a result.
+    """
+
+    def embed_customer_data_in_result(self, res, cust_data):
+        for cust in cust_data:
+            res['_embedded']['customers'].append(
+                {
+                    "id"     : cust.doc_id,
+                    "name"   : cust['name'],
+                    "_links" : self.make_links({"self" : Customer.get_self_url(cust.doc_id)})
+                }
+            )
+
+
+class UserCustomerList(flask_restful.Resource, ApiResourceList, _CustomerDataEmbedder):
     """
     List of customers for a given user.
     """
@@ -264,16 +292,17 @@ class UserCustomerList(flask_restful.Resource, ApiResourceList):
 
     def _get(self, user_id):
         """
-        Return the raw user table data.
+        Return the raw data for a resource, which embeds the user's customers.
         """
-        rels_q        = Query()
-        rel_data      = DB_USER_CUSTOMER_RELS_TABLE.search(rels_q.user_id == int(user_id))
-        customer_ids  = [r['customer_id'] for r in rel_data]
+        rels_q       = Query()
+        rel_data     = DB_USER_CUSTOMER_RELS_TABLE.search(rels_q.user_id == int(user_id))
+        customer_ids = [r['customer_id'] for r in rel_data]
         # We don't seem to have a way to retrieve a set of objects via a set of ids?
-        customer_data = [DB_CUSTOMER_TABLE.get(doc_id=_id) for _id in customer_ids]
+        # Doing it just in a loop for now...
+        cust_data    = [DB_CUSTOMER_TABLE.get(doc_id=_id) for _id in customer_ids]
 
         res = {
-            "total_queried" : len(customer_data),
+            "total_queried" : len(cust_data),
             "_embedded"     : {
                 "customers" : []
             },
@@ -283,23 +312,70 @@ class UserCustomerList(flask_restful.Resource, ApiResourceList):
                               })
         }
 
-        for cust in customer_data:
-            res['_embedded']['customers'].append(
-                {
-                    "id"     : cust.doc_id,
-                    "name"   : cust['name'],
-                    "_links" : self.make_links({"self" : Customer.get_self_url(cust.doc_id)})
-                }
-            )
+        self.embed_customer_data_in_result(res, cust_data)
         return res
 
 
-class CustomerList(UserCustomerList):
+class CustomerUserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedder):
+    """
+    List of customers for a given user.
+    """
+
+    URL = "/customers/<customer_id>/users/"
+
+    def _get(self, customer_id):
+        """
+        Return the raw data for a resource, which embeds the customer's users.
+        """
+        rels_q    = Query()
+        rel_data  = DB_USER_CUSTOMER_RELS_TABLE.search(rels_q.customer_id == int(customer_id))
+        user_ids  = [r['user_id'] for r in rel_data]
+        # We don't seem to have a way to retrieve a set of objects via a set of ids?
+        # Doing it just in a loop for now...
+        user_data = [DB_USER_TABLE.get(doc_id=_id) for _id in user_ids]
+
+        res = {
+            "total_queried" : len(user_data),
+            "_embedded"     : {
+                "users" : []
+            },
+            "_links"        : self.make_links({
+                                  "self"         : CustomerUserList.get_self_url(customer_id),
+                                  "contained_in" : Customer.get_self_url(customer_id)
+                              })
+        }
+
+        self.embed_user_data_in_result(res, user_data)
+        return res
+
+
+class CustomerList(UserCustomerList, _CustomerDataEmbedder):
     """
     A list of customers.
     """
 
     URL = "/customers"
+
+    def _get(self):
+        """
+        Return the raw user table data.
+        """
+        cust_data = DB_CUSTOMER_TABLE.all()
+
+        res = {
+            "total_queried" : len(cust_data),
+            "_embedded"     : {
+                "customers" : []
+            },
+            "_links"        : self.make_links({
+                                  "self" :         CustomerList.get_self_url(),
+                                  "contained_in" : Root.get_self_url()
+                              })
+        }
+
+        self.embed_customer_data_in_result(res, cust_data)
+        return res
+
 
 
 class Customer(flask_restful.Resource, ApiResource):
@@ -309,13 +385,33 @@ class Customer(flask_restful.Resource, ApiResource):
 
     URL = "/customers/<customer_id>"
 
+    def _get(self, customer_id):
+        cust = DB_CUSTOMER_TABLE.get(doc_id=int(customer_id))
+        if not cust:
+            flask_restful.abort(404, message=f"Customer '{customer_id}' not found!")
+        res = {
+            "id" : cust.doc_id
+        }
+        res.update(cust)
+        link_spec = {
+            "self" :         Customer.get_self_url(cust.doc_id),
+            "contained_in" : CustomerList.get_self_url(),
+            "users"        : CustomerUserList.get_self_url(cust.doc_id)
+        }
+
+        # A customer may have a parent customer
+        parent_id = cust.get('parent_id')
+        if parent_id is not None:
+            link_spec['parent'] = Customer.get_self_url(parent_id)
+
+        res['_links'] = self.make_links(link_spec)
+        return res
+
 
 # ----------------------------------------------------
 # Registering the resource classes with our Flask app.
 # ----------------------------------------------------
-for resource_class in [Root, UserList, User, UserCustomerList]:
+for resource_class in [Root,
+                       UserList, User, UserCustomerList,
+                       Customer, CustomerList, CustomerUserList]:
     API.add_resource(resource_class, resource_class.URL)
-
-# API.add_resource(UserCustomerList, '/users/<user_id>/customers')
-# API.add_resource(CustomerList,     '/customers')
-# API.add_resource(Customer,         '/customers/<customer_id>')
