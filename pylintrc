@@ -62,6 +62,7 @@ confidence=
 # --disable=W".
 disable=blacklisted-name,
         invalid-name,
+        arguments-differ,
         missing-docstring,
         empty-docstring,
         unneeded-not,

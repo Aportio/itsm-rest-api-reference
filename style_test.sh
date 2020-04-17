@@ -21,13 +21,13 @@ exit_check () {
 
 check_flake8 () {
     echo "Checking sources with flake8..."
-    flake8 --config=flake8.conf src
+    flake8 --config=flake8.conf itsm_api
     exit_check $? "flake8"
 }
 
 check_pylint () {
     echo "Checking sources with pylint..."
-    pylint src -j 0   # -j 0: Use all available processors to parallelize
+    pylint itsm_api -j 0   # -j 0: Use all available processors to parallelize
     exit_check $? "pylint"
 }
 
@@ -49,7 +49,7 @@ check_docformatter () {
 check_docstrings () {
     echo "Checking docstrings with pydocstyle..."
     pydocstyle --add-select=D213 --ignore=D105,D106,D200,D203,D212,D405,D406,D409,D416 \
-        src \
+        itsm_api \
     exit_check $? "docstrings"
 }
 
@@ -59,7 +59,7 @@ check_docstrings_tests () {
     pydocstyle --add-select=D213 \
                --match='(?!cache).*\.py' \
                --ignore=D100,D101,D102,D103,D104,D105,D106,D107,D200,D203,D212,D405,D406,D409,D416 \
-               src
+               itsm_api
     exit_check $? "docstring_tests"
 }
 
