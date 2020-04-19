@@ -102,8 +102,11 @@ class ApiResource:
                     # We don't need empty lines at the start of the explanation
                     continue
                 # Add up the lines of the explanation text
-                more_lines.append(line or " ")  # Empty lines become line break
-        return ((title or "A resource"), "<br>".join(more_lines))
+                if line.startswith("*"):
+                    line = f"&nbsp; &nbsp; {line}"
+
+                more_lines.append(line or "<br>&nbsp;<br>")  # Empty lines become line break
+        return ((title or "A resource"), " ".join(more_lines))
 
     def _htmlify(self, data):
         """
@@ -206,8 +209,8 @@ class Root(flask_restful.Resource, ApiResource):
     In any resource, look for a `_links` element. It contains references to
     additional or related resources. It also always contains a link to `self`,
     so that it is always clear how we found this resource. For some resources
-    there also is a `contained_in` link, which refers to the collection or
-    other parent of the current resource.
+    there also is a `contained_in` link, which refers to the collection or other
+    parent of the current resource.
 
     """
 
@@ -236,6 +239,8 @@ class _UserDataEmbedder:
                 {
                     "id"     : user.doc_id,
                     "email"  : user['email'],
+                    # make_links is provided by the class using this mixin
+                    # pylint: disable=no-member
                     "_links" : self.make_links({"self" : User.get_self_url(user.doc_id)})
                 }
             )
@@ -330,6 +335,8 @@ class _CustomerDataEmbedder:
                 {
                     "id"     : cust.doc_id,
                     "name"   : cust['name'],
+                    # make_links is provided by the class using this mixin
+                    # pylint: disable=no-member
                     "_links" : self.make_links({"self" : Customer.get_self_url(cust.doc_id)})
                 }
             )
@@ -514,12 +521,15 @@ class _TicketDataEmbedder:
                     "created"        : ticket['created'],
                     "status"         : ticket['status'],
                     "classification" : ticket['classification'].get("l1", "(none)"),
+                    # make_links is provided by the class using this mixin
+                    # pylint: disable=no-member
                     "_links"         : self.make_links({
                                            "self" : Ticket.get_self_url(ticket.doc_id)
                                        })
                 }
             )
         return res
+
 
 class CustomerTicketList(flask_restful.Resource, ApiResourceList, _TicketDataEmbedder):
     """
@@ -633,7 +643,47 @@ class Ticket(flask_restful.Resource, ApiResource):
     An individual service desk ticket.
 
     A "ticket" represents a service desk ticket that has been created within
-    the ITSM backend.
+    the ITSM backend by a user.
+
+    A ticket has a number of attributes:
+
+    * aportio_id: This is an internal ticket ID that has been created by
+    Aportio's system. While the attribute itself is not mandatory, we strongly
+    recommend that this value is stored in the ITSM, possibly via an ITSM
+    custom field.
+
+    * customer_id: The customer against which this ticket was filed.
+
+    * short_title: The headline of the ticket. This may be the email's subject
+      line, for example.
+
+    * long_text: The cleaned, non-HTML text of the ticket description.
+
+    * user_id: The ID of the user that created the ticket.
+
+    * status: The current status of the ticket. Permissible values are: OPEN
+      CLOSED, etc.
+
+    * created: The date/time when the ticket was created.
+
+    * classification: A dictionary with L1 and possibly also L2 and L3
+      classification outcomes for this ticket, as provided by Aportio.
+
+    In addition, ITSM/customer specific custom fields may be present.
+
+    A ticket may also contain additional entries for lists of worknotes and
+    comments. Each of those has the same format:
+
+    * id: A unique ID or index within the ticket.
+
+    * user_id: The ID of the user that created the worknote/comment.
+
+    * created: The date/time when the worknote/comment was created.
+
+    * text: The actual content of the worknote/comment.
+
+    Note that the `_links` section may contain links to attachments of this
+    ticket.
 
     """
 

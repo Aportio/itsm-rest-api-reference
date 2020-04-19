@@ -4,7 +4,7 @@
         <a href="/">[root]</a> &nbsp; {% if explanation %}<a href="javascript:showHideExplanation();">[show/hide explanation]</a>{% endif %}
         <h3>Resource: {{ title }}</h3>
         {% if explanation %}
-        <p id="explanation" style="display:none;">
+        <p id="explanation" style="display:none;max-width: 800px;">
         {{ explanation|safe }}
         </p>
         {% endif %}
