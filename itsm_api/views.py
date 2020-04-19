@@ -75,31 +75,45 @@ class ApiResource:
 
     URL = "<overwrite in child class>"
 
-    def _get_title(self):
+    def _get_title_and_explanation(self):
         """
-        Extract first line of class docstring to use as title in HTML.
+        Extract class docstring to use as title and text in HTML.
+
+        Returns a tuple of title and remaining docstring as explanation.
+
         """
-        title = "A resource"  # default if there is no docstring
+        title      = ""
+        more_lines = []
         if self.__doc__:
             # Find the first non-empty line in the docstring. If there is
-            for line in self.__doc__.split("\n"):
+            for line in self.__doc__.split("\n")[:-1]:  # strip off last line, always blank
                 line = line.strip()
                 if line:
-                    if line.endswith("."):
-                        # Don't want a period at the end of a title to make it look better.
-                        title = line[:-1]
-                    else:
-                        title = line
-                    break
-        return title
+                    if not title:
+                        # We don't have the title set, yet, so we know this is the first line.
+                        if line.endswith("."):
+                            # Don't want a period at the end of a title to make it look
+                            # better.
+                            title = line[:-1]
+                        else:
+                            title = line
+                        continue
+                if not line and not more_lines:
+                    # We don't need empty lines at the start of the explanation
+                    continue
+                # Add up the lines of the explanation text
+                more_lines.append(line or " ")  # Empty lines become line break
+        return ((title or "A resource"), "<br>".join(more_lines))
 
     def _htmlify(self, data):
         """
         Render a resource in nice HTML.
         """
         resource = json.dumps(data, indent=4)
+        title, explanation = self._get_title_and_explanation()
         return flask.make_response(
-                        flask.render_template('resource.html', title=self._get_title(),
+                        flask.render_template('resource.html', title=title,
+                                                               explanation=explanation,
                                                                resource=resource),
                         200, {'Content-Type': 'text/html'})
 
@@ -153,7 +167,8 @@ class ApiResource:
         """
         Return the raw data for the resource.
         """
-        raise NotImplementedError("needs to be implemented by child class")
+        raise NotImplementedError(f"The _get() function needs to be implemented by "
+                                  f"child class '{self.__class__.__name__}'!")
 
     @accept('application/json')
     def get(self, *args, **kwargs):
@@ -187,6 +202,13 @@ class ApiResourceList(ApiResource):
 class Root(flask_restful.Resource, ApiResource):
     """
     The root resource, with links to other resources in the API.
+
+    In any resource, look for a `_links` element. It contains references to
+    additional or related resources. It also always contains a link to `self`,
+    so that it is always clear how we found this resource. For some resources
+    there also is a `contained_in` link, which refers to the collection or
+    other parent of the current resource.
+
     """
 
     URL   = "/"
@@ -194,8 +216,10 @@ class Root(flask_restful.Resource, ApiResource):
     def _get(self):
         return {
             "_links" : self.make_links({
-                "users"     : UserList.URL,
-                "customers" : CustomerList.URL,
+                "self"      : Root.get_self_url(),
+                "users"     : UserList.get_self_url(),
+                "customers" : CustomerList.get_self_url(),
+                "tickets"   : TicketList.get_self_url(),
             })
         }
 
@@ -205,20 +229,31 @@ class _UserDataEmbedder:
     A mixin that provides a function to embed a user list in a result.
     """
 
-    def embed_user_data_in_result(self, res, user_data):
+    def embed_user_data_in_result(self, user_data):
+        res = []
         for user in user_data:
-            res['_embedded']['users'].append(
+            res.append(
                 {
                     "id"     : user.doc_id,
                     "email"  : user['email'],
                     "_links" : self.make_links({"self" : User.get_self_url(user.doc_id)})
                 }
             )
+        return res
 
 
 class UserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedder):
     """
     A list of users.
+
+    This is a collection with 'embedded' information. This means some
+    information about the individual users is included here to provide a quick
+    access to the most important information without having to load the full
+    user resource through an additional request.
+
+    To see all the details of a user, follow the 'self' link to the user
+    resource.
+
     """
 
     URL   = "/users"
@@ -232,21 +267,36 @@ class UserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedder):
         res = {
             "total_queried" : len(user_data),
             "_embedded"     : {
-                "users" : []
+                "users" : self.embed_user_data_in_result(user_data)
             },
             "_links"        : self.make_links({
                                   "self" :         UserList.get_self_url(),
                                   "contained_in" : Root.get_self_url()
                               })
         }
-
-        self.embed_user_data_in_result(res, user_data)
         return res
 
 
 class User(flask_restful.Resource, ApiResource):
     """
     An individual user.
+
+    A "user" is a person, which is associated with one or more "customers"
+    (clients of a service provider). Typically, this is someone working for the
+    customer organization and who may contact the service desk to raise a
+    ticket.
+
+    The only mandatory field in a user resource is the `id` field as well as a
+    list of one or more email addresses.
+
+    Additional fields may be available or configured by the ITSM backend, but
+    they always are represented under `custom_fields` as key value pairs. This
+    may include other fields that are mandatory within the ITSM backend.
+
+    Note that in the `_links` section you can find a reference to all the
+    tickets that were created by this user, as well as a list to all the
+    customers that this user is associated with.
+
     """
 
     URL = "/users/<user_id>"
@@ -262,7 +312,8 @@ class User(flask_restful.Resource, ApiResource):
         res['_links'] = self.make_links({
                             "self" :         User.get_self_url(user.doc_id),
                             "contained_in" : UserList.get_self_url(),
-                            "customers" :    UserCustomerList.get_self_url(user.doc_id)
+                            "customers" :    UserCustomerList.get_self_url(user.doc_id),
+                            "tickets" :      UserTicketList.get_self_url(user.doc_id)
                         })
         return res
 
@@ -272,20 +323,31 @@ class _CustomerDataEmbedder:
     A mixin that provides a function to embed a customer list in a result.
     """
 
-    def embed_customer_data_in_result(self, res, cust_data):
+    def embed_customer_data_in_result(self, cust_data):
+        res = []
         for cust in cust_data:
-            res['_embedded']['customers'].append(
+            res.append(
                 {
                     "id"     : cust.doc_id,
                     "name"   : cust['name'],
                     "_links" : self.make_links({"self" : Customer.get_self_url(cust.doc_id)})
                 }
             )
+        return res
 
 
 class UserCustomerList(flask_restful.Resource, ApiResourceList, _CustomerDataEmbedder):
     """
     List of customers for a given user.
+
+    This is a collection with 'embedded' information. This means some
+    information about the individual customers is included here to provide a
+    quick access to the most important information without having to load the
+    full customer resource through an additional request.
+
+    To see all the details of a customer, follow the 'self' link to the customer
+    resource.
+
     """
 
     URL = "/users/<user_id>/customers/"
@@ -304,21 +366,28 @@ class UserCustomerList(flask_restful.Resource, ApiResourceList, _CustomerDataEmb
         res = {
             "total_queried" : len(cust_data),
             "_embedded"     : {
-                "customers" : []
+                "customers" : self.embed_customer_data_in_result(cust_data)
             },
             "_links"        : self.make_links({
                                   "self"         : UserCustomerList.get_self_url(user_id),
                                   "contained_in" : User.get_self_url(user_id)
                               })
         }
-
-        self.embed_customer_data_in_result(res, cust_data)
         return res
 
 
 class CustomerUserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedder):
     """
-    List of customers for a given user.
+    List of users for a given customer.
+
+    This is a collection with 'embedded' information. This means some
+    information about the individual users is included here to provide a
+    quick access to the most important information without having to load the
+    full user resource through an additional request.
+
+    To see all the details of a user, follow the 'self' link to the user
+    resource.
+
     """
 
     URL = "/customers/<customer_id>/users/"
@@ -337,21 +406,28 @@ class CustomerUserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedde
         res = {
             "total_queried" : len(user_data),
             "_embedded"     : {
-                "users" : []
+                "users" : self.embed_user_data_in_result(user_data)
             },
             "_links"        : self.make_links({
                                   "self"         : CustomerUserList.get_self_url(customer_id),
                                   "contained_in" : Customer.get_self_url(customer_id)
                               })
         }
-
-        self.embed_user_data_in_result(res, user_data)
         return res
 
 
-class CustomerList(UserCustomerList, _CustomerDataEmbedder):
+class CustomerList(flask_restful.Resource, ApiResourceList, _CustomerDataEmbedder):
     """
     A list of customers.
+
+    This is a collection with 'embedded' information. This means some
+    information about the individual customers is included here to provide a
+    quick access to the most important information without having to load the
+    full customer resource through an additional request.
+
+    To see all the details of a customer, follow the 'self' link to the customer
+    resource.
+
     """
 
     URL = "/customers"
@@ -365,27 +441,39 @@ class CustomerList(UserCustomerList, _CustomerDataEmbedder):
         res = {
             "total_queried" : len(cust_data),
             "_embedded"     : {
-                "customers" : []
+                "customers" : self.embed_customer_data_in_result(cust_data)
             },
             "_links"        : self.make_links({
                                   "self" :         CustomerList.get_self_url(),
-                                  "contained_in" : Root.get_self_url()
+                                  "contained_in" : Root.get_self_url(),
                               })
         }
-
-        self.embed_customer_data_in_result(res, cust_data)
         return res
-
 
 
 class Customer(flask_restful.Resource, ApiResource):
     """
     An individual customer.
+
+    A "customer" is a commercial client of the service provider. It typically
+    has users associated with it, which may contact the service desk to raise
+    tickets.
+
+    The only mandatory fields in a customer resource are the `id` field and a
+    name.
+
+    Additional fields may be available or configured by the ITSM backend, but
+    they always are represented under `custom_fields` as key value pairs. This
+    may include other fields that are mandatory within the ITSM backend.
+
     """
 
     URL = "/customers/<customer_id>"
 
     def _get(self, customer_id):
+        """
+        Return the raw data of a customer.
+        """
         cust = DB_CUSTOMER_TABLE.get(doc_id=int(customer_id))
         if not cust:
             flask_restful.abort(404, message=f"Customer '{customer_id}' not found!")
@@ -396,7 +484,8 @@ class Customer(flask_restful.Resource, ApiResource):
         link_spec = {
             "self" :         Customer.get_self_url(cust.doc_id),
             "contained_in" : CustomerList.get_self_url(),
-            "users"        : CustomerUserList.get_self_url(cust.doc_id)
+            "users" :        CustomerUserList.get_self_url(cust.doc_id),
+            "tickets" :      CustomerTicketList.get_self_url(cust.doc_id)
         }
 
         # A customer may have a parent customer
@@ -408,10 +497,170 @@ class Customer(flask_restful.Resource, ApiResource):
         return res
 
 
+class _TicketDataEmbedder:
+    """
+    A mixin that provides a function to embed a ticket list in a result.
+    """
+
+    def embed_ticket_data_in_result(self, ticket_data):
+        res = []
+        for ticket in ticket_data:
+            res.append(
+                {
+                    "id"             : ticket.doc_id,
+                    "aportio_id"     : ticket['aportio_id'],
+                    "customer_id"    : ticket['customer_id'],
+                    "short_title"    : ticket['short_title'],
+                    "created"        : ticket['created'],
+                    "status"         : ticket['status'],
+                    "classification" : ticket['classification'].get("l1", "(none)"),
+                    "_links"         : self.make_links({
+                                           "self" : Ticket.get_self_url(ticket.doc_id)
+                                       })
+                }
+            )
+        return res
+
+class CustomerTicketList(flask_restful.Resource, ApiResourceList, _TicketDataEmbedder):
+    """
+    A list of tickets of a customers.
+
+    This is a collection with 'embedded' information. This means some
+    information about the individual tickets is included here to provide a
+    quick access to the most important information without having to load the
+    full ticket resource through an additional request.
+
+    To see all the details of a ticket, follow the 'self' link to the ticket
+    resource.
+
+    """
+
+    URL = "/customers/<customer_id>/tickets"
+
+    def _get(self, customer_id):
+        """
+        Return the raw ticket list data of a customer.
+        """
+        ticket_q    = Query()
+        ticket_data = DB_TICKET_TABLE.search(ticket_q.customer_id == int(customer_id))
+
+        res = {
+            "total_queried" : len(ticket_data),
+            "_embedded"     : {
+                "tickets" : self.embed_ticket_data_in_result(ticket_data)
+            },
+            "_links" : self.make_links({
+                           "self" :         CustomerTicketList.get_self_url(customer_id),
+                           "contained_in" : Customer.get_self_url(customer_id)
+                       })
+        }
+        return res
+
+
+class UserTicketList(flask_restful.Resource, ApiResourceList, _TicketDataEmbedder):
+    """
+    A list of tickets of a user.
+
+    This is a collection with 'embedded' information. This means some
+    information about the individual tickets is included here to provide a
+    quick access to the most important information without having to load the
+    full ticket resource through an additional request.
+
+    To see all the details of a ticket, follow the 'self' link to the ticket
+    resource.
+
+    """
+
+    URL = "/users/<user_id>/tickets"
+
+    def _get(self, user_id):
+        """
+        Return the raw ticket list data of a user.
+        """
+        ticket_q    = Query()
+        ticket_data = DB_TICKET_TABLE.search(ticket_q.user_id == int(user_id))
+
+        res = {
+            "total_queried" : len(ticket_data),
+            "_embedded"     : {
+                "tickets" : self.embed_ticket_data_in_result(ticket_data)
+            },
+            "_links" : self.make_links({
+                           "self" :         UserTicketList.get_self_url(user_id),
+                           "contained_in" : User.get_self_url(user_id)
+                       })
+        }
+        return res
+
+
+class TicketList(flask_restful.Resource, ApiResourceList, _TicketDataEmbedder):
+    """
+    The list of tickets.
+
+    This is a collection with 'embedded' information. This means some
+    information about the individual tickets is included here to provide a
+    quick access to the most important information without having to load the
+    full ticket resource through an additional request.
+
+    To see all the details of a ticket, follow the 'self' link to the ticket
+    resource.
+
+    """
+
+    URL = "/tickets"
+
+    def _get(self):
+        """
+        Return the raw ticket table data.
+        """
+        ticket_data = DB_TICKET_TABLE.all()
+
+        res = {
+            "total_queried" : len(ticket_data),
+            "_embedded"     : {
+                "tickets" : self.embed_ticket_data_in_result(ticket_data)
+            },
+            "_links" : self.make_links({
+                           "self" :         TicketList.get_self_url(),
+                           "contained_in" : Root.get_self_url()
+                       })
+        }
+        return res
+
+
+class Ticket(flask_restful.Resource, ApiResource):
+    """
+    An individual service desk ticket.
+
+    A "ticket" represents a service desk ticket that has been created within
+    the ITSM backend.
+
+    """
+
+    URL = "/ticket/<ticket_id>"
+
+    def _get(self, ticket_id):
+        ticket = DB_TICKET_TABLE.get(doc_id=int(ticket_id))
+        if not ticket:
+            flask_restful.abort(404, message=f"Ticket '{ticket_id}' not found!")
+        res = {
+            "id" : ticket.doc_id
+        }
+        res.update(ticket)
+        res['_links'] = self.make_links({
+                            "self" :         Ticket.get_self_url(ticket.doc_id),
+                            "contained_in" : TicketList.get_self_url(),
+                            "customer" :     Customer.get_self_url(res['customer_id']),
+                            "user" :         User.get_self_url(res['user_id'])
+                        })
+        return res
+
+
 # ----------------------------------------------------
 # Registering the resource classes with our Flask app.
 # ----------------------------------------------------
 for resource_class in [Root,
-                       UserList, User, UserCustomerList,
-                       Customer, CustomerList, CustomerUserList]:
+                       UserList, User, UserCustomerList, UserTicketList,
+                       Customer, CustomerList, CustomerUserList, CustomerTicketList,
+                       Ticket, TicketList]:
     API.add_resource(resource_class, resource_class.URL)
