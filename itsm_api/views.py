@@ -10,8 +10,10 @@ import json
 import flask
 import flask_restful
 
-from flask_accept  import accept
-from tinydb        import TinyDB, Query
+from flask_accept         import accept
+from tinydb               import TinyDB, Query
+from tinydb.operations    import delete
+from validator_collection import validators
 
 from itsm_api      import app
 
@@ -166,18 +168,13 @@ class ApiResource:
             route_str = "".join(new_strs)
         return route_str.format(*args)
 
-    def _get(self, *args, **kwargs):
-        """
-        Return the raw data for the resource.
-        """
-        raise NotImplementedError(f"The _get() function needs to be implemented by "
-                                  f"child class '{self.__class__.__name__}'!")
-
     @accept('application/json')
     def get(self, *args, **kwargs):
         """
         Return a resource in plain JSON.
         """
+        if not hasattr(self, "_get"):
+            flask_restful.abort(405, description=f"Method not allowed")
         self.is_html = False  # pylint: disable=attribute-defined-outside-init
         return self._get(*args, **kwargs)
 
@@ -186,8 +183,25 @@ class ApiResource:
         """
         Return an HTML rendered resource.
         """
+        if not hasattr(self, "_get"):
+            flask_restful.abort(405, description=f"Method not allowed")
         self.is_html = True  # pylint: disable=attribute-defined-outside-init
         return self._htmlify(self._get(*args, **kwargs))
+
+    @accept('application/json')
+    def put(self, *args, **kwargs):
+        """
+        Return a resource in plain JSON.
+        """
+        if not hasattr(self, "_put"):
+            flask_restful.abort(405, description=f"Method not allowed")
+        self.is_html = False  # pylint: disable=attribute-defined-outside-init
+        try:
+            new_url = self._put(*args, **kwargs)
+            resp    = flask.make_response({"msg" : "Ok"})
+            return resp
+        except ValueError as ex:
+            flask_restful.abort(400, description=f"Bad Request - {str(ex)}")
 
 
 class ApiResourceList(ApiResource):
@@ -195,7 +209,29 @@ class ApiResourceList(ApiResource):
     Base mixin for a generic list of API resources.
     """
 
-    pass
+    @accept('application/json')
+    def post(self, *args, **kwargs):
+        """
+        Return a resource in plain JSON.
+        """
+        if not hasattr(self, "_post"):
+            flask_restful.abort(405, description=f"Method not allowed")
+        self.is_html = False  # pylint: disable=attribute-defined-outside-init
+        try:
+            new_url = self._post(*args, **kwargs)
+            if new_url:
+                resp_data = {"location" : new_url}
+            else:
+                # We have some special collections, which don't create a new resource with its
+                # own address. In those cases, no new URL will be returned and we should not
+                # incude a 'location' header.
+                resp_data = {}
+            resp_data = {"msg" : "Ok"}
+            resp    = flask.make_response({"msg" : "Ok", "location" : new_url}, 201)
+            resp.headers.extend({"Location" : new_url})
+            return resp
+        except ValueError as ex:
+            flask_restful.abort(400, description=f"Bad Request - {str(ex)}")
 
 
 # -------------------------------
@@ -219,10 +255,11 @@ class Root(flask_restful.Resource, ApiResource):
     def _get(self):
         return {
             "_links" : self.make_links({
-                "self"      : Root.get_self_url(),
-                "users"     : UserList.get_self_url(),
-                "customers" : CustomerList.get_self_url(),
-                "tickets"   : TicketList.get_self_url(),
+                "self"                       : Root.get_self_url(),
+                "users"                      : UserList.get_self_url(),
+                "customers"                  : CustomerList.get_self_url(),
+                "tickets"                    : TicketList.get_self_url(),
+                "customer_user_associations" : CustomerUserAssociationList.get_self_url(),
             })
         }
 
@@ -281,6 +318,17 @@ class UserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedder):
         }
         return res
 
+    def _post(self):
+        """
+        Process a POST to create a new user.
+
+        This may raise exceptions in case of malformed input data.
+
+        """
+        new_resource = User.sanity_checked_req_data(flask.request.json)
+        new_user_id  = DB_USER_TABLE.insert(new_resource)
+        return User.get_self_url(user_id=new_user_id)
+
 
 class User(flask_restful.Resource, ApiResource):
     """
@@ -321,6 +369,71 @@ class User(flask_restful.Resource, ApiResource):
                             "tickets" :      UserTicketList.get_self_url(user.doc_id)
                         })
         return res
+
+    @classmethod
+    def sanity_checked_req_data(cls, data, doc_id=None):
+        """
+        Perform sanity check for POST/PUT user data.
+        """
+        # Perform some sanity checking of the provided attributes
+        mandatory_keys   = ["email"]
+        missing_keys     = [key for key in mandatory_keys if key not in data]
+        if missing_keys:
+            raise ValueError(f"missing mandatory key(s): {', '.join(missing_keys)}")
+
+        permissible_keys = mandatory_keys + ["custom_fields"]
+        invalid_keys     = [k for k in data if k not in permissible_keys]
+        if invalid_keys:
+            raise ValueError(f"invalid key(s) in request body: {', '.join(invalid_keys)}")
+
+        if not isinstance(data['email'], list):
+            raise ValueError("invalid type for field 'emails'")
+
+        def validate_email(e):
+            # raises exception if malformed email
+            validators.email(e)
+            # check if any user has this email already
+            UserQuery = Query()
+            user_set_similar_email = DB_USER_TABLE.search(UserQuery.email.any(e))
+            for user in user_set_similar_email:
+                if str(user.doc_id) == str(doc_id):
+                    # We will match ourselves if some emails are still the same, but that's
+                    # ok, so skip this check
+                    continue
+                for email in user['email']:
+                    if e == email:
+                        raise ValueError(f"user with email '{email}' exists already")
+            return e
+
+        res = {
+            "email" : [validate_email(e) for e in data['email']]
+        }
+
+        custom_fields = data.get("custom_fields")
+        if custom_fields:
+            res["custom_fields"] = custom_fields
+
+        return res
+
+    def _put(self, user_id):
+        """
+        Process a PUT to update an existing user.
+
+        This may raise exceptions in case of malformed input data.
+
+        """
+        user = DB_USER_TABLE.get(doc_id=int(user_id))
+        if not user:
+            flask_restful.abort(404, message=f"User '{user_id}' not found!")
+        new_resource = User.sanity_checked_req_data(flask.request.json, doc_id=user_id)
+        # Find all the keys that we should remove from the stored representation, due to them
+        # not being in what's been PUT to us.
+        keys_to_remove = [stored_key for stored_key in user.keys()
+                          if stored_key not in new_resource]
+        for old_key in keys_to_remove:
+            DB_USER_TABLE.update(delete(old_key), doc_ids=[int(user_id)])
+        DB_USER_TABLE.update(new_resource, doc_ids=[int(user_id)])
+        return User.get_self_url(user_id=user_id)
 
 
 class _CustomerDataEmbedder:
@@ -403,6 +516,9 @@ class CustomerUserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedde
         """
         Return the raw data for a resource, which embeds the customer's users.
         """
+        cust = DB_CUSTOMER_TABLE.get(doc_id=int(customer_id))
+        if not cust:
+            flask_restful.abort(404, message=f"Customer '{customer_id}' not found!")
         rels_q    = Query()
         rel_data  = DB_USER_CUSTOMER_RELS_TABLE.search(rels_q.customer_id == int(customer_id))
         user_ids  = [r['user_id'] for r in rel_data]
@@ -420,6 +536,122 @@ class CustomerUserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedde
                                   "contained_in" : Customer.get_self_url(customer_id)
                               })
         }
+        return res
+
+
+class CustomerUserAssociationList(flask_restful.Resource, ApiResourceList):
+    """
+    A collection resource to manage the association of users to customers.
+
+    This resource is not 'user friendly' to the extend that it does not contain
+    embedded resources. Instead, it is merely used to cleanly and RESTfully
+    express the association of users to customers. These associations can here
+    be created or deleted.
+
+    The User and Customer resources provide more user friendly means to read
+    which customer a user belongs to or which users a customer has.
+
+    """
+
+    URL = "/customer_user_associations"
+
+    def _get(self):
+        """
+        Return the raw data for a resource.
+        """
+        associations = DB_USER_CUSTOMER_RELS_TABLE.all()
+        for association in associations:
+            association['_links'] = self.make_links({
+                'self' : CustomerUserAssociation.get_self_url(association.doc_id)
+            })
+        res = {
+            "total_queried" : len(associations),
+            "associations"  : associations,
+            "_links" : self.make_links({
+                           "self"         : CustomerUserAssociationList.get_self_url(),
+                           "contained_in" : Root.get_self_url()
+                       })
+        }
+        return res
+
+    def _post(self):
+        """
+        Process the addition of a user/customer association.
+
+        The request body for this consists of a JSON dictionary, with an entry
+        like this:
+
+            {
+                "user_id"     : "<user_id>",
+                "customer_id" : "<customer_id>"
+            }
+
+        """
+        req_data = flask.request.json
+        try:
+            user_id = int(req_data['user_id'])
+            cust_id = int(req_data['customer_id'])
+            if len(req_data) > 2:
+                raise
+        except Exception:
+            flask_restful.abort(400, description=f"Bad Request - Malformed")
+
+        # See if we can find the specified user
+        user = DB_USER_TABLE.get(doc_id=user_id)
+        if not user:
+            flask_restful.abort(400,
+                                description=f"Bad Request - Referring to unknown user "
+                                            f"'{user_id}'")
+        # And confirm that the customer also exists
+        cust = DB_CUSTOMER_TABLE.get(doc_id=cust_id)
+        if not cust:
+            flask_restful.abort(400, message=f"Bad Request - Referring to unknown customer "
+                                             f"'{cust_id}'")
+
+        # Now check if we have this association already
+        assoc_q    = Query()
+        assoc_data = DB_USER_CUSTOMER_RELS_TABLE.search((assoc_q.customer_id == cust_id) &
+                                                        (assoc_q.user_id     == user_id))
+        if assoc_data:
+            flask_restful.abort(400, message="Bad Request - Assocation between customer "
+                                             "and user exists already.")
+
+        new_association_id = DB_USER_CUSTOMER_RELS_TABLE.insert(req_data)
+        return CustomerUserAssociation.get_self_url(association_id=new_association_id)
+
+
+class CustomerUserAssociation(flask_restful.Resource, ApiResource,
+                              _UserDataEmbedder, _CustomerDataEmbedder):
+    """
+    A resource to represent the association between customer and user.
+    """
+
+    URL = CustomerUserAssociationList.URL + "/<association_id>"
+
+    def _get(self, association_id):
+        """
+        Return the raw data of a customer.
+        """
+        association = DB_USER_CUSTOMER_RELS_TABLE.get(doc_id=int(association_id))
+        if not association:
+            flask_restful.abort(404, message=f"Customer/user association '{assocation_id}' "
+                                              "not found!")
+        res = {
+            "id" : association.doc_id
+        }
+        res.update(association)
+        cust_data = [DB_CUSTOMER_TABLE.get(doc_id=association['customer_id'])]
+        user_data = [DB_USER_TABLE.get(doc_id=association['user_id'])]
+        res['_embedded'] = {
+            "user"     : self.embed_user_data_in_result(user_data),
+            "customer" : self.embed_customer_data_in_result(cust_data)
+        }
+        link_spec = {
+            "self"         : CustomerUserAssociation.get_self_url(association.doc_id),
+            "contained_in" : CustomerUserAssociationList.get_self_url()
+        }
+
+        res['_links'] = self.make_links(link_spec)
         return res
 
 
@@ -712,5 +944,6 @@ class Ticket(flask_restful.Resource, ApiResource):
 for resource_class in [Root,
                        UserList, User, UserCustomerList, UserTicketList,
                        Customer, CustomerList, CustomerUserList, CustomerTicketList,
+                       CustomerUserAssociationList, CustomerUserAssociation,
                        Ticket, TicketList]:
     API.add_resource(resource_class, resource_class.URL)
