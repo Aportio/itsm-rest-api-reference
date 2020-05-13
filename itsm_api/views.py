@@ -168,6 +168,15 @@ class ApiResource:
             route_str = "".join(new_strs)
         return route_str.format(*args)
 
+    def _get(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def _put(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def _post(self, *args, **kwargs):
+        raise NotImplementedError()
+
     @accept('application/json')
     def get(self, *args, **kwargs):
         """
@@ -197,8 +206,8 @@ class ApiResource:
             flask_restful.abort(405, description=f"Method not allowed")
         self.is_html = False  # pylint: disable=attribute-defined-outside-init
         try:
-            new_url = self._put(*args, **kwargs)
-            resp    = flask.make_response({"msg" : "Ok"})
+            _    = self._put(*args, **kwargs)
+            resp = flask.make_response({"msg" : "Ok"})
             return resp
         except ValueError as ex:
             flask_restful.abort(400, description=f"Bad Request - {str(ex)}")
@@ -219,14 +228,6 @@ class ApiResourceList(ApiResource):
         self.is_html = False  # pylint: disable=attribute-defined-outside-init
         try:
             new_url = self._post(*args, **kwargs)
-            if new_url:
-                resp_data = {"location" : new_url}
-            else:
-                # We have some special collections, which don't create a new resource with its
-                # own address. In those cases, no new URL will be returned and we should not
-                # incude a 'location' header.
-                resp_data = {}
-            resp_data = {"msg" : "Ok"}
             resp    = flask.make_response({"msg" : "Ok", "location" : new_url}, 201)
             resp.headers.extend({"Location" : new_url})
             return resp
@@ -352,7 +353,7 @@ class User(flask_restful.Resource, ApiResource):
 
     """
 
-    URL = "/users/<user_id>"
+    URL = UserList.URL + "/<user_id>"
 
     def _get(self, user_id):
         user = DB_USER_TABLE.get(doc_id=int(user_id))
@@ -470,7 +471,7 @@ class UserCustomerList(flask_restful.Resource, ApiResourceList, _CustomerDataEmb
 
     """
 
-    URL = "/users/<user_id>/customers/"
+    URL = User.URL + "/customers/"
 
     def _get(self, user_id):
         """
@@ -491,49 +492,6 @@ class UserCustomerList(flask_restful.Resource, ApiResourceList, _CustomerDataEmb
             "_links"        : self.make_links({
                                   "self"         : UserCustomerList.get_self_url(user_id),
                                   "contained_in" : User.get_self_url(user_id)
-                              })
-        }
-        return res
-
-
-class CustomerUserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedder):
-    """
-    List of users for a given customer.
-
-    This is a collection with 'embedded' information. This means some
-    information about the individual users is included here to provide a
-    quick access to the most important information without having to load the
-    full user resource through an additional request.
-
-    To see all the details of a user, follow the 'self' link to the user
-    resource.
-
-    """
-
-    URL = "/customers/<customer_id>/users/"
-
-    def _get(self, customer_id):
-        """
-        Return the raw data for a resource, which embeds the customer's users.
-        """
-        cust = DB_CUSTOMER_TABLE.get(doc_id=int(customer_id))
-        if not cust:
-            flask_restful.abort(404, message=f"Customer '{customer_id}' not found!")
-        rels_q    = Query()
-        rel_data  = DB_USER_CUSTOMER_RELS_TABLE.search(rels_q.customer_id == int(customer_id))
-        user_ids  = [r['user_id'] for r in rel_data]
-        # We don't seem to have a way to retrieve a set of objects via a set of ids?
-        # Doing it just in a loop for now...
-        user_data = [DB_USER_TABLE.get(doc_id=_id) for _id in user_ids]
-
-        res = {
-            "total_queried" : len(user_data),
-            "_embedded"     : {
-                "users" : self.embed_user_data_in_result(user_data)
-            },
-            "_links"        : self.make_links({
-                                  "self"         : CustomerUserList.get_self_url(customer_id),
-                                  "contained_in" : Customer.get_self_url(customer_id)
                               })
         }
         return res
@@ -592,7 +550,7 @@ class CustomerUserAssociationList(flask_restful.Resource, ApiResourceList):
             user_id = int(req_data['user_id'])
             cust_id = int(req_data['customer_id'])
             if len(req_data) > 2:
-                raise
+                raise Exception()
         except Exception:
             flask_restful.abort(400, description=f"Bad Request - Malformed")
 
@@ -634,7 +592,7 @@ class CustomerUserAssociation(flask_restful.Resource, ApiResource,
         """
         association = DB_USER_CUSTOMER_RELS_TABLE.get(doc_id=int(association_id))
         if not association:
-            flask_restful.abort(404, message=f"Customer/user association '{assocation_id}' "
+            flask_restful.abort(404, message=f"Customer/user association '{association_id}' "
                                               "not found!")
         res = {
             "id" : association.doc_id
@@ -707,7 +665,7 @@ class Customer(flask_restful.Resource, ApiResource):
 
     """
 
-    URL = "/customers/<customer_id>"
+    URL = CustomerList.URL + "/<customer_id>"
 
     def _get(self, customer_id):
         """
@@ -733,6 +691,49 @@ class Customer(flask_restful.Resource, ApiResource):
             link_spec['parent'] = Customer.get_self_url(parent_id)
 
         res['_links'] = self.make_links(link_spec)
+        return res
+
+
+class CustomerUserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedder):
+    """
+    List of users for a given customer.
+
+    This is a collection with 'embedded' information. This means some
+    information about the individual users is included here to provide a
+    quick access to the most important information without having to load the
+    full user resource through an additional request.
+
+    To see all the details of a user, follow the 'self' link to the user
+    resource.
+
+    """
+
+    URL = Customer.URL + "/users/"
+
+    def _get(self, customer_id):
+        """
+        Return the raw data for a resource, which embeds the customer's users.
+        """
+        cust = DB_CUSTOMER_TABLE.get(doc_id=int(customer_id))
+        if not cust:
+            flask_restful.abort(404, message=f"Customer '{customer_id}' not found!")
+        rels_q    = Query()
+        rel_data  = DB_USER_CUSTOMER_RELS_TABLE.search(rels_q.customer_id == int(customer_id))
+        user_ids  = [r['user_id'] for r in rel_data]
+        # We don't seem to have a way to retrieve a set of objects via a set of ids?
+        # Doing it just in a loop for now...
+        user_data = [DB_USER_TABLE.get(doc_id=_id) for _id in user_ids]
+
+        res = {
+            "total_queried" : len(user_data),
+            "_embedded"     : {
+                "users" : self.embed_user_data_in_result(user_data)
+            },
+            "_links"        : self.make_links({
+                                  "self"         : CustomerUserList.get_self_url(customer_id),
+                                  "contained_in" : Customer.get_self_url(customer_id)
+                              })
+        }
         return res
 
 
@@ -919,7 +920,7 @@ class Ticket(flask_restful.Resource, ApiResource):
 
     """
 
-    URL = "/ticket/<ticket_id>"
+    URL = TicketList.URL + "/<ticket_id>"
 
     def _get(self, ticket_id):
         ticket = DB_TICKET_TABLE.get(doc_id=int(ticket_id))
