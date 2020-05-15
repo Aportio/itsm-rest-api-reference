@@ -5,6 +5,12 @@ the Aportio ITSM REST API. It allows simple operations to read, create or update
 customers, tickets and comments. Running and exploring the server will provide a good feel and
 documentation of what is expected of any server-side implementation of the API.
 
+Certain implementation choices made in this reference implementation are of no consequence to
+anyone attempting a real-world implementation in order to front-end an ITSM backend API. Such
+an implementor is encouraged to look at the functionality of the API, not how it is
+implemented here. Specifically, the choice of database backend, support for a human browseable
+API, etc., can all be ignored.
+
 ## Starting the server
 
 You can run the server either via a docker image, or you can locally run the Python sources.
@@ -25,7 +31,9 @@ You can visit the running server in your browser on http://localhost:5000.
 
 ### Running the server locally (best for local development and examining the code)
 
-Install the requirements (ideally in a pre-prepared python3 virtual environment):
+Have Python 3.6 or higher available. Ideally, configure a virtual environment for the project:
+
+Install the requirements:
 
     $ pip install requirements/deploy.txt
 
@@ -81,12 +89,29 @@ find further links by looking for the `_links` element in returned data.
 available collection resources can be seen when accessing the root ("`/`") resource. There are
 no other collections further down in the hierarchy, which support resource creation.
 * Updates to existing resources are done via `PUT` request to the resources full URL.
+* You cannot issue a `PUT` request to a collection resource, or to an URL for a non-existing
+resource, since the resource ID is part of its URL, and all IDs are created on the server side
+when the resource is created via `POST`.
 * When creating (`POST`) or updating (`PUT`) a resource, fields starting with "`_`" never need
 to be supplied. For example, `_links` or `_embedded`. Likewise, the `id` field should never be
 part of request body.
+* A successful `POST` request returns `201 Created` with the location/URL of the new resource
+in the request body, as well as the `Location:` header in the response.
+* A successful `PUT` request returns `200 Ok`.
+* When creating a new ticket, the `aportio_id` is stored. This is a unique ID created by
+Aportio, before attempting to create the ticket via the API. In a real-world implementation,
+it is recommended that this is stored in a custom field in the ITSM ticket.
+* Many resources contain an `_embedded` section. This section may contain brief summaries for
+the various referenced resources. This often provides sufficient information for the most
+important attributes of the referenced resource, without requiring extra `GET` requests to get
+the entire representation of the referenced resource. However, each embedded resource always
+has a `_links` section, with a link to itself (look for `self`). This gives the URL of the
+full resource, which can be accessed in case the summary did not contain all the necessary
+information.
 
 ## Current limitations / TODO
 
+* Authentication of any kind is not yet implemented.
 * Creation of customer resources is not supported. It is assumed that in a real world
 environment, this is done through the ITSM system's own UI or API.
 * Creation of users as well as user/customer associations is only supported to demonstrate and
@@ -100,3 +125,148 @@ be implemented for comments and tickets as well as user/customer associations.
 * The `PATCH` method is not implemented. This means any update to resources is done via `PUT`.
 Consequently, a complete resource definition always needs to be provided.
 * Support for attachments to tickets is not yet implemented.
+
+## Examples for creating and updating resources
+
+### Create a new ticket
+
+Request:
+
+    POST /tickets
+    Accept: 'application/json'
+    Content-type: application/json
+
+    {
+        "user_id"        : 1,
+        "customer_id"    : 1,
+        "aportio_id"     : "12233",
+        "short_title"    : "Laptop is broken",
+        "status"         : "OPEN",
+        "classification" : {"l1" : "service-request"},
+        "custom_fields"  : {
+            "foo"            : "bar",
+            "something_else" : [1, 2 "xyz"]
+        }
+    }
+
+Response:
+
+    201 Created
+
+    Content-type: application/json
+    Location: http://localhost/tickets/123
+
+    {
+       "location" : "/tickets/123",
+       "msg" : "Ok"
+    }
+
+Comments:
+
+* The `aportio_id` is a mandatory field and is unique. It should be stored in the ITSM
+backend, possibly in a custom fields.
+* While `classification` is mandatory, it may be supplied as `{}` in case the classification
+itself is provided later.
+* The `custom_fields` attribute is optional. It can contain any JSON serializable values. The
+assumption is that normally, this will be used to set other fields in the ITSM (customer
+defined ones or other standard fields).
+* The specified user has to be associated with the customer.
+
+### Edit a ticket
+
+For example to change the ticket status and to provide additional classification.
+
+Request:
+    
+    PUT /tickets
+    Accept: 'application/json'
+    Content-type: application/json
+
+    {
+        "user_id"        : 1,
+        "customer_id"    : 1,
+        "aportio_id"     : "12233",
+        "short_title"    : "Laptop is broken",
+        "status"         : "CLOSED",
+        "classification" : {"l1" : "service-request", "l2" : "hardware"}
+    }
+
+Response:
+
+    200 Ok
+
+    Content-type: application/json
+
+    {
+       "msg" : "Ok"
+    }
+
+Comments:
+
+* In `classification` the only permissible dictionary keys are `l1`, `l2` and `l3`. However,
+the values stored for those keys are completely free form and will have to be agreed on
+beforehand between Aportio and its customer. 
+
+### Post a comment on a ticket
+
+Request:
+
+    POST /comments
+    Accept: 'application/json'
+    Content-type: application/json
+
+    {
+        "user_id"   : 1,
+        "ticket_id" : 123,
+        "text"      : "This is another comment",
+        "type"      : "WORKNOTE"
+    }
+
+Response:
+
+    201 Created
+
+    Content-type: application/json
+    Location: http://localhost/comments/4567
+
+    {
+       "location" : "/comments/4567",
+       "msg" : "Ok"
+    }
+
+Comments:
+
+* Comments can either be of type `COMMENT` or `WORKNOTE`. By convention, a `COMMENT` is usually
+what is provided by an end-user, while a `WORKNOTE` is provided by service desk staff.
+
+### Update a comment
+
+    POST /comments/4567
+    Accept: 'application/json'
+    Content-type: application/json
+
+    {
+        "user_id"   : 1,
+        "ticket_id" : 123,
+        "text"      : "An updated text",
+        "type"      : "COMMENT"
+    }
+
+Respone:
+
+    200 Ok
+
+    Content-type: application/json
+
+    {
+       "msg" : "Ok"
+    }
+
+Comments:
+
+* While a `PUT` request has to contain all the fields in a resource, it is not allowed to
+change the `user_id`, or `ticket_id` in an existing comment. Attempting to do so will result
+in a `400 Bad request` response.
+* It is possible to change the type of comment in an update (for example, from `COMMENT` to
+`WORKNOTE`). A real-world ITSM system may not allow this operation. In that case, such an
+attempt should return a `400 Bad request` response.

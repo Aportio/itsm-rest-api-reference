@@ -39,10 +39,7 @@ def client():
     app.config['DB_NAME'] = db_fname
     init_db()
 
-    with app.test_client() as client:
-        with app.app_context():
-            init_db()
-        yield client
+    yield app.test_client()
 
     os.remove(db_fname)  # delete the temporary database file
 
@@ -707,9 +704,3 @@ def test_create_comment(client):
     assert comment['type'] == "WORKNOTE"
     assert comment['ticket_id'] == 1
     assert comment['text'] == "This is another text"
-
-
-
-
-
-
