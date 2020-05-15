@@ -2,4 +2,5 @@
 Configuration and settings for our Flask application.
 """
 
-DEBUG = True
+DEBUG   = True
+DB_NAME = 'db.json'

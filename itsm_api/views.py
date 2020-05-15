@@ -19,39 +19,29 @@ from validator_collection import validators
 from itsm_api      import app
 
 API = flask_restful.Api(app)    # Initialize the API (managed by flask_restful)
-DB  = TinyDB('db.json')         # Initialize our DB 'connection' (provided by TinyDB)
 
-# Pre-create references to our database tables
-DB_USER_TABLE               = DB.table('users')
-DB_CUSTOMER_TABLE           = DB.table('customers')
-DB_USER_CUSTOMER_RELS_TABLE = DB.table('user_customer_rels')
-DB_TICKET_TABLE             = DB.table('tickets')
-DB_COMMENT_TABLE            = DB.table('comments')
 
-"""
-GET  /users/[?<query-string>]
-GET  /users/<user-id>
-GET  /users/<user-id>/customers
-GET  /users/<user-id>/tickets[?<query-string>]
-GET  /customers[?<query-string>]
-GET  /customers/<cust-id>
-GET  /customers/<cust-id>/child-customers[?<query-string>]
-GET  /customers/<cust-id>/users/<user-email>
-GET  /customers/<cust-id>/tickets[?<query-string>]
-GET  /customers/<cust-id>/tickets/<ticket-id>
-POST /customers/<cust-id>/tickets
-PUT  /tickets/<ticket-id>
-GET  /tickets/<ticket-id>/attachments
-GET  /tickets/<ticket-id>/attachments/<id>
-POST /tickets/<ticket-id>/attachment?name=<attachment-name>
-GET  /tickets/<ticket-id>/worknotes/
-GET  /tickets/<ticket-id>/worknotes/<id>
-POST /tickets/<ticket-id>/worknotes
-GET  /tickets/<ticket-id>/comments/
-GET  /tickets/<ticket-id>/comments/<id>
-POST /tickets/<ticket-id>/comments
+def init_db():
+    """
+    Initialize the handles for the different database tables.
 
-"""
+    Note that the config parameter 'DB_NAME' is used to find the DB file.
+
+    """
+    # We are setting the module variables here for the first time, so disable the warning
+    global DB_USER_TABLE                # pylint: disable=global-variable-undefined
+    global DB_CUSTOMER_TABLE            # pylint: disable=global-variable-undefined
+    global DB_USER_CUSTOMER_RELS_TABLE  # pylint: disable=global-variable-undefined
+    global DB_TICKET_TABLE              # pylint: disable=global-variable-undefined
+    global DB_COMMENT_TABLE             # pylint: disable=global-variable-undefined
+
+    db = TinyDB(app.config['DB_NAME'])
+
+    DB_USER_TABLE               = db.table('users')
+    DB_CUSTOMER_TABLE           = db.table('customers')
+    DB_USER_CUSTOMER_RELS_TABLE = db.table('user_customer_rels')
+    DB_TICKET_TABLE             = db.table('tickets')
+    DB_COMMENT_TABLE            = db.table('comments')
 
 
 def _str_len_check(text, min_len, max_len):
@@ -244,7 +234,7 @@ class ApiResource:
         Return a resource in plain JSON.
         """
         if not hasattr(self, "_get"):
-            flask_restful.abort(405, description=f"Method not allowed")
+            flask_restful.abort(405, message=f"Method not allowed")
         self.is_html = False  # pylint: disable=attribute-defined-outside-init
         # We are using kwargs, because the object ID in the URL has different names depending
         # on the resource. The resource _get() implementations therefore use different keyword
@@ -259,7 +249,7 @@ class ApiResource:
         Return an HTML rendered resource.
         """
         if not hasattr(self, "_get"):
-            flask_restful.abort(405, description=f"Method not allowed")
+            flask_restful.abort(405, message=f"Method not allowed")
         self.is_html = True  # pylint: disable=attribute-defined-outside-init
         # We are using kwargs, because the object ID in the URL has different names depending
         # on the resource. The resource _get() implementations therefore use different keyword
@@ -274,7 +264,7 @@ class ApiResource:
         Return a resource in plain JSON.
         """
         if not hasattr(self, "_put"):
-            flask_restful.abort(405, description=f"Method not allowed")
+            flask_restful.abort(405, message=f"Method not allowed")
         self.is_html = False  # pylint: disable=attribute-defined-outside-init
         try:
             # We are using kwargs, since in the super class here we don't know the name of the
@@ -282,9 +272,12 @@ class ApiResource:
             # implementation know. The id parameter name there is matched to the id name
             # specified in the URL.
             kwargs['data'] = flask.request.json
+            if not kwargs['data']:
+                raise Exception("expected request data")
             # self.__class__ at this point will be a child class, which actually implements
             # sanity_check(). We don't want pylint to complain, so allow an exception.
             # pylint: disable=no-member
+            print("@@@@ kwargs: ", kwargs)
             kwargs['data'], obj = self.__class__.sanity_check(**kwargs)
             # _put is defined in the child class, only. We don't want pylint to complain, so
             # we allow an exception.
@@ -293,7 +286,7 @@ class ApiResource:
             resp = flask.make_response({"msg" : "Ok"})
             return resp
         except ValueError as ex:
-            flask_restful.abort(400, description=f"Bad Request - {str(ex)}")
+            flask_restful.abort(400, message=f"Bad Request - {str(ex)}")
 
 
 class ApiResourceList(ApiResource):
@@ -308,21 +301,24 @@ class ApiResourceList(ApiResource):
         """
         # Check if this collection resource even implements a POST method
         if not hasattr(self, "_post"):
-            flask_restful.abort(405, description=f"Method not allowed")
+            flask_restful.abort(405, message=f"Method not allowed")
         self.is_html = False  # pylint: disable=attribute-defined-outside-init
         try:
             # _post() and SINGLE_RESOURCE_CLASS are defined in a child class, only. We don't
             # want pylint to complain about those, so we allow exceptions.
             # Perform a sanity check and produce a cleaned version of the input
             # pylint: disable=no-member
-            data, _ = self.SINGLE_RESOURCE_CLASS.sanity_check(flask.request.json)
+            data = flask.request.json
+            if not data:
+                raise Exception("expected request data")
+            data, _ = self.SINGLE_RESOURCE_CLASS.sanity_check(data)
             # pylint: disable=no-member
             new_url = self._post(data)
             resp    = flask.make_response({"msg" : "Ok", "location" : new_url}, 201)
             resp.headers.extend({"Location" : new_url})
             return resp
         except ValueError as ex:
-            flask_restful.abort(400, description=f"Bad Request - {str(ex)}")
+            flask_restful.abort(400, message=f"Bad Request - {str(ex)}")
 
 
 # -------------------------------
@@ -664,8 +660,8 @@ class CustomerUserAssociationList(flask_restful.Resource, ApiResourceList):
         assoc_data = DB_USER_CUSTOMER_RELS_TABLE.search((assoc_q.customer_id == cust_id) &
                                                         (assoc_q.user_id     == user_id))
         if assoc_data:
-            flask_restful.abort(400, message="Bad Request - Assocation between customer "
-                                             "and user exists already.")
+            flask_restful.abort(400, message="Bad Request - association between customer "
+                                             "and user exists already")
 
         new_association_id = DB_USER_CUSTOMER_RELS_TABLE.insert(data)
         return CustomerUserAssociation.get_self_url(association_id=new_association_id)
@@ -707,8 +703,8 @@ class CustomerUserAssociation(flask_restful.Resource, ApiResource,
         cust_data = [DB_CUSTOMER_TABLE.get(doc_id=association['customer_id'])]
         user_data = [DB_USER_TABLE.get(doc_id=association['user_id'])]
         res['_embedded'] = {
-            "user"     : self.embed_user_data_in_result(user_data),
-            "customer" : self.embed_customer_data_in_result(cust_data)
+            "user"     : self.embed_user_data_in_result(user_data)[0],
+            "customer" : self.embed_customer_data_in_result(cust_data)[0]
         }
         link_spec = {
             "self"         : CustomerUserAssociation.get_self_url(association.doc_id),
@@ -1132,7 +1128,9 @@ class Ticket(flask_restful.Resource, ApiResource, _CommentDataEmbedder):
         possible additional values "l2" and "l3".
 
         """
-        invalid_keys = [k for k, _ in classification_dict if k not in ["l1", "l2", "l3"]]
+        if not isinstance(classification_dict, dict):
+            raise ValueError("classification needs to be a dictionary")
+        invalid_keys = [k for k in classification_dict if k not in ["l1", "l2", "l3"]]
         if invalid_keys:
             raise ValueError(f"invalid key(s) in classification: {', '.join(invalid_keys)}")
 
@@ -1201,7 +1199,7 @@ class Ticket(flask_restful.Resource, ApiResource, _CommentDataEmbedder):
         assoc_data = DB_USER_CUSTOMER_RELS_TABLE.search((assoc_q.customer_id == cust_id) &
                                                         (assoc_q.user_id     == user_id))
         if not assoc_data:
-            flask_restful.abort(400, message=f"Bad Request - User '{user_id}' is not "
+            flask_restful.abort(400, message=f"Bad Request - user '{user_id}' is not "
                                              f"associated with customer '{cust_id}'")
         return data, ticket
 
@@ -1214,10 +1212,14 @@ class Ticket(flask_restful.Resource, ApiResource, _CommentDataEmbedder):
 
         # Ensure that user and customer have not been changed (they can only be written once)
         if data['user_id'] != ticket['user_id']:
-            flask_restful.abort(400, message=f"Bad Request - Cannot change user ID in "
+            flask_restful.abort(400, message=f"Bad Request - cannot change user ID in "
                                              f"ticket '{ticket_id}'")
         if data['customer_id'] != ticket['customer_id']:
-            flask_restful.abort(400, message=f"Bad Request - Cannot change customer ID in "
+            flask_restful.abort(400, message=f"Bad Request - cannot change customer ID in "
+                                             f"ticket '{ticket_id}'")
+
+        if data['aportio_id'] != ticket['aportio_id']:
+            flask_restful.abort(400, message=f"Bad Request - cannot change aportio ID in "
                                              f"ticket '{ticket_id}'")
 
         # Remove keys that are not in the new resource
@@ -1361,7 +1363,7 @@ class Comment(flask_restful.Resource, ApiResource,
         assoc_data = DB_USER_CUSTOMER_RELS_TABLE.search((assoc_q.customer_id == cust_id) &
                                                         (assoc_q.user_id     == user_id))
         if not assoc_data:
-            flask_restful.abort(400, message=f"Bad Request - User '{user_id}' is not "
+            flask_restful.abort(400, message=f"Bad Request - user '{user_id}' is not "
                                              f"associated with ticket customer '{cust_id}'")
         if comment_id is None:
             data['_created'] = datetime.datetime.now().isoformat()
@@ -1379,10 +1381,10 @@ class Comment(flask_restful.Resource, ApiResource,
 
         # Ensure that user and customer have not been changed (they can only be written once)
         if data['user_id'] != comment['user_id']:
-            flask_restful.abort(400, message=f"Bad Request - Cannot change user ID in "
+            flask_restful.abort(400, message=f"Bad Request - cannot change user ID in "
                                              f"comment '{comment_id}'")
-        if data['customer_id'] != comment['customer_id']:
-            flask_restful.abort(400, message=f"Bad Request - Cannot change customer ID in "
+        if data['ticket_id'] != comment['ticket_id']:
+            flask_restful.abort(400, message=f"Bad Request - cannot change ticket ID in "
                                              f"comment '{comment_id}'")
 
         # Remove keys that are not in the new resource
