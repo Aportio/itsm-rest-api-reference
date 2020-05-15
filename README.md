@@ -117,7 +117,7 @@ environment, this is done through the ITSM system's own UI or API.
 * Creation of users as well as creation of user/customer associations is only supported to
 demonstrate and test capabilities. It is very likely that this would also be managed directly
 through the ITSM's UI or API. Therefore, it is fine for a real-world implementation to return
-a `405 Method not supported` error for any `PUT` or `POST` access to those resources. Note,
+a `405 Method not allowed` error for any `PUT` or `POST` access to those resources. Note,
 however, that the `users` and `customer_user_associations` resources need to be made available
 at least for `GET` access.
 * The content type for requests and responses is always `application/json`. This will change
