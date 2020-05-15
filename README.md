@@ -89,7 +89,7 @@ find further links by looking for the `_links` element in returned data.
 available collection resources can be seen when accessing the root ("`/`") resource. There are
 no other collections further down in the hierarchy, which support resource creation.
 * Updates to existing resources are done via `PUT` request to the resources full URL.
-* You cannot issue a `PUT` request to a collection resource, or to an URL for a non-existing
+* You cannot issue a `PUT` request to a collection resource, or to a URL for a non-existing
 resource, since the resource ID is part of its URL, and all IDs are created on the server side
 when the resource is created via `POST`.
 * When creating (`POST`) or updating (`PUT`) a resource, fields starting with "`_`" never need
@@ -167,7 +167,7 @@ Response:
 Comments:
 
 * The `aportio_id` is a mandatory field and is unique. It should be stored in the ITSM
-backend, possibly in a custom fields.
+backend, possibly in a custom field.
 * While `classification` is mandatory, it may be supplied as `{}` in case the classification
 itself is provided later.
 * The `custom_fields` attribute is optional. It can contain any JSON serializable values. The
@@ -207,7 +207,7 @@ Response:
 Comments:
 
 * In `classification` the only permissible dictionary keys are `l1`, `l2` and `l3`. However,
-the values stored for those keys are completely free form and will have to be agreed on
+the values stored for those keys are completely free-form and will have to be agreed on
 beforehand between Aportio and its customer. 
 
 ### Post a comment on a ticket
