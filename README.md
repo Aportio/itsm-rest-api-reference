@@ -178,7 +178,7 @@ For example to change the ticket status and to provide additional classification
 
 Request:
     
-    PUT /tickets
+    PUT /tickets/123
     Accept: 'application/json'
     Content-type: application/json
 
@@ -241,7 +241,7 @@ what is provided by an end-user, while a `WORKNOTE` is provided by service desk 
 
 ### Update a comment
 
-    POST /comments/4567
+    PUT /comments/4567
     Accept: 'application/json'
     Content-type: application/json
 
