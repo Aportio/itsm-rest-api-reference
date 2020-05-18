@@ -37,7 +37,7 @@ System requirements:
 * Reasonably modern Linux (tested with Ubuntu 18.04).
 * Ideally, configure a virtual environment for the project.
 
-Install the requirements:
+Install the required packages:
 
     $ pip install requirements/deploy.txt
 
