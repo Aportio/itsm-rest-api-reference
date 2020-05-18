@@ -8,4 +8,5 @@ from itsm_api.views import init_db
 
 init_db()
 
-app.run(debug=False, host='0.0.0.0')
+app.run(debug=app.config['DEBUG'], host='0.0.0.0')
+

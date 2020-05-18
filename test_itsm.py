@@ -279,6 +279,113 @@ def test_customer_list(client):
     }
 
 
+def test_customer_list_search(client):
+    # First test an illegal search term
+    customers_url = _get_root_links(client)['customers'] + "?foo=bar"
+    rv            = client.get(customers_url, **JSON_HDRS_READ)
+    assert rv.status_code == 400
+    desc = rv.get_json()['message']
+    assert "invalid search key: foo" in desc
+
+    # Now a legal search term, but on the wrong resource (a single customer, but searches are
+    # only supported by list resources)
+    customers_url = _get_root_links(client)['customers'] + "/1?name=Bar%20Company"
+    rv            = client.get(customers_url, **JSON_HDRS_READ)
+    assert rv.status_code == 400
+    desc = rv.get_json()['message']
+    assert "this resource does not support queries" in desc
+
+    # Now a valid query
+    customers_url = _get_root_links(client)['customers'] + "?name=Bar%20Company"
+    customers     = client.get(customers_url, **JSON_HDRS_READ).get_json()
+    assert customers == {
+        'total_queried': 1,
+        '_embedded': {
+            'customers': [
+                {
+                    'id': 2,
+                    'name': 'Bar Company',
+                    '_created': '',
+                    '_links': {'self': {'href': '/customers/2'}}
+                }
+            ]
+        },
+        '_links': {
+            'self': {'href': '/customers'},
+            'contained_in': {'href': '/'}
+        }
+    }
+
+
+def test_user_list_search(client):
+    users_url = _get_root_links(client)['users'] + \
+                                            "?custom_fields.address.city=Littleville"
+    users     = client.get(users_url, **JSON_HDRS_READ).get_json()
+    assert users == {
+        "total_queried": 1,
+        "_embedded": {
+            "users": [
+                {
+                    "id": 2,
+                    "email": [
+                        "another@user.com",
+                        "with-multiple@emails.com"
+                    ],
+                    "_created": "",
+                    "_links": {"self": {"href": "/users/2"}}
+                }
+            ]
+        },
+        "_links": {
+            "self": {"href": "/users"},
+            "contained_in": {"href": "/"}
+        }
+    }
+
+    # Invalid hierarchical field
+    users_url = _get_root_links(client)['users'] + "?bar.baz=foo"
+    rv        = client.get(users_url, **JSON_HDRS_READ)
+    assert rv.status_code == 400
+    desc = rv.get_json()['message']
+    assert "invalid search key: bar.baz" in desc
+
+    # Query on list resource
+    users_url = _get_root_links(client)['users'] + "?email=foo@foobar.com"
+    users     = client.get(users_url, **JSON_HDRS_READ).get_json()
+    assert users['total_queried'] == 1
+    assert users['_embedded']['users'][0]['id'] == 3
+    assert users['_embedded']['users'][0]['email'][0] == "foo@foobar.com"
+
+
+def test_ticket_list_search(client):
+    # Query with numeric parameter
+    tickets_url = _get_root_links(client)['tickets'] + "?customer_id=2"
+    tickets     = client.get(tickets_url, **JSON_HDRS_READ).get_json()
+    assert tickets == {
+        "total_queried": 1,
+        "_embedded": {
+            "tickets": [
+                {
+                    "id": 2,
+                    "aportio_id": "2222",
+                    "customer_id": 2,
+                    "user_id": 2,
+                    "short_title": "Need a new license for Office",
+                    "_created": "2020-04-12T14:39:+13:00",
+                    "status": "CLOSED",
+                    "classification": "service-request",
+                    "_links": {"self": {"href": "/tickets/2"}},
+                    "_updated": "2020-04-12T14:39:+13:00"
+                }
+            ]
+        },
+        "_links": {
+            "self": {"href": "/tickets"},
+            "contained_in": {"href": "/"}
+        }
+    }
+
+
 def test_customer_user_list(client):
     customer_url = _get_root_links(client)['customers'] + "/1"
     customer     = client.get(customer_url, **JSON_HDRS_READ).get_json()
@@ -533,7 +640,6 @@ def test_create_edit_ticket(client):
     # Retrieve the ticket data and confirm change
     rv = client.get(new_ticket_url, **JSON_HDRS_READ)
     data = rv.get_json()
-    print(data)
     assert data['status'] == "CLOSED"
     assert data['classification'] == {'l1': 'service-request', 'l2': 'foo'}
 

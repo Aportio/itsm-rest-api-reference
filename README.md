@@ -80,6 +80,43 @@ that a user may be associated with multiple customers.
 * Comments: These are either external or internal notes (often called "comments" or
 "worknotes"), which are attached to a ticket.
 
+### Search queries
+
+A number of collection resources support queries via search parameters in the URL. Various
+fields of the resource can be specified in the URL, for example:
+
+    /users?email=john@test.com&email=bar@baz.com
+
+This returns all users which have either the email address 'john@test.com' or 'bar@baz.com'.
+
+Queries can be made for hierarchical parameters as well:
+
+    /customers?custom_fields.address.city=Sample%20Town
+
+This returns a list of all customers in the city 'Sample Town'. Note the URL encoding of the
+whitespace. Also note that this of course relies on the presence of a properly structured
+'address' custom field.
+
+Note that specifying the same key multiple times ('email' in the example above) is the same as
+specifying an OR query: Email should be either one or the other. If you add other parameters
+to the query string then this has the effect of an AND. As an example of combining AND and OR
+queriesm, consider the following:
+
+    /users?email=john@test.com&email=bar@baz.com&custom_fields.address.city=Smallville
+
+This returns all users in Smallville, which have either one of the two email addresses.
+
+Search queries are supported on the following resources:
+
+* Users
+* Customers
+* Tickets
+* Customer-User lists (the users of a customer)
+* User-Customer lists (the customers of a user)
+* Customer-Ticket lists (the tickets of a customer)
+* User-Ticket lists (the tickets of a user)
+
+
 ### Main concepts
 
 * All resources are linked, making the API discoverable. You never need to just know a URL,
@@ -111,6 +148,7 @@ information.
 
 ## Current limitations / TODO
 
+* Post (and possibly PUT?) requests should contain the new/updated resource in the respionse.
 * Authentication of any kind is not yet implemented.
 * Creation of customer resources is not supported. It is assumed that in a real world
 environment, this is done through the ITSM system's own UI or API.

@@ -12,14 +12,19 @@ import flask_restful
 import json
 
 from flask_accept         import accept
-from tinydb               import TinyDB, Query
+from tinydb               import TinyDB, Query, where
 from tinydb.operations    import delete
+from urllib.parse         import unquote_plus
 from validator_collection import validators
 
 from itsm_api      import app
 
 API = flask_restful.Api(app)    # Initialize the API (managed by flask_restful)
 
+
+# =============================================================
+# Utility functions, used by the framework and resource classes
+# =============================================================
 
 def init_db():
     """
@@ -112,9 +117,9 @@ def _dict_sanity_check(data, mandatory_keys, optional_keys, obj=None):
     return res
 
 
-# ---------------------------------------------------------------
-# Parent classes and mixins to help in the rendering of resources
-# ---------------------------------------------------------------
+# ==================================================
+# Parent classes for all resources (list and single)
+# ==================================================
 
 class ApiResource:
     """
@@ -199,6 +204,85 @@ class ApiResource:
         return {name : {"href" : self._render_link(url)}
                 for name, url in name_url_pairs.items()}
 
+    def make_search_query(self, search):
+        """
+        Construct TinyDB search query expression from URL parameters.
+
+        A key can appear multiple times. For example:
+
+            ?email=foo@bar.com&email=x@y.com
+
+        This finds all records with email entries that match either one of the
+        two specified emails.
+
+        Returns None if no parameters were provided.
+
+        """
+        if search and not hasattr(self, 'VALID_SEARCH_FIELDS'):
+            raise ValueError(f"this resource does not support queries")
+
+        # Construct a TinyDB search query out of individual AND terms.
+        full_query_expr = None
+
+        # Iterate over all the keys in the search URL parameters and join search expressions
+        # for each key with an AND.
+        for key in search.keys():
+            if "." in key:
+                # Special processing for 'hierarchical' keys, such as "custom_fields.foo".
+                search_hierarchy = key.split(".")       # split into top level and sub keys
+                top_level        = search_hierarchy[0]
+                # VALID_SEARCH_FIELDS is defined in child classes, therefore ignore the pylint
+                # warning here.
+                # pylint: disable=no-member
+                data_type = self.VALID_SEARCH_FIELDS.get(top_level + ".*")
+                if not data_type:
+                    raise ValueError(f"invalid search key: {key}")
+                if data_type is not dict:
+                    # We have to define this as dict in our VALID_SEARCH_FIELDS
+                    raise ValueError(f"(internal error)")
+
+                # TinyDB syntax is odd for those keys: foo.bar.baz
+                #     where('foo')['bar']['baz']
+                # So we are assembling this construct her.
+                where_key = where(top_level)
+                for next_level_key in search_hierarchy[1:]:
+                    where_key = where_key[next_level_key]
+            else:
+                # Normal key, not-hierarchical, direcly present in VALID_SEARCH_FIELDS
+                # VALID_SEARCH_FIELDS is defined in child classes, therefore ignore the pylint
+                # warning here.
+                data_type = self.VALID_SEARCH_FIELDS.get(key)   # pylint: disable=no-member
+                if not data_type:
+                    raise ValueError(f"invalid search key: {key}")
+                # Simple TinyDB query: where('foo')
+                where_key = where(key)
+            # URL parameters are a MultiDict, this means a key can appear multiple times. We
+            # use this to allow OR operations.
+            # Also make sure that we unquote all the values specified for a key, since they
+            # may have been URL encoded.
+            values = [unquote_plus(v) for v in search.getlist(key)]
+            if data_type is list:
+                # If the parameter in our DB has a list value then we match if any of
+                # specified search values match any of the stored values. For example, a
+                # user's email is a list (of addresses). If any of them match any of the
+                # specified ones then that's a match.
+                new_query_expr = where_key.any(values)
+            # For non-list values, we check if any one of the search values is matched.
+            elif data_type is int:
+                # All URL query parameters are strings, but some fields in the database are
+                # ints and therefore need to be cast to int first.
+                new_query_expr = where_key.one_of([int(v) for v in values])
+            else:
+                new_query_expr = where_key.one_of(values)
+            # Now add the search expression for this search query key to the overall search
+            # expression with an AND operator
+            if full_query_expr:
+                full_query_expr &= new_query_expr
+            else:
+                full_query_expr = new_query_expr
+
+        return full_query_expr
+
     @classmethod
     def get_self_url(cls, *args, **kwargs):
         """
@@ -236,12 +320,21 @@ class ApiResource:
         if not hasattr(self, "_get"):
             flask_restful.abort(405, message=f"Method not allowed")
         self.is_html = False  # pylint: disable=attribute-defined-outside-init
-        # We are using kwargs, because the object ID in the URL has different names depending
-        # on the resource. The resource _get() implementations therefore use different keyword
-        # parameter names, which we don't know here in the base class.
-        # _get() is defined in the child class, we don't want pylint to complain, so we allow
-        # an exception.
-        return self._get(**kwargs)  # pylint: disable=no-member
+
+        try:
+            # Get on individual resources doesn't support search. The 'make_search_query'
+            # function correctly raises an error if it's called on resources that don't
+            # support search. Therefore, we just call it here for that error side effect.
+            _ = self.make_search_query(flask.request.args)
+            # We are using kwargs, because the object ID in the URL has different names
+            # depending on the resource. The resource _get() implementations therefore use
+            # different keyword parameter names, which we don't know here in the base class.
+            # _get() is defined in the child class, we don't want pylint to complain, so we
+            # allow an exception.
+            # pylint: disable=no-member
+            return self._get(**kwargs)
+        except ValueError as ex:
+            flask_restful.abort(400, message=f"Bad Request - {str(ex)}")
 
     @get.support('text/html')
     def get_html(self, **kwargs):
@@ -251,12 +344,20 @@ class ApiResource:
         if not hasattr(self, "_get"):
             flask_restful.abort(405, message=f"Method not allowed")
         self.is_html = True  # pylint: disable=attribute-defined-outside-init
-        # We are using kwargs, because the object ID in the URL has different names depending
-        # on the resource. The resource _get() implementations therefore use different keyword
-        # parameter names, which we don't know here in the base class.
-        # _get() is defined in the child class, we don't want pylint to complain, so we allow
-        # an exception.
-        return self._htmlify(self._get(**kwargs))  # pylint: disable=no-member
+        try:
+            # Get on individual resources doesn't support search. The 'make_search_query'
+            # function correctly raises an error if it's called on resources that don't
+            # support search. Therefore, we just call it here for that error side effect.
+            _ = self.make_search_query(flask.request.args)
+            # We are using kwargs, because the object ID in the URL has different names
+            # depending on the resource. The resource _get() implementations therefore use
+            # different keyword parameter names, which we don't know here in the base class.
+            # _get() is defined in the child class, we don't want pylint to complain, so we
+            # allow an exception.
+            # pylint: disable=no-member
+            return self._htmlify(self._get(**kwargs))
+        except ValueError as ex:
+            flask_restful.abort(400, message=f"Bad Request - {str(ex)}")
 
     @accept('application/json')
     def put(self, **kwargs):
@@ -277,7 +378,6 @@ class ApiResource:
             # self.__class__ at this point will be a child class, which actually implements
             # sanity_check(). We don't want pylint to complain, so allow an exception.
             # pylint: disable=no-member
-            print("@@@@ kwargs: ", kwargs)
             kwargs['data'], obj = self.__class__.sanity_check(**kwargs)
             # _put is defined in the child class, only. We don't want pylint to complain, so
             # we allow an exception.
@@ -293,6 +393,51 @@ class ApiResourceList(ApiResource):
     """
     Base mixin for a generic list of API resources.
     """
+
+    @accept('application/json')
+    def get(self, **kwargs):
+        """
+        Return a list resource in plain JSON.
+        """
+        if not hasattr(self, "_get"):
+            flask_restful.abort(405, message=f"Method not allowed")
+        self.is_html = False  # pylint: disable=attribute-defined-outside-init
+
+        try:
+            # Create a TinyDB query out of the search query expression in the URL. If none was
+            # provided then search_query is None.
+            search_query = self.make_search_query(flask.request.args)
+            # We are using kwargs, because the object ID in the URL has different names
+            # depending on the resource. The resource _get() implementations therefore use
+            # different keyword parameter names, which we don't know here in the base class.
+            # _get() is defined in the child class, we don't want pylint to complain, so we
+            # allow an exception.
+            # pylint: disable=no-member
+            return self._get(query=search_query, **kwargs)
+        except ValueError as ex:
+            flask_restful.abort(400, message=f"Bad Request - {str(ex)}")
+
+    @get.support('text/html')
+    def get_html(self, **kwargs):
+        """
+        Return an HTML rendered resource.
+        """
+        if not hasattr(self, "_get"):
+            flask_restful.abort(405, message=f"Method not allowed")
+        self.is_html = True  # pylint: disable=attribute-defined-outside-init
+        try:
+            # Create a TinyDB query out of the search query expression in the URL. If none was
+            # provided then search_query is None.
+            search_query = self.make_search_query(flask.request.args)
+            # We are using kwargs, because the object ID in the URL has different names
+            # depending on the resource. The resource _get() implementations therefore use
+            # different keyword parameter names, which we don't know here in the base class.
+            # _get() is defined in the child class, we don't want pylint to complain, so we
+            # allow an exception.
+            # pylint: disable=no-member
+            return self._htmlify(self._get(query=search_query, **kwargs))
+        except ValueError as ex:
+            flask_restful.abort(400, message=f"Bad Request - {str(ex)}")
 
     @accept('application/json')
     def post(self):
@@ -321,9 +466,110 @@ class ApiResourceList(ApiResource):
             flask_restful.abort(400, message=f"Bad Request - {str(ex)}")
 
 
-# -------------------------------
+# ========================================================
+# Mixins useful for the embedding of other resources' data
+# ========================================================
+
+class _UserDataEmbedder:
+    """
+    A mixin that provides a function to embed a user list in a result.
+    """
+
+    def embed_user_data_in_result(self, user_data):
+        res = []
+        for user in user_data:
+            d = {
+                    "id"       : user.doc_id,
+                    "email"    : user['email'],
+                    "_created" : user.get('_created', ''),
+                    # make_links is provided by the class using this mixin
+                    # pylint: disable=no-member
+                    "_links"   : self.make_links({"self" : User.get_self_url(user.doc_id)})
+            }
+            if '_updated' in user:
+                d['_updated'] = user['_updated']
+            res.append(d)
+        return res
+
+
+class _CustomerDataEmbedder:
+    """
+    A mixin that provides a function to embed a customer list in a result.
+    """
+
+    def embed_customer_data_in_result(self, cust_data):
+        res = []
+        for cust in cust_data:
+            d = {
+                    "id"       : cust.doc_id,
+                    "name"     : cust['name'],
+                    "_created" : cust.get('_created', ''),
+                    # make_links is provided by the class using this mixin
+                    # pylint: disable=no-member
+                    "_links"   : self.make_links({
+                                     "self" : Customer.get_self_url(cust.doc_id)}
+                                 )
+            }
+            if '_updated' in cust:
+                d['_updated'] = cust['_updated']
+            res.append(d)
+        return res
+
+
+class _TicketDataEmbedder:
+    """
+    A mixin that provides a function to embed a ticket list in a result.
+    """
+
+    def embed_ticket_data_in_result(self, ticket_data):
+        res = []
+        for ticket in ticket_data:
+            d = {
+                    "id"             : ticket.doc_id,
+                    "aportio_id"     : ticket['aportio_id'],
+                    "customer_id"    : ticket['customer_id'],
+                    "user_id"        : ticket['user_id'],
+                    "short_title"    : ticket['short_title'],
+                    "_created"       : ticket.get('_created', ''),
+                    "status"         : ticket['status'],
+                    "classification" : ticket['classification'].get("l1", "(none)"),
+                    # make_links is provided by the class using this mixin
+                    # pylint: disable=no-member
+                    "_links"         : self.make_links({
+                                           "self" : Ticket.get_self_url(ticket.doc_id)
+                                       })
+            }
+            if '_updated' in ticket:
+                d['_updated'] = ticket['_updated']
+            res.append(d)
+        return res
+
+
+class _CommentDataEmbedder:
+    """
+    A mixin that provides a function to embed a comment list in a result.
+    """
+
+    def embed_comment_data_in_result(self, comment_data):
+        res = []
+        for comment in comment_data:
+            d = {
+                "id"       : comment.doc_id,
+                "user_id"  : comment['user_id'],
+                "text"     : comment['text'],
+                "_created" : comment.get('_created', ''),
+                # pylint: disable=no-member
+                "_links"   : self.make_links({"self" : Comment.get_self_url(comment.doc_id)})
+            }
+            if "_updated" in comment:
+                d['_updated'] = comment['_updated']
+            res.append(d)
+        return res
+
+
+# ===============================
 # The actual resources in our API
-# -------------------------------
+# ===============================
 
 class Root(flask_restful.Resource, ApiResource):
     """
@@ -355,27 +601,9 @@ class Root(flask_restful.Resource, ApiResource):
         }
 
 
-class _UserDataEmbedder:
-    """
-    A mixin that provides a function to embed a user list in a result.
-    """
-
-    def embed_user_data_in_result(self, user_data):
-        res = []
-        for user in user_data:
-            d = {
-                    "id"       : user.doc_id,
-                    "email"    : user['email'],
-                    "_created" : user.get('_created', ''),
-                    # make_links is provided by the class using this mixin
-                    # pylint: disable=no-member
-                    "_links"   : self.make_links({"self" : User.get_self_url(user.doc_id)})
-            }
-            if '_updated' in user:
-                d['_updated'] = user['_updated']
-            res.append(d)
-        return res
-
+# ------------------------
+# Top-level list resources
+# ------------------------
 
 class UserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedder):
     """
@@ -391,13 +619,20 @@ class UserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedder):
 
     """
 
-    URL   = "/users"
+    URL                 = "/users"
+    VALID_SEARCH_FIELDS = {
+        "email"           : list,
+        "custom_fields.*" : dict
+    }
 
-    def _get(self):
+    def _get(self, query=None):
         """
         Return the user table data.
         """
-        user_data = DB_USER_TABLE.all()
+        if not query:
+            user_data = DB_USER_TABLE.all()
+        else:
+            user_data = DB_USER_TABLE.search(query)
 
         res = {
             "total_queried" : len(user_data),
@@ -421,6 +656,220 @@ class UserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedder):
         new_user_id = DB_USER_TABLE.insert(data)
         return User.get_self_url(user_id=new_user_id)
 
+
+class CustomerList(flask_restful.Resource, ApiResourceList, _CustomerDataEmbedder):
+    """
+    A list of customers.
+
+    This is a collection with 'embedded' information. This means some
+    information about the individual customers is included here to provide a
+    quick access to the most important information without having to load the
+    full customer resource through an additional request.
+
+    To see all the details of a customer, follow the 'self' link to the customer
+    resource.
+
+    """
+
+    URL                 = "/customers"
+    VALID_SEARCH_FIELDS = {
+        "name"            : str,
+        "custom_fields.*" : dict,
+    }
+
+    def _get(self, query=None):
+        """
+        Return the customer list.
+        """
+        if not query:
+            cust_data = DB_CUSTOMER_TABLE.all()
+        else:
+            cust_data = DB_CUSTOMER_TABLE.search(query)
+
+        res = {
+            "total_queried" : len(cust_data),
+            "_embedded"     : {
+                "customers" : self.embed_customer_data_in_result(cust_data)
+            },
+            "_links"        : self.make_links({
+                                  "self" :         CustomerList.get_self_url(),
+                                  "contained_in" : Root.get_self_url(),
+                              })
+        }
+        return res
+
+
+class TicketList(flask_restful.Resource, ApiResourceList, _TicketDataEmbedder):
+    """
+    The list of tickets.
+
+    This is a collection with 'embedded' information. This means some
+    information about the individual tickets is included here to provide a
+    quick access to the most important information without having to load the
+    full ticket resource through an additional request.
+
+    To see all the details of a ticket, follow the 'self' link to the ticket
+    resource.
+
+    """
+
+    URL                 = "/tickets"
+    VALID_SEARCH_FIELDS = {
+        "aportio_id"       : str,
+        "customer_id"      : int,
+        "user_id"          : int,
+        "short_title"      : str,
+        "status"           : str,
+        "classification.*" : dict,
+        "custom_fields.*"  : dict
+    }
+
+    def _get(self, query=None):
+        """
+        Return the ticket table data.
+        """
+        if not query:
+            ticket_data = DB_TICKET_TABLE.all()
+        else:
+            ticket_data = DB_TICKET_TABLE.search(query)
+
+        res = {
+            "total_queried" : len(ticket_data),
+            "_embedded"     : {
+                "tickets" : self.embed_ticket_data_in_result(ticket_data)
+            },
+            "_links" : self.make_links({
+                           "self" :         TicketList.get_self_url(),
+                           "contained_in" : Root.get_self_url()
+                       })
+        }
+        return res
+
+    def _post(self, data):
+        """
+        Process the addition of a ticket.
+        """
+        new_ticket_id = DB_TICKET_TABLE.insert(data)
+        return Ticket.get_self_url(ticket_id=new_ticket_id)
+
+
+class CommentList(flask_restful.Resource, ApiResourceList):
+    """
+    A list of comments (either public or private).
+
+    This resource is not 'user friendly' to the extend that it does not contain
+    embedded resources. Instead, it is merely used to cleanly and RESTfully
+    express the association of comments to tickets as well as the contents of
+    those comments.
+
+    The Ticket resource provides more user friendly means to read the comments
+    and worknotes associated with that ticket, by displaying those as embedded
+    resources, where the embedded information in fact shows all information
+    about the comment/worknote.
+
+    """
+
+    URL = "/comments"
+
+    # All list resources get a query parameter from the parent class, even if they don't
+    # all support it.
+    # pylint: disable=unused-argument
+    def _get(self, query=None):
+        """
+        Return the list of all comments/worknotes.
+        """
+        comments = DB_COMMENT_TABLE.all()
+        for comment in comments:
+            comment['_links'] = self.make_links({
+                'self' : Comment.get_self_url(comment.doc_id)
+            })
+        res = {
+            "total_queried" : len(comments),
+            "comments"      : comments,
+            "_links" : self.make_links({
+                           "self"         : CommentList.get_self_url(),
+                           "contained_in" : Root.get_self_url()
+                       })
+        }
+        return res
+
+    def _post(self, data):
+        """
+        Process the addition of a comment to a ticket.
+        """
+        new_comment_id = DB_COMMENT_TABLE.insert(data)
+        return Comment.get_self_url(comment_id=new_comment_id)
+
+
+class CustomerUserAssociationList(flask_restful.Resource, ApiResourceList):
+    """
+    A collection resource to manage the association of users to customers.
+
+    This resource is not 'user friendly' to the extend that it does not contain
+    embedded resources. Instead, it is merely used to cleanly and RESTfully
+    express the association of users to customers. These associations can be
+    created or deleted here.
+
+    The User and Customer resources provide more user friendly means to read
+    which customer a user belongs to or which users a customer has.
+
+    """
+
+    URL = "/customer_user_associations"
+
+    # All list resources get a query parameter from the parent class, even if they don't
+    # all support it.
+    # pylint: disable=unused-argument
+    def _get(self, query=None):
+        """
+        Return the list of associations.
+        """
+        associations = DB_USER_CUSTOMER_RELS_TABLE.all()
+        for association in associations:
+            association['_links'] = self.make_links({
+                'self' : CustomerUserAssociation.get_self_url(association.doc_id)
+            })
+        res = {
+            "total_queried" : len(associations),
+            "associations"  : associations,
+            "_links" : self.make_links({
+                           "self"         : CustomerUserAssociationList.get_self_url(),
+                           "contained_in" : Root.get_self_url()
+                       })
+        }
+        return res
+
+    def _post(self, data):
+        """
+        Process the addition of a user/customer association.
+
+        The request body for this consists of a JSON dictionary, with an entry
+        like this:
+
+            {
+                "user_id"     : "<user_id>",
+                "customer_id" : "<customer_id>"
+            }
+
+        """
+        cust_id = data['customer_id']
+        user_id = data['user_id']
+
+        # Now check if we have this association already
+        assoc_q    = Query()
+        assoc_data = DB_USER_CUSTOMER_RELS_TABLE.search((assoc_q.customer_id == cust_id) &
+                                                        (assoc_q.user_id     == user_id))
+        if assoc_data:
+            flask_restful.abort(400, message="Bad Request - association between customer "
+                                             "and user exists already")
+
+        new_association_id = DB_USER_CUSTOMER_RELS_TABLE.insert(data)
+        return CustomerUserAssociation.get_self_url(association_id=new_association_id)
+
+
+# --------------------
+# Individual resources
+# --------------------
 
 class User(flask_restful.Resource, ApiResource):
     """
@@ -540,216 +989,6 @@ class User(flask_restful.Resource, ApiResource):
         return User.get_self_url(user_id=user_id)
 
 
-class _CustomerDataEmbedder:
-    """
-    A mixin that provides a function to embed a customer list in a result.
-    """
-
-    def embed_customer_data_in_result(self, cust_data):
-        res = []
-        for cust in cust_data:
-            d = {
-                    "id"       : cust.doc_id,
-                    "name"     : cust['name'],
-                    "_created" : cust.get('_created', ''),
-                    # make_links is provided by the class using this mixin
-                    # pylint: disable=no-member
-                    "_links"   : self.make_links({
-                                     "self" : Customer.get_self_url(cust.doc_id)}
-                                 )
-            }
-            if '_updated' in cust:
-                d['_updated'] = cust['_updated']
-            res.append(d)
-        return res
-
-
-class UserCustomerList(flask_restful.Resource, ApiResourceList, _CustomerDataEmbedder):
-    """
-    List of customers for a given user.
-
-    This is a collection with 'embedded' information. This means some
-    information about the individual customers is included here to provide a
-    quick access to the most important information without having to load the
-    full customer resource through an additional request.
-
-    To see all the details of a customer, follow the 'self' link to the customer
-    resource.
-
-    """
-
-    URL = User.URL + "/customers/"
-
-    def _get(self, user_id):
-        """
-        Return the customer list for a given user.
-        """
-        rels_q       = Query()
-        rel_data     = DB_USER_CUSTOMER_RELS_TABLE.search(rels_q.user_id == int(user_id))
-        customer_ids = [r['customer_id'] for r in rel_data]
-        # We don't seem to have a way to retrieve a set of objects via a set of ids?
-        # Doing it just in a loop for now...
-        cust_data    = [DB_CUSTOMER_TABLE.get(doc_id=_id) for _id in customer_ids]
-
-        res = {
-            "total_queried" : len(cust_data),
-            "_embedded"     : {
-                "customers" : self.embed_customer_data_in_result(cust_data)
-            },
-            "_links"        : self.make_links({
-                                  "self"         : UserCustomerList.get_self_url(user_id),
-                                  "contained_in" : User.get_self_url(user_id)
-                              })
-        }
-        return res
-
-
-class CustomerUserAssociationList(flask_restful.Resource, ApiResourceList):
-    """
-    A collection resource to manage the association of users to customers.
-
-    This resource is not 'user friendly' to the extend that it does not contain
-    embedded resources. Instead, it is merely used to cleanly and RESTfully
-    express the association of users to customers. These associations can be
-    created or deleted here.
-
-    The User and Customer resources provide more user friendly means to read
-    which customer a user belongs to or which users a customer has.
-
-    """
-
-    URL = "/customer_user_associations"
-
-    def _get(self):
-        """
-        Return the list of associations.
-        """
-        associations = DB_USER_CUSTOMER_RELS_TABLE.all()
-        for association in associations:
-            association['_links'] = self.make_links({
-                'self' : CustomerUserAssociation.get_self_url(association.doc_id)
-            })
-        res = {
-            "total_queried" : len(associations),
-            "associations"  : associations,
-            "_links" : self.make_links({
-                           "self"         : CustomerUserAssociationList.get_self_url(),
-                           "contained_in" : Root.get_self_url()
-                       })
-        }
-        return res
-
-    def _post(self, data):
-        """
-        Process the addition of a user/customer association.
-
-        The request body for this consists of a JSON dictionary, with an entry
-        like this:
-
-            {
-                "user_id"     : "<user_id>",
-                "customer_id" : "<customer_id>"
-            }
-
-        """
-        cust_id = data['customer_id']
-        user_id = data['user_id']
-
-        # Now check if we have this association already
-        assoc_q    = Query()
-        assoc_data = DB_USER_CUSTOMER_RELS_TABLE.search((assoc_q.customer_id == cust_id) &
-                                                        (assoc_q.user_id     == user_id))
-        if assoc_data:
-            flask_restful.abort(400, message="Bad Request - association between customer "
-                                             "and user exists already")
-
-        new_association_id = DB_USER_CUSTOMER_RELS_TABLE.insert(data)
-        return CustomerUserAssociation.get_self_url(association_id=new_association_id)
-
-
-class CustomerUserAssociation(flask_restful.Resource, ApiResource,
-                              _UserDataEmbedder, _CustomerDataEmbedder):
-    """
-    A resource to represent the association between customer and user.
-    """
-
-    URL = CustomerUserAssociationList.URL + "/<association_id>"
-
-    @classmethod
-    def sanity_check(cls, data):  # no version with ID, since PUT (update) isn't allowed
-        """
-        Perform sanity check for POST customer/user association data.
-        """
-        data = _dict_sanity_check(data,
-                                  mandatory_keys = [
-                                      ("user_id", User.exists),
-                                      ("customer_id", Customer.exists)
-                                  ],
-                                  optional_keys = [])
-        return data, None
-
-    def _get(self, association_id):
-        """
-        Return the information about a customer/user association.
-        """
-        association = DB_USER_CUSTOMER_RELS_TABLE.get(doc_id=int(association_id))
-        if not association:
-            flask_restful.abort(404, message=f"Customer/user association '{association_id}' "
-                                              "not found!")
-        res = {
-            "id" : association.doc_id
-        }
-        res.update(association)
-        cust_data = [DB_CUSTOMER_TABLE.get(doc_id=association['customer_id'])]
-        user_data = [DB_USER_TABLE.get(doc_id=association['user_id'])]
-        res['_embedded'] = {
-            "user"     : self.embed_user_data_in_result(user_data)[0],
-            "customer" : self.embed_customer_data_in_result(cust_data)[0]
-        }
-        link_spec = {
-            "self"         : CustomerUserAssociation.get_self_url(association.doc_id),
-            "contained_in" : CustomerUserAssociationList.get_self_url()
-        }
-
-        res['_links'] = self.make_links(link_spec)
-        return res
-
-
-class CustomerList(flask_restful.Resource, ApiResourceList, _CustomerDataEmbedder):
-    """
-    A list of customers.
-
-    This is a collection with 'embedded' information. This means some
-    information about the individual customers is included here to provide a
-    quick access to the most important information without having to load the
-    full customer resource through an additional request.
-
-    To see all the details of a customer, follow the 'self' link to the customer
-    resource.
-
-    """
-
-    URL = "/customers"
-
-    def _get(self):
-        """
-        Return the customer list.
-        """
-        cust_data = DB_CUSTOMER_TABLE.all()
-
-        res = {
-            "total_queried" : len(cust_data),
-            "_embedded"     : {
-                "customers" : self.embed_customer_data_in_result(cust_data)
-            },
-            "_links"        : self.make_links({
-                                  "self" :         CustomerList.get_self_url(),
-                                  "contained_in" : Root.get_self_url(),
-                              })
-        }
-        return res
-
-
 class Customer(flask_restful.Resource, ApiResource):
     """
     An individual customer.
@@ -804,213 +1043,6 @@ class Customer(flask_restful.Resource, ApiResource):
             link_spec['parent'] = Customer.get_self_url(parent_id)
 
         res['_links'] = self.make_links(link_spec)
-        return res
-
-
-class CustomerUserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedder):
-    """
-    List of users for a given customer.
-
-    This is a collection with 'embedded' information. This means some
-    information about the individual users is included here to provide a
-    quick access to the most important information without having to load the
-    full user resource through an additional request.
-
-    To see all the details of a user, follow the 'self' link to the user
-    resource.
-
-    """
-
-    URL = Customer.URL + "/users/"
-
-    def _get(self, customer_id):
-        """
-        Return list of users for a customer.
-        """
-        cust = DB_CUSTOMER_TABLE.get(doc_id=int(customer_id))
-        if not cust:
-            flask_restful.abort(404, message=f"Customer '{customer_id}' not found!")
-        rels_q    = Query()
-        rel_data  = DB_USER_CUSTOMER_RELS_TABLE.search(rels_q.customer_id == int(customer_id))
-        user_ids  = [r['user_id'] for r in rel_data]
-        # We don't seem to have a way to retrieve a set of objects via a set of ids?
-        # Doing it just in a loop for now...
-        user_data = [DB_USER_TABLE.get(doc_id=_id) for _id in user_ids]
-
-        res = {
-            "total_queried" : len(user_data),
-            "_embedded"     : {
-                "users" : self.embed_user_data_in_result(user_data)
-            },
-            "_links"        : self.make_links({
-                                  "self"         : CustomerUserList.get_self_url(customer_id),
-                                  "contained_in" : Customer.get_self_url(customer_id)
-                              })
-        }
-        return res
-
-
-class _TicketDataEmbedder:
-    """
-    A mixin that provides a function to embed a ticket list in a result.
-    """
-
-    def embed_ticket_data_in_result(self, ticket_data):
-        res = []
-        for ticket in ticket_data:
-            d = {
-                    "id"             : ticket.doc_id,
-                    "aportio_id"     : ticket['aportio_id'],
-                    "customer_id"    : ticket['customer_id'],
-                    "short_title"    : ticket['short_title'],
-                    "_created"       : ticket.get('_created', ''),
-                    "status"         : ticket['status'],
-                    "classification" : ticket['classification'].get("l1", "(none)"),
-                    # make_links is provided by the class using this mixin
-                    # pylint: disable=no-member
-                    "_links"         : self.make_links({
-                                           "self" : Ticket.get_self_url(ticket.doc_id)
-                                       })
-            }
-            if '_updated' in ticket:
-                d['_updated'] = ticket['_updated']
-            res.append(d)
-        return res
-
-
-class CustomerTicketList(flask_restful.Resource, ApiResourceList, _TicketDataEmbedder):
-    """
-    A list of tickets of a customers.
-
-    This is a collection with 'embedded' information. This means some
-    information about the individual tickets is included here to provide a
-    quick access to the most important information without having to load the
-    full ticket resource through an additional request.
-
-    To see all the details of a ticket, follow the 'self' link to the ticket
-    resource.
-
-    """
-
-    URL = "/customers/<customer_id>/tickets"
-
-    def _get(self, customer_id):
-        """
-        Return list of tickets for a customer.
-        """
-        ticket_q    = Query()
-        ticket_data = DB_TICKET_TABLE.search(ticket_q.customer_id == int(customer_id))
-
-        res = {
-            "total_queried" : len(ticket_data),
-            "_embedded"     : {
-                "tickets" : self.embed_ticket_data_in_result(ticket_data)
-            },
-            "_links" : self.make_links({
-                           "self" :         CustomerTicketList.get_self_url(customer_id),
-                           "contained_in" : Customer.get_self_url(customer_id)
-                       })
-        }
-        return res
-
-
-class UserTicketList(flask_restful.Resource, ApiResourceList, _TicketDataEmbedder):
-    """
-    A list of tickets of a user.
-
-    This is a collection with 'embedded' information. This means some
-    information about the individual tickets is included here to provide a
-    quick access to the most important information without having to load the
-    full ticket resource through an additional request.
-
-    To see all the details of a ticket, follow the 'self' link to the ticket
-    resource.
-
-    """
-
-    URL = "/users/<user_id>/tickets"
-
-    def _get(self, user_id):
-        """
-        Return the ticket list of a user.
-        """
-        ticket_q    = Query()
-        ticket_data = DB_TICKET_TABLE.search(ticket_q.user_id == int(user_id))
-
-        res = {
-            "total_queried" : len(ticket_data),
-            "_embedded"     : {
-                "tickets" : self.embed_ticket_data_in_result(ticket_data)
-            },
-            "_links" : self.make_links({
-                           "self" :         UserTicketList.get_self_url(user_id),
-                           "contained_in" : User.get_self_url(user_id)
-                       })
-        }
-        return res
-
-
-class TicketList(flask_restful.Resource, ApiResourceList, _TicketDataEmbedder):
-    """
-    The list of tickets.
-
-    This is a collection with 'embedded' information. This means some
-    information about the individual tickets is included here to provide a
-    quick access to the most important information without having to load the
-    full ticket resource through an additional request.
-
-    To see all the details of a ticket, follow the 'self' link to the ticket
-    resource.
-
-    """
-
-    URL = "/tickets"
-
-    def _get(self):
-        """
-        Return the ticket table data.
-        """
-        ticket_data = DB_TICKET_TABLE.all()
-
-        res = {
-            "total_queried" : len(ticket_data),
-            "_embedded"     : {
-                "tickets" : self.embed_ticket_data_in_result(ticket_data)
-            },
-            "_links" : self.make_links({
-                           "self" :         TicketList.get_self_url(),
-                           "contained_in" : Root.get_self_url()
-                       })
-        }
-        return res
-
-    def _post(self, data):
-        """
-        Process the addition of a ticket.
-        """
-        new_ticket_id = DB_TICKET_TABLE.insert(data)
-        return Ticket.get_self_url(ticket_id=new_ticket_id)
-
-
-class _CommentDataEmbedder:
-    """
-    A mixin that provides a function to embed a comment list in a result.
-    """
-
-    def embed_comment_data_in_result(self, comment_data):
-        res = []
-        for comment in comment_data:
-            d = {
-                "id"       : comment.doc_id,
-                "user_id"  : comment['user_id'],
-                "text"     : comment['text'],
-                "_created" : comment.get('_created', ''),
-                # pylint: disable=no-member
-                "_links"   : self.make_links({"self" : Comment.get_self_url(comment.doc_id)})
-            }
-            if "_updated" in comment:
-                d['_updated'] = comment['_updated']
-            res.append(d)
         return res
 
 
@@ -1231,51 +1263,6 @@ class Ticket(flask_restful.Resource, ApiResource, _CommentDataEmbedder):
         return Ticket.get_self_url(ticket_id=ticket_id)
 
 
-class CommentList(flask_restful.Resource, ApiResourceList):
-    """
-    A list of comments (either public or private).
-
-    This resource is not 'user friendly' to the extend that it does not contain
-    embedded resources. Instead, it is merely used to cleanly and RESTfully
-    express the association of comments to tickets as well as the contents of
-    those comments.
-
-    The Ticket resource provides more user friendly means to read the comments
-    and worknotes associated with that ticket, by displaying those as embedded
-    resources, where the embedded information in fact shows all information
-    about the comment/worknote.
-
-    """
-
-    URL = "/comments"
-
-    def _get(self):
-        """
-        Return the list of all comments/worknotes.
-        """
-        comments = DB_COMMENT_TABLE.all()
-        for comment in comments:
-            comment['_links'] = self.make_links({
-                'self' : Comment.get_self_url(comment.doc_id)
-            })
-        res = {
-            "total_queried" : len(comments),
-            "comments"      : comments,
-            "_links" : self.make_links({
-                           "self"         : CommentList.get_self_url(),
-                           "contained_in" : Root.get_self_url()
-                       })
-        }
-        return res
-
-    def _post(self, data):
-        """
-        Process the addition of a comment to a ticket.
-        """
-        new_comment_id = DB_COMMENT_TABLE.insert(data)
-        return Comment.get_self_url(comment_id=new_comment_id)
-
-
 class Comment(flask_restful.Resource, ApiResource,
               _TicketDataEmbedder, _UserDataEmbedder, _CustomerDataEmbedder):
     """
@@ -1396,21 +1383,254 @@ class Comment(flask_restful.Resource, ApiResource,
         return Comment.get_self_url(comment_id=comment_id)
 
 
-# ------------------------------------------------------------------------------------------
+class CustomerUserAssociation(flask_restful.Resource, ApiResource,
+                              _UserDataEmbedder, _CustomerDataEmbedder):
+    """
+    A resource to represent the association between customer and user.
+    """
+
+    URL = CustomerUserAssociationList.URL + "/<association_id>"
+
+    @classmethod
+    def sanity_check(cls, data):  # no version with ID, since PUT (update) isn't allowed
+        """
+        Perform sanity check for POST customer/user association data.
+        """
+        data = _dict_sanity_check(data,
+                                  mandatory_keys = [
+                                      ("user_id", User.exists),
+                                      ("customer_id", Customer.exists)
+                                  ],
+                                  optional_keys = [])
+        return data, None
+
+    def _get(self, association_id):
+        """
+        Return the information about a customer/user association.
+        """
+        association = DB_USER_CUSTOMER_RELS_TABLE.get(doc_id=int(association_id))
+        if not association:
+            flask_restful.abort(404, message=f"Customer/user association '{association_id}' "
+                                              "not found!")
+        res = {
+            "id" : association.doc_id
+        }
+        res.update(association)
+        cust_data = [DB_CUSTOMER_TABLE.get(doc_id=association['customer_id'])]
+        user_data = [DB_USER_TABLE.get(doc_id=association['user_id'])]
+        res['_embedded'] = {
+            "user"     : self.embed_user_data_in_result(user_data)[0],
+            "customer" : self.embed_customer_data_in_result(cust_data)[0]
+        }
+        link_spec = {
+            "self"         : CustomerUserAssociation.get_self_url(association.doc_id),
+            "contained_in" : CustomerUserAssociationList.get_self_url()
+        }
+
+        res['_links'] = self.make_links(link_spec)
+        return res
+
+
+# ---------------------------
+# Second level list resources
+# ---------------------------
+
+class UserCustomerList(flask_restful.Resource, ApiResourceList, _CustomerDataEmbedder):
+    """
+    List of customers for a given user.
+
+    This is a collection with 'embedded' information. This means some
+    information about the individual customers is included here to provide a
+    quick access to the most important information without having to load the
+    full customer resource through an additional request.
+
+    To see all the details of a customer, follow the 'self' link to the customer
+    resource.
+
+    """
+
+    URL                 = User.URL + "/customers/"
+    VALID_SEARCH_FIELDS = CustomerList.VALID_SEARCH_FIELDS
+
+    def _get(self, user_id, query=None):
+        """
+        Return the customer list for a given user.
+        """
+        user = DB_USER_TABLE.get(doc_id=int(user_id))
+        if not user:
+            flask_restful.abort(404, message=f"User '{user_id}' not found!")
+        rels_q       = Query()
+        rel_data     = DB_USER_CUSTOMER_RELS_TABLE.search(rels_q.user_id == int(user_id))
+        customer_ids = {r['customer_id'] for r in rel_data}
+        if not query:
+            # We don't seem to have a way to retrieve a set of objects via a set of ids?
+            # Doing it just in a loop for now...
+            customer_data = [DB_CUSTOMER_TABLE.get(doc_id=_id) for _id in customer_ids]
+        else:
+            # Need to manually join the rel and search results, since we can't seem to have
+            # complex queries that contain normal fields as well as doc_ids.
+            customer_data_search = DB_CUSTOMER_TABLE.search(query)
+            customer_data        = [c for c in customer_data_search
+                                    if c.doc_id in customer_ids]
+
+        res = {
+            "total_queried" : len(customer_data),
+            "_embedded"     : {
+                "customers" : self.embed_customer_data_in_result(customer_data)
+            },
+            "_links"        : self.make_links({
+                                  "self"         : UserCustomerList.get_self_url(user_id),
+                                  "contained_in" : User.get_self_url(user_id)
+                              })
+        }
+        return res
+
+
+class CustomerUserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedder):
+    """
+    List of users for a given customer.
+
+    This is a collection with 'embedded' information. This means some
+    information about the individual users is included here to provide a
+    quick access to the most important information without having to load the
+    full user resource through an additional request.
+
+    To see all the details of a user, follow the 'self' link to the user
+    resource.
+
+    """
+
+    URL                 = Customer.URL + "/users/"
+    VALID_SEARCH_FIELDS = UserList.VALID_SEARCH_FIELDS
+
+    def _get(self, customer_id, query=None):
+        """
+        Return list of users for a customer.
+        """
+        cust = DB_CUSTOMER_TABLE.get(doc_id=int(customer_id))
+        if not cust:
+            flask_restful.abort(404, message=f"Customer '{customer_id}' not found!")
+        rels_q    = Query()
+        rel_data  = DB_USER_CUSTOMER_RELS_TABLE.search(rels_q.customer_id == int(customer_id))
+        user_ids  = {r['user_id'] for r in rel_data}
+        if not query:
+            # We don't seem to have a way to retrieve a set of objects via a set of ids?
+            # Doing it just in a loop for now...
+            user_data = [DB_USER_TABLE.get(doc_id=_id) for _id in user_ids]
+        else:
+            # Need to manually join the rel and search results, since we can't seem to have
+            # complex queries that contain normal fields as well as doc_ids.
+            user_data_search = DB_USER_TABLE.search(query)
+            user_data        = [u for u in user_data_search if u.doc_id in user_ids]
+
+        res = {
+            "total_queried" : len(user_data),
+            "_embedded"     : {
+                "users" : self.embed_user_data_in_result(user_data)
+            },
+            "_links"        : self.make_links({
+                                  "self"         : CustomerUserList.get_self_url(customer_id),
+                                  "contained_in" : Customer.get_self_url(customer_id)
+                              })
+        }
+        return res
+
+
+class CustomerTicketList(flask_restful.Resource, ApiResourceList, _TicketDataEmbedder):
+    """
+    A list of tickets of a customers.
+
+    This is a collection with 'embedded' information. This means some
+    information about the individual tickets is included here to provide a
+    quick access to the most important information without having to load the
+    full ticket resource through an additional request.
+
+    To see all the details of a ticket, follow the 'self' link to the ticket
+    resource.
+
+    """
+
+    URL                 = "/customers/<customer_id>/tickets"
+    VALID_SEARCH_FIELDS = TicketList.VALID_SEARCH_FIELDS
+
+    def _get(self, customer_id, query=None):
+        """
+        Return list of tickets for a customer.
+        """
+        if not query:
+            ticket_data = DB_TICKET_TABLE.search(where('customer_id') == int(customer_id))
+        else:
+            query       = (where('customer_id') == int(customer_id)) & query
+            ticket_data = DB_TICKET_TABLE.search(query)
+
+        res = {
+            "total_queried" : len(ticket_data),
+            "_embedded"     : {
+                "tickets" : self.embed_ticket_data_in_result(ticket_data)
+            },
+            "_links" : self.make_links({
+                           "self" :         CustomerTicketList.get_self_url(customer_id),
+                           "contained_in" : Customer.get_self_url(customer_id)
+                       })
+        }
+        return res
+
+
+class UserTicketList(flask_restful.Resource, ApiResourceList, _TicketDataEmbedder):
+    """
+    A list of tickets of a user.
+
+    This is a collection with 'embedded' information. This means some
+    information about the individual tickets is included here to provide a
+    quick access to the most important information without having to load the
+    full ticket resource through an additional request.
+
+    To see all the details of a ticket, follow the 'self' link to the ticket
+    resource.
+
+    """
+
+    URL                 = "/users/<user_id>/tickets"
+    VALID_SEARCH_FIELDS = TicketList.VALID_SEARCH_FIELDS
+
+    def _get(self, user_id, query=None):
+        """
+        Return the ticket list of a user.
+        """
+        if not query:
+            ticket_data = DB_TICKET_TABLE.search(where('user_id') == int(user_id))
+        else:
+            query       = (where('user_id') == int(user_id)) & query
+            ticket_data = DB_TICKET_TABLE.search(query)
+
+        res = {
+            "total_queried" : len(ticket_data),
+            "_embedded"     : {
+                "tickets" : self.embed_ticket_data_in_result(ticket_data)
+            },
+            "_links" : self.make_links({
+                           "self" :         UserTicketList.get_self_url(user_id),
+                           "contained_in" : User.get_self_url(user_id)
+                       })
+        }
+        return res
+
+
+# ==========================================================================================
 # Now that all resources (collections and singles) are defined, we can let the collection
 # know - via class attribute - which class implements the single resource of the collection.
 # Couldn't do this while we defined the class, since there's no forward declaration in
 # Python.
-# ------------------------------------------------------------------------------------------
+# ==========================================================================================
 UserList.SINGLE_RESOURCE_CLASS                    = User
 CustomerList.SINGLE_RESOURCE_CLASS                = Customer
 CustomerUserAssociationList.SINGLE_RESOURCE_CLASS = CustomerUserAssociation
 TicketList.SINGLE_RESOURCE_CLASS                  = Ticket
 CommentList.SINGLE_RESOURCE_CLASS                 = Comment
 
-# ----------------------------------------------------
-# Registering the resource classes with our Flask app.
-# ----------------------------------------------------
+# ===================================================
+# Registering the resource classes with our Flask app
+# ===================================================
 for resource_class in [Root,
                        UserList, User, UserCustomerList, UserTicketList,
                        Customer, CustomerList, CustomerUserList, CustomerTicketList,
