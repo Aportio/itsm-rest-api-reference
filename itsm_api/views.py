@@ -677,6 +677,7 @@ class CustomerList(flask_restful.Resource, ApiResourceList, _CustomerDataEmbedde
     URL                 = "/customers"
     VALID_SEARCH_FIELDS = {
         "name"            : str,
+        "parent_id"       : int,
         "custom_fields.*" : dict,
     }
 
