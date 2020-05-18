@@ -133,7 +133,8 @@ when the resource is created via `POST`.
 to be supplied. For example, `_links` or `_embedded`. Likewise, the `id` field should never be
 part of request body.
 * A successful `POST` request returns `201 Created` with the location/URL of the new resource
-in the request body, as well as the `Location:` header in the response.
+in the `Location:` HTTP header of the response. For the caller's convenience a full
+representation of the new resource is returned in the response body.
 * A successful `PUT` request returns `200 Ok`.
 * When creating a new ticket, the `aportio_id` is stored. This is a unique ID created by
 Aportio, before attempting to create the ticket via the API. In a real-world implementation,
@@ -148,7 +149,6 @@ information.
 
 ## Current limitations / TODO
 
-* Post (and possibly PUT?) requests should contain the new/updated resource in the respionse.
 * Authentication of any kind is not yet implemented.
 * Creation of customer resources is not supported. It is assumed that in a real world
 environment, this is done through the ITSM system's own UI or API.
@@ -198,8 +198,20 @@ Response:
     Location: http://localhost/tickets/123
 
     {
-       "location" : "/tickets/123",
-       "msg" : "Ok"
+        "id": 123,
+        "aportio_id": "12233
+        "customer_id": 1,
+        "short_title": "Laptop is broken",
+        "user_id": 1,
+        "_created": "2020-04-12T14:39:+13:00",
+        "status": "OPEN",
+        "classification": {
+            "l1": "service-request",
+            ...
+        },
+        ....
+
+        (full representation of the new resource is returned)
     }
 
 Comments:
@@ -271,8 +283,23 @@ Response:
     Location: http://localhost/comments/4567
 
     {
-       "location" : "/comments/4567",
-       "msg" : "Ok"
+        "user_id": 1,
+        "ticket_id": 123,
+        "text": "This is another comment",
+        "type": "WORKNOTE",
+        "_created": "2020-05-14T14:09:25.431621",
+        "_updated": "2020-05-14T14:09:25.431621",
+        "id": 1,
+        "_embedded": {
+            "ticket": {
+                "id": 123,
+                ...
+
+            }
+        },
+
+        ...
+        (full representation of the new resource is returned)
     }
 
 Comments:

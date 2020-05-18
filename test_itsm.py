@@ -136,8 +136,8 @@ def test_create_edit_user(client):
     assert rv.is_json  and  rv.status_code == 201
     msg = rv.get_json()
     assert rv.headers.get('location') == "http://localhost/users/5"
-    assert msg['location'] == "/users/5"
-    assert msg['msg'] == "Ok"
+    new_url = rv.headers.get('location')[len("http://localhost"):]
+    assert new_url == "/users/5"
 
     # Load the user list again and confirm the new user is now present
     users_url = _get_root_links(client)['users']
@@ -219,11 +219,11 @@ def test_customer_user_association(client):
     assert rv.is_json  and  rv.status_code == 201
     desc = rv.get_json()
     assert rv.headers.get('location') == "http://localhost/customer_user_associations/7"
-    assert desc['location'] == "/customer_user_associations/7"
-    assert desc['msg'] == "Ok"
+    new_url = rv.headers.get('location')[len("http://localhost"):]
+    assert new_url == "/customer_user_associations/7"
 
     # Get the association and ensure correctness
-    rv = client.get(desc['location'], **JSON_HDRS_READ)
+    rv = client.get(new_url, **JSON_HDRS_READ)
     assert rv.is_json  and  rv.status_code == 200
     desc = rv.get_json()
     assert desc['id'] == 7
@@ -579,10 +579,8 @@ def test_create_edit_ticket(client):
     assert rv.is_json  and  rv.status_code == 201
     msg = rv.get_json()
     assert rv.headers.get('location') == "http://localhost/tickets/5"
-    assert msg['location'] == "/tickets/5"
-    assert msg['msg'] == "Ok"
-
-    new_ticket_url = msg['location']
+    new_ticket_url = rv.headers.get('location')[len("http://localhost"):]
+    assert new_ticket_url == "/tickets/5"
 
     # Attempt invalid updates
     for invalid_data, error_msg in [
@@ -801,12 +799,16 @@ def test_create_comment(client):
     rv = client.post(comments_url, **JSON_HDRS_READWRITE,
                      data = json.dumps(comment_def))
     assert rv.is_json  and  rv.status_code == 201
-    msg = rv.get_json()
     assert rv.headers.get('location') == "http://localhost/comments/3"
-    assert msg['location'] == "/comments/3"
-    assert msg['msg'] == "Ok"
+    # Should receive full representation of new resource as response
+    post_response = rv.get_json()
+    new_url = rv.headers.get('location')[len("http://localhost"):]
 
-    comment = client.get(msg['location'], **JSON_HDRS_READ).get_json()
+    # Now query it on the new URL
+    comment = client.get(new_url, **JSON_HDRS_READ).get_json()
     assert comment['type'] == "WORKNOTE"
     assert comment['ticket_id'] == 1
     assert comment['text'] == "This is another text"
+
+    # Should be the same as what we got in our POST response
+    assert post_response == comment

@@ -329,7 +329,6 @@ class ApiResource:
             # We are using kwargs, because the object ID in the URL has different names
             # depending on the resource. The resource _get() implementations therefore use
             # different keyword parameter names, which we don't know here in the base class.
-            # _get() is defined in the child class, we don't want pylint to complain, so we
             # allow an exception.
             # pylint: disable=no-member
             return self._get(**kwargs)
@@ -457,9 +456,13 @@ class ApiResourceList(ApiResource):
             if not data:
                 raise Exception("expected request data")
             data, _ = self.SINGLE_RESOURCE_CLASS.sanity_check(data)
-            # pylint: disable=no-member
-            new_url = self._post(data)
-            resp    = flask.make_response({"msg" : "Ok", "location" : new_url}, 201)
+            new_id          = self._post(data)  # pylint: disable=no-member
+            new_url         = self.SINGLE_RESOURCE_CLASS.get_self_url(new_id)
+            new_obj         = self.SINGLE_RESOURCE_CLASS()
+            new_obj.is_html = self.is_html
+            # Tightly cooperaing classes, we will allow the protected access
+            new_obj_data    = new_obj._get(new_id)  # pylint: disable=protected-access
+            resp            = flask.make_response(new_obj_data, 201)
             resp.headers.extend({"Location" : new_url})
             return resp
         except ValueError as ex:
@@ -654,7 +657,7 @@ class UserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedder):
 
         """
         new_user_id = DB_USER_TABLE.insert(data)
-        return User.get_self_url(user_id=new_user_id)
+        return new_user_id
 
 
 class CustomerList(flask_restful.Resource, ApiResourceList, _CustomerDataEmbedder):
@@ -750,7 +753,7 @@ class TicketList(flask_restful.Resource, ApiResourceList, _TicketDataEmbedder):
         Process the addition of a ticket.
         """
         new_ticket_id = DB_TICKET_TABLE.insert(data)
-        return Ticket.get_self_url(ticket_id=new_ticket_id)
+        return new_ticket_id
 
 
 class CommentList(flask_restful.Resource, ApiResourceList):
@@ -798,7 +801,7 @@ class CommentList(flask_restful.Resource, ApiResourceList):
         Process the addition of a comment to a ticket.
         """
         new_comment_id = DB_COMMENT_TABLE.insert(data)
-        return Comment.get_self_url(comment_id=new_comment_id)
+        return new_comment_id
 
 
 class CustomerUserAssociationList(flask_restful.Resource, ApiResourceList):
@@ -864,7 +867,7 @@ class CustomerUserAssociationList(flask_restful.Resource, ApiResourceList):
                                              "and user exists already")
 
         new_association_id = DB_USER_CUSTOMER_RELS_TABLE.insert(data)
-        return CustomerUserAssociation.get_self_url(association_id=new_association_id)
+        return new_association_id
 
 
 # --------------------
