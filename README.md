@@ -100,7 +100,7 @@ whitespace. Also note that this of course relies on the presence of a properly s
 Note that specifying the same key multiple times ('email' in the example above) is the same as
 specifying an OR query: Email should be either one or the other. If you add other parameters
 to the query string then this has the effect of an AND. As an example of combining AND and OR
-queriesm, consider the following:
+queries, consider the following:
 
     /users?email=john@test.com&email=bar@baz.com&custom_fields.address.city=Smallville
 
