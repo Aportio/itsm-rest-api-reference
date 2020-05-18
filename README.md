@@ -31,7 +31,11 @@ You can visit the running server in your browser on http://localhost:5000.
 
 ### Running the server locally (best for local development and examining the code)
 
-Have Python 3.6 or higher available. Ideally, configure a virtual environment for the project:
+System requirements:
+
+* Python 3.6 or higher.
+* Reasonably modern Linux (tested with Ubuntu 18.04).
+* Ideally, configure a virtual environment for the project.
 
 Install the requirements:
 
