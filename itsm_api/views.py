@@ -239,16 +239,17 @@ class ApiResource:
                     raise ValueError(f"invalid search key: {key}")
                 if data_type is not dict:
                     # We have to define this as dict in our VALID_SEARCH_FIELDS
-                    raise ValueError(f"(internal error)")
+                    raise ValueError(f"wrong type for hierarchical search parameters: "
+                                     f"{data_type}")
 
                 # TinyDB syntax is odd for those keys: foo.bar.baz
                 #     where('foo')['bar']['baz']
-                # So we are assembling this construct her.
+                # So we are assembling this construct here.
                 where_key = where(top_level)
                 for next_level_key in search_hierarchy[1:]:
                     where_key = where_key[next_level_key]
             else:
-                # Normal key, not-hierarchical, direcly present in VALID_SEARCH_FIELDS
+                # Normal key, not-hierarchical, directly present in VALID_SEARCH_FIELDS
                 # VALID_SEARCH_FIELDS is defined in child classes, therefore ignore the pylint
                 # warning here.
                 data_type = self.VALID_SEARCH_FIELDS.get(key)   # pylint: disable=no-member

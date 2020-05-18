@@ -118,7 +118,7 @@ Search queries are supported on the following resources:
 * Customer-User lists (the users associated with a customer)
 * User-Customer lists (the customers that a user is associated with)
 * Customer-Ticket lists (the tickets belonging to a customer)
-* User-Ticket lists (the tickets creatd by a user)
+* User-Ticket lists (the tickets created by a user)
 
 
 ### Main concepts
