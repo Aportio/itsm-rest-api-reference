@@ -115,10 +115,10 @@ Search queries are supported on the following resources:
 * Users
 * Customers
 * Tickets
-* Customer-User lists (the users of a customer)
-* User-Customer lists (the customers of a user)
-* Customer-Ticket lists (the tickets of a customer)
-* User-Ticket lists (the tickets of a user)
+* Customer-User lists (the users associated with a customer)
+* User-Customer lists (the customers that a user is associated with)
+* Customer-Ticket lists (the tickets belonging to a customer)
+* User-Ticket lists (the tickets creatd by a user)
 
 
 ### Main concepts
@@ -138,7 +138,10 @@ to be supplied. For example, `_links` or `_embedded`. Likewise, the `id` field s
 part of request body.
 * A successful `POST` request returns `201 Created` with the location/URL of the new resource
 in the `Location:` HTTP header of the response. For the caller's convenience a full
-representation of the new resource is returned in the response body.
+representation of the new resource may (!) be returned in the response body. The caller should
+not rely on that, though: The server may decide not to send the full resource, or may only
+send a summarized version, for example in case the response is too big. In general it is up to
+the server whether to include a resource representation and in what form.
 * A successful `PUT` request returns `200 Ok`.
 * When creating a new ticket, the `aportio_id` is stored. This is a unique ID created by
 Aportio, before attempting to create the ticket via the API. In a real-world implementation,
@@ -150,6 +153,9 @@ the entire representation of the referenced resource. However, each embedded res
 has a `_links` section, with a link to itself (look for `self`). This gives the URL of the
 full resource, which can be accessed in case the summary did not contain all the necessary
 information.
+* Users and customers are associated with each other in a separate record. This means that a
+single user may be associated with multiple customers.
+
 
 ## Current limitations / TODO
 
