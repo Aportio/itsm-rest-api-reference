@@ -323,7 +323,7 @@ class ApiResource:
         self.is_html = False  # pylint: disable=attribute-defined-outside-init
 
         try:
-            # Get on individual resources doesn't support search. The 'make_search_query'
+            # GET on individual resources doesn't support search. The 'make_search_query'
             # function correctly raises an error if it's called on resources that don't
             # support search. Therefore, we just call it here for that error side effect.
             _ = self.make_search_query(flask.request.args)
@@ -461,7 +461,7 @@ class ApiResourceList(ApiResource):
             new_url         = self.SINGLE_RESOURCE_CLASS.get_self_url(new_id)
             new_obj         = self.SINGLE_RESOURCE_CLASS()
             new_obj.is_html = self.is_html
-            # Tightly cooperaing classes, we will allow the protected access
+            # Tightly cooperating classes, we will allow the protected access
             new_obj_data    = new_obj._get(new_id)  # pylint: disable=protected-access
             resp            = flask.make_response(new_obj_data, 201)
             resp.headers.extend({"Location" : new_url})
@@ -697,7 +697,7 @@ class CustomerList(flask_restful.Resource, ApiResourceList, _CustomerDataEmbedde
                 "customers" : self.embed_customer_data_in_result(cust_data)
             },
             "_links"        : self.make_links({
-                                  "self" :         CustomerList.get_self_url(),
+                                  "self"         : CustomerList.get_self_url(),
                                   "contained_in" : Root.get_self_url(),
                               })
         }
@@ -744,7 +744,7 @@ class TicketList(flask_restful.Resource, ApiResourceList, _TicketDataEmbedder):
                 "tickets" : self.embed_ticket_data_in_result(ticket_data)
             },
             "_links" : self.make_links({
-                           "self" :         TicketList.get_self_url(),
+                           "self"         : TicketList.get_self_url(),
                            "contained_in" : Root.get_self_url()
                        })
         }
@@ -923,10 +923,10 @@ class User(flask_restful.Resource, ApiResource):
         }
         res.update(user)
         res['_links'] = self.make_links({
-                            "self" :         User.get_self_url(user.doc_id),
+                            "self"         : User.get_self_url(user.doc_id),
                             "contained_in" : UserList.get_self_url(),
-                            "customers" :    UserCustomerList.get_self_url(user.doc_id),
-                            "tickets" :      UserTicketList.get_self_url(user.doc_id)
+                            "customers"    : UserCustomerList.get_self_url(user.doc_id),
+                            "tickets"      : UserTicketList.get_self_url(user.doc_id)
                         })
         return res
 
@@ -943,7 +943,7 @@ class User(flask_restful.Resource, ApiResource):
         else:
             user = None
 
-        # Create a custom validator to successully validate the emails in the context of this
+        # Create a custom validator to successfully validate the emails in the context of this
         # user, so that we can allow an update to the specified user with existing emails, but
         # disallow it if some other user has the specified emails. This function captures the
         # current user ID as it is a closure.
@@ -1224,10 +1224,12 @@ class Ticket(flask_restful.Resource, ApiResource, _CommentDataEmbedder):
                                       ("short_title", validate_short_title),
                                       ("user_id", User.exists),
                                       ("status", Ticket.valid_status),
-                                      ("classification", Ticket.valid_classification)],
+                                      ("classification", Ticket.valid_classification),
+                                      ("long_text", validate_long_text)
+                                  ],
                                   optional_keys = [
-                                      ("long_text", validate_long_text),
-                                      ("custom_fields", dict)],
+                                      ("custom_fields", dict)
+                                  ],
                                   obj=ticket)
         # Now check whether this user is even associated with that customer
         cust_id    = data['customer_id']
@@ -1421,8 +1423,10 @@ class CustomerUserAssociation(flask_restful.Resource, ApiResource,
             "id" : association.doc_id
         }
         res.update(association)
+
         cust_data = [DB_CUSTOMER_TABLE.get(doc_id=association['customer_id'])]
         user_data = [DB_USER_TABLE.get(doc_id=association['user_id'])]
+
         res['_embedded'] = {
             "user"     : self.embed_user_data_in_result(user_data)[0],
             "customer" : self.embed_customer_data_in_result(cust_data)[0]
@@ -1574,7 +1578,7 @@ class CustomerTicketList(flask_restful.Resource, ApiResourceList, _TicketDataEmb
                 "tickets" : self.embed_ticket_data_in_result(ticket_data)
             },
             "_links" : self.make_links({
-                           "self" :         CustomerTicketList.get_self_url(customer_id),
+                           "self"         : CustomerTicketList.get_self_url(customer_id),
                            "contained_in" : Customer.get_self_url(customer_id)
                        })
         }
@@ -1614,7 +1618,7 @@ class UserTicketList(flask_restful.Resource, ApiResourceList, _TicketDataEmbedde
                 "tickets" : self.embed_ticket_data_in_result(ticket_data)
             },
             "_links" : self.make_links({
-                           "self" :         UserTicketList.get_self_url(user_id),
+                           "self"         : UserTicketList.get_self_url(user_id),
                            "contained_in" : User.get_self_url(user_id)
                        })
         }

@@ -532,6 +532,7 @@ def test_create_edit_ticket(client):
         "customer_id"    : 1,
         "aportio_id"     : "12233",
         "short_title"    : "Laptop is broken",
+        "long_text"      : "It doesn't start up anymore.",
         "status"         : "OPEN",
         "classification" : {"l1" : "service-request"}
     }
@@ -573,6 +574,7 @@ def test_create_edit_ticket(client):
                          "customer_id" : 1,
                          "aportio_id" : "12233",
                          "short_title" : "Laptop is broken",
+                         "long_text" : "It doesn't start up anymore.",
                          "status" : "OPEN",
                          "classification" : {"l1" : "service-request"}
                      }))
@@ -628,6 +630,7 @@ def test_create_edit_ticket(client):
         "customer_id"    : 1,
         "aportio_id"     : "12233",
         "short_title"    : "Laptop is broken",
+        "long_text"      : "It doesn't start up anymore.",
         "status"         : "CLOSED",
         "classification" : {"l1" : "service-request", "l2" : "foo"}
     }
