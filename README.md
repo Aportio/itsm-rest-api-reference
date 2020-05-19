@@ -86,7 +86,7 @@ that a user may be associated with multiple customers.
 
 ### Search queries
 
-*(please review the notes at the end of this chapter for real-world implementation considerations)*
+*_(please review the notes at the end of this chapter for real-world implementation considerations)_*
 
 A number of collection resources support queries via search parameters in the URL. Various
 fields of the resource can be specified in the URL, for example:
@@ -122,7 +122,7 @@ Search queries are supported on the following resources:
 * Customer-Ticket lists (the tickets belonging to a customer)
 * User-Ticket lists (the tickets created by a user)
 
-*Implementation of search/query features for a real-world ITSM system*
+*_Implementation of search/query features for a real-world ITSM system_*
 
 The query API mimics a database query. However, it is understood that many ITSMs do not
 provide a comparable functionality. The ability to search for different entities may not be
