@@ -128,7 +128,7 @@ The query API mimics a database query. However, it is understood that many ITSMs
 provide a comparable functionality. The ability to search for different entities may not be
 unified, different API calls may be needed, query terms may not be combinable, etc.
 
-Therefore, during a real-world implementation task, the system should look for specific
+Therefore, in a real-world implementation task the system should look for specific
 queries and translate them into whichever API calls are necessary. A full implementation of
 the capabilities described above (AND/OR across multiple fields) is not necessary.
 
@@ -136,7 +136,6 @@ However, please note that the following queries need to be recognized and suppor
 real-world implementation, by whichever means necessary:
 
     /customers/<customer-id>/users?email=<user-email>
-    /customers/<customer-id>/tickets?user_id=<user-id>
     /customers/<customer-id>/tickets?user_id=<user-id>
     /customers/<customer-id>/tickets?user_id=<user-id>&status=<status>
 
