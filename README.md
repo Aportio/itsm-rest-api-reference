@@ -1,15 +1,43 @@
 # Aportio ITSM-backend REST-API reference implementation
 
 This is a simple reference implementation for a RESTful ITSM backend, which implements
-the Aportio ITSM REST API. It allows simple operations to read, create or update users,
-customers, tickets and comments. Running and exploring the server will provide a good feel and
-documentation of what is expected of any server-side implementation of the API.
+the Aportio ITSM REST API. By providing a proxy to map from these APIs to the APIs of
+their ITSM system, developers can incorporate InboxAgent's AI-powered, advanced email
+parsing and classification features into their own applications and deliver more value
+to their customers.
 
-Certain implementation choices made in this reference implementation are of no consequence to
-anyone attempting a real-world implementation in order to front-end an ITSM backend API. Such
-an implementor is encouraged to look at the functionality of the API, not how it is
-implemented here. Specifically, the choice of database backend, support for a human browseable
-API, etc., can all be ignored.
+This reference implementation provides simple operations to read, create or update users,
+customers, tickets and comments. Running and exploring the server will offer a good feel
+as well as live documentation of what is expected of any server-side implementation of
+the API.
+
+## The basic concept
+
+[Aportio](http://aportio.com) provides a hosted service to automatically ingest, parse,
+clean, de-clutter and classify incoming emails and recognize ongoing email conversations.
+It then creates or updates tickets in our customers' ITSM systems. It directly integrates
+with some common ITSM systems in the market. In addition to those ITSM-specific APIs,
+Aportio supports a powerful generic RESTful API, which we have defined.
+
+If you are currently using an ITSM system which Aportio does not yet support directly,
+or if you have a custom ITSM system, then an adaptor or proxy needs to be provided
+between Aportio and the ITSM system. The proxy needs to implement this server-side
+RESTful API to allow Aportio to interact with it.
+
+The following diagram illustrates the architecture:
+
+![Aportio-ITSM-proxy-architecture](/media/architecture.png?raw=true "Architecture")
+
+The proxy can be hosted on premises, or in the cloud, as long as cloud-hosted Aportio can
+access the RESTful API implemented by the proxy.
+
+## Implementation choices
+
+For the reference implementation in this repository certain implementation choices were made
+that are of no consequence to anyone attempting a real-world implementation. Such an
+implementor is encouraged to look at the functionality of the API, not how it is implemented
+here. Specifically, the choice of database backend, support for a human browseable API, etc.,
+can all be ignored.
 
 ## Starting the server
 
@@ -67,8 +95,8 @@ unit test run.
 ## Exploring the server's RESTful API
 
 The API is RESTful and utilizes JSON for request bodies and responses. For your convenience,
-it recognizes when it is access via a web browser and displays the data nicely formatted on a
-web page, makes links clickable and also displays useful documentation about each resource.
+it recognizes when it is accessed via a web browser and displays the data nicely formatted on
+a web page, makes links clickable and also displays useful documentation about each resource.
 
 This browser-based exploration of the API is useful, but it is only limited to GET requests.
 Any POST requests (to create resources) or PUT requests (to update resources) need to be
