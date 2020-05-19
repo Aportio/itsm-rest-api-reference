@@ -1,0 +1,160 @@
+{
+    "_default": {},
+    "users": {
+        "1": {
+            "email": [
+                "some@user.com"
+            ]
+        },
+        "2": {
+            "email": [
+                "another@user.com",
+                "with-multiple@emails.com"
+            ],
+            "custom_fields": {
+                "mobile" : "412-333-4444",
+                "address": {
+                    "street" : "456 Elm Street",
+                    "city" : "Littleville"
+                }
+            }
+        },
+        "3": {
+            "email": [
+                "foo@foobar.com"
+            ],
+            "custom_fields": {
+                "fullname": "Foo Bar"
+            }
+        },
+        "4": {
+            "email": [
+                "someone@somewhere.com"
+            ],
+            "custom_fields": {
+                "fullname": "Some One",
+                "dob": "1970-01-01",
+                "phone": [
+                    "440-333-2222",
+                    "303-111-2222"
+                ]
+            }
+        }
+    },
+    "customers": {
+        "1": {
+            "name": "Foo Company",
+            "parent_id": 3
+        },
+        "2": {
+            "name": "Bar Company",
+            "parent_id": 3,
+            "custom_fields": {
+                "phone": "777-321-0987"
+            }
+        },
+        "3": {
+            "name": "Foobar Company",
+            "custom_fields": {
+                "address": "123 Foo Street, Bar Town 1234"
+            }
+        }
+    },
+    "user_customer_rels": {
+        "1": {
+            "user_id": 1,
+            "customer_id": 1
+        },
+        "2": {
+            "user_id": 1,
+            "customer_id": 2
+        },
+        "3": {
+            "user_id": 1,
+            "customer_id": 3
+        },
+        "4": {
+            "user_id": 2,
+            "customer_id": 2
+        },
+        "5": {
+            "user_id": 3,
+            "customer_id": 1
+        },
+        "6": {
+            "user_id": 3,
+            "customer_id": 3
+        }
+    },
+    "tickets": {
+        "1": {
+            "aportio_id": "1111",
+            "customer_id": 1,
+            "short_title": "Broken laptop",
+            "long_text": "My laptop is broken. It won't boot anymore. Need help.",
+            "user_id": 1,
+            "_created": "2020-04-12T14:39:+13:00",
+            "status": "OPEN",
+            "classification": {
+                "l1": "incident",
+                "l2": "hardware"
+            },
+            "custom_fields": {
+                "department": "marketing"
+            }
+        },
+        "2": {
+            "aportio_id": "2222",
+            "customer_id": 2,
+            "short_title": "Need a new license for Office",
+            "long_text": "My Office license is expired, please give me a new one.",
+            "user_id": 2,
+            "_created": "2020-04-12T14:39:+13:00",
+            "_updated": "2020-04-12T14:39:+13:00",
+            "status": "CLOSED",
+            "classification": {
+                "l1": "service-request"
+            }
+        },
+        "3": {
+            "aportio_id": "4321",
+            "customer_id": 1,
+            "short_title": "This is a test",
+            "long_text": "This is a test",
+            "user_id": 3,
+            "status": "OPEN",
+            "classification": {},
+            "_created": "2020-05-13T21:32:07.199672",
+            "_updated": "2020-05-13T21:32:07.199672"
+        },
+        "4": {
+            "aportio_id": "1239",
+            "customer_id": 1,
+            "short_title": "This is a test",
+            "long_text": "This is a test",
+            "user_id": 4,
+            "status": "OPEN",
+            "classification": {},
+            "_created": "2020-05-14T07:52:35.192934",
+            "_updated": "2020-05-14T07:52:35.192934"
+        }
+    },
+    "comments": {
+        "1": {
+            "user_id": 2,
+            "ticket_id": 1,
+            "text": "Has there been a follow up?",
+            "type": "WORKNOTE",
+            "_created": "2020-05-14T14:09:25.431621",
+            "_updated": "2020-05-14T14:09:25.431621"
+        },
+        "2": {
+            "user_id": 1,
+            "ticket_id": 1,
+            "text": "Can I please have an update on this?",
+            "type": "COMMENT",
+            "_created": "2020-05-14T14:09:26.813168",
+            "_updated": "2020-05-14T14:09:26.813168"
+        }
+    }
+}

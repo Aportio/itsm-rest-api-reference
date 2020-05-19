@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+    <body>
+        <a href="/">[root]</a> &nbsp; {% if explanation %}<a href="javascript:showHideExplanation();">[show/hide explanation]</a>{% endif %}
+        <h3>Resource: {{ title }}</h3>
+        {% if explanation %}
+        <p id="explanation" style="display:none;max-width: 800px;">
+        {{ explanation|safe }}
+        </p>
+        {% endif %}
+        <hr>
+        <pre style="border:1px dashed #aaa;padding:1em;background:#eee">
+{{ resource|safe }}
+        </pre>
+    </body>
+
+<script type='text/javascript'>
+function showHideExplanation() {
+  var x = document.getElementById("explanation");
+  if (x.style.display === "none") {
+    x.style.display = "block";
+  } else {
+    x.style.display = "none";
+  }
+}
+</script>
+
+</html>
