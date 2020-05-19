@@ -86,6 +86,8 @@ that a user may be associated with multiple customers.
 
 ### Search queries
 
+*(please review the notes at the end of this chapter for real-world implementation considerations)*
+
 A number of collection resources support queries via search parameters in the URL. Various
 fields of the resource can be specified in the URL, for example:
 
@@ -120,6 +122,23 @@ Search queries are supported on the following resources:
 * Customer-Ticket lists (the tickets belonging to a customer)
 * User-Ticket lists (the tickets created by a user)
 
+*Implementation of search/query features for a real-world ITSM system*
+
+The query API mimics a database query. However, it is understood that many ITSMs do not
+provide a comparable functionality. The ability to search for different entities may not be
+unified, different API calls may be needed, query terms may not be combinable, etc.
+
+Therefore, during a real-world implementation task, the system should look for specific
+queries and translate them into whichever API calls are necessary. A full implementation of
+the capabilities described above (AND/OR across multiple fields) is not necessary.
+
+However, please note that the following queries need to be recognized and supported by a
+real-world implementation, by whichever means necessary:
+
+    /customers/<customer-id>/users?email=<user-email>
+    /customers/<customer-id>/tickets?user_id=<user-id>
+    /customers/<customer-id>/tickets?user_id=<user-id>
+    /customers/<customer-id>/tickets?user_id=<user-id>&status=<status>
 
 ### Main concepts
 
@@ -155,6 +174,11 @@ full resource, which can be accessed in case the summary did not contain all the
 information.
 * Users and customers are associated with each other in a separate record. This means that a
 single user may be associated with multiple customers.
+* The resource representation generally only contain a small number of top-level attributes.
+For example, a Customer resource only consists of a `name` and a `parent_id` (to model
+hierarchical relationships between customers). Likewise, the only fixed attribute of a User
+resource is the `email` list of addresses. Any other attribute that might be useful needs to
+be mapped into the optional `custom_fields` dictionary that can be part of those resources.
 
 
 ## Current limitations / TODO
