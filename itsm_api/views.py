@@ -1458,7 +1458,7 @@ class UserCustomerList(flask_restful.Resource, ApiResourceList, _CustomerDataEmb
 
     """
 
-    URL                 = User.URL + "/customers/"
+    URL                 = User.URL + "/customers"
     VALID_SEARCH_FIELDS = CustomerList.VALID_SEARCH_FIELDS
 
     def _get(self, user_id, query=None):
@@ -1509,7 +1509,7 @@ class CustomerUserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedde
 
     """
 
-    URL                 = Customer.URL + "/users/"
+    URL                 = Customer.URL + "/users"
     VALID_SEARCH_FIELDS = UserList.VALID_SEARCH_FIELDS
 
     def _get(self, customer_id, query=None):
