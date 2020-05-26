@@ -161,7 +161,7 @@ def test_create_edit_user(client):
     assert user_data['_links'] == {
         'self': {'href': '/users/5'},
         'contained_in': {'href': '/users'},
-        'customers': {'href': '/users/5/customers/'},
+        'customers': {'href': '/users/5/customers'},
         'tickets': {'href': '/users/5/tickets'}
     }
 
@@ -396,7 +396,7 @@ def test_customer_user_list(client):
         '_links': {
             'self': {'href': '/customers/1'},
             'contained_in': {'href': '/customers'},
-            'users': {'href': '/customers/1/users/'},
+            'users': {'href': '/customers/1/users'},
             'tickets': {'href': '/customers/1/tickets'},
             'parent': {'href': '/customers/3'}
         }
@@ -424,7 +424,7 @@ def test_customer_user_list(client):
             ]
         },
         '_links': {
-            'self': {'href': '/customers/1/users/'},
+            'self': {'href': '/customers/1/users'},
             'contained_in': {'href': '/customers/1'}
         }
     }
@@ -485,7 +485,7 @@ def test_user_customer_list(client):
             ],
         },
         '_links': {
-            'self': {'href': '/users/1/customers/'},
+            'self': {'href': '/users/1/customers'},
             'contained_in': {'href': '/users/1'}
         }
     }
