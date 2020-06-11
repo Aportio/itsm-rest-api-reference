@@ -6,10 +6,12 @@ flask_restful.
 
 """
 
+import base64
 import datetime
 import flask
 import flask_restful
 import json
+import os
 
 from flask_accept         import accept
 from tinydb               import TinyDB, Query, where
@@ -41,6 +43,7 @@ def init_db():
     global DB_USER_CUSTOMER_RELS_TABLE  # pylint: disable=global-variable-undefined
     global DB_TICKET_TABLE              # pylint: disable=global-variable-undefined
     global DB_COMMENT_TABLE             # pylint: disable=global-variable-undefined
+    global DB_ATTACHMENT_TABLE          # pylint: disable=global-variable-undefined
 
     db = TinyDB(app.config['DB_NAME'])
 
@@ -116,7 +119,8 @@ def _dict_sanity_check(data, mandatory_keys, optional_keys, obj=None):
     now_time_string = datetime.datetime.now().isoformat()
     if obj is None:
         res['_created'] = now_time_string
-    res['_updated'] = now_time_string
+    else:
+        res['_updated'] = now_time_string
     return res
 
 
@@ -459,7 +463,7 @@ class ApiResourceList(ApiResource):
             data = flask.request.json
             if not data:
                 raise Exception("expected request data")
-            data, _ = self.SINGLE_RESOURCE_CLASS.sanity_check(data)
+            data, _         = self.SINGLE_RESOURCE_CLASS.sanity_check(data)
             new_id          = self._post(data)  # pylint: disable=no-member
             new_url         = self.SINGLE_RESOURCE_CLASS.get_self_url(new_id)
             new_obj         = self.SINGLE_RESOURCE_CLASS()
@@ -816,8 +820,8 @@ class AttachmentList(flask_restful.Resource, ApiResourceList):
                 'self' : Attachment.get_self_url(attachment.doc_id)
             })
         res = {
-            "total_queried" : len(attachment),
-            "attachment"    : attachment,
+            "total_queried" : len(attachments),
+            "attachments"   : attachments,
             "_links" : self.make_links({
                            "self"         : AttachmentList.get_self_url(),
                            "contained_in" : Root.get_self_url()
@@ -830,6 +834,29 @@ class AttachmentList(flask_restful.Resource, ApiResourceList):
         Process the addition of an attachment to a ticket.
         """
         new_attachment_id = DB_ATTACHMENT_TABLE.insert(data)
+        # Try to decode and save the attachment data to server-side storage.
+        try:
+            # Get the filename of the attachment and append it to the attachment ID to create
+            # a unique filename for storage. The unique filename will have a format like:
+            # <id>__<name>
+            # example: 1__errors.log
+            # The filename is expected to exist in the data because it is a mandatory key.
+            filename        = data['filename']
+            unique_filename = f"{new_attachment_id}__{filename}"
+
+            # Decode attachment data
+            decoded_attachment_data = base64.urlsafe_b64decode(data['attachment_data'])
+
+            # Create a directory to save the attachment to if it doesn't exist and then save
+            # the attachment file.
+            dir_path  = os.path.join(_ATTACHMENT_FOLDER, data['ticket_id'])
+            file_path = os.path.join(dir_path, unique_filename)
+            os.makedirs(dir_path, exist_ok=True)
+            with open(file_path, "wb") as attachment_file:
+                attachment_file.write(decoded_attachment_data)
+        except Exception as e:
+            # Do stuff here if the saving fails
+            pass
         return new_attachment_id
 
 
@@ -1461,13 +1488,12 @@ class Comment(flask_restful.Resource, ApiResource,
         return Comment.get_self_url(comment_id=comment_id)
 
 
-class Attachment(flask_restful.Resource, ApiResource,
-                 _TicketDataEmbedder, _CustomerDataEmbedder):
+class Attachment(flask_restful.Resource, ApiResource, _TicketDataEmbedder):
     """
-    A resource to represent a comment/worknote.
+    A resource to represent an attachment for a ticket.
     """
 
-    URL           = AttachmentList.URL + "/<attachment_id>"
+    URL     = AttachmentList.URL + "/<attachment_id>"
 
     @classmethod
     def exists(cls, attachment_id):
@@ -1482,19 +1508,22 @@ class Attachment(flask_restful.Resource, ApiResource,
 
     def _get(self, attachment_id):
         """
-        Return information about a attachment comment.
+        Return information about an attachment.
         """
         attachment = DB_ATTACHMENT_TABLE.get(doc_id=int(attachment_id))
+        print(attachment)
         if not attachment:
             flask_restful.abort(404, message=f"attachment '{attachment_id}' not found!")
         ticket_data   = DB_TICKET_TABLE.get(doc_id=attachment['ticket_id'])
-        customer_data = DB_CUSTOMER_TABLE.get(doc_id=attachment_data['customer_id'])
-        res = dict(comment)
+        # customer_data = DB_CUSTOMER_TABLE.get(doc_id=attachment['customer_id'])
+        # user_data     = DB_USER_TABLE.get(doc_id=attachment['user_id'])
+        res = dict(attachment)
         res.update({
             "id" : attachment.doc_id,
             "_embedded" : {
-                "ticket"   : self.embed_ticket_data_in_result([ticket_data])[0],
-                "customer" : self.embed_customer_data_in_result([customer_data])[0]
+                "ticket"   : self.embed_ticket_data_in_result([ticket_data])[0]
+                # "customer" : self.embed_customer_data_in_result([customer_data])[0],
+                # "user"     : self.embed_user_data_in_result([user_data])[0]
             },
             '_links' : self.make_links({
                            "self" :         Attachment.get_self_url(attachment.doc_id),
@@ -1503,79 +1532,61 @@ class Attachment(flask_restful.Resource, ApiResource,
         })
         return res
 
-
-Ignore sanity check and put for a moment...
-
-
     @classmethod
     def sanity_check(cls, data, attachment_id=None):
         """
         Perform a sanity check for POST/PUT of attachment data.
         """
-        if comment_id is not None:
-            comment_id = int(comment_id)
-            comment    = DB_COMMENT_TABLE.get(doc_id=comment_id)
-            if not comment:
-                flask_restful.abort(404, message=f"comment '{comment_id}' not found!")
+        if attachment_id is not None:
+            attachment_id = int(attachment_id)
+            attachment    = DB_ATTACHMENT_TABLE.get(doc_id=attachment_id)
+            if not attachment:
+                flask_restful.abort(404, message=f"attachment '{attachment_id}' not found!")
         else:
-            comment = None
+            attachment = None
 
-        def validate_str(text):
-            return _str_len_check(text, cls.MIN_LEN, cls.MAX_LEN)
+        def field_exists(field):
+            if not field:
+                raise ValueError(f"All fields must exist in the request body")
 
-        def validate_type(text):
-            text = text.upper()
-            if text not in cls.KNOWN_TYPES:
-                raise ValueError(f"unknown comment type '{text}'")
-            return text
-
+        # Some validator methods are set to lambdas that just return their value because they
+        # are mandatory fields but they don't currently need any validation.
         data = _dict_sanity_check(data,
                                   mandatory_keys = [
-                                      ("user_id", User.exists),
                                       ("ticket_id", Ticket.exists),
-                                      ("text", validate_str),
-                                      ("type", validate_type)],
+                                      ("filename", lambda x: x),
+                                      ("content_type", lambda x: x),
+                                      ("attachment_data", lambda x: x)],
                                   optional_keys = [],
-                                  obj=comment)
-        # Check that the user is associated with the customer of the ticket.
-        ticket     = DB_TICKET_TABLE.get(doc_id=data['ticket_id'])
-        cust_id    = ticket['customer_id']
-        user_id    = data['user_id']
-        assoc_q    = Query()
-        assoc_data = DB_USER_CUSTOMER_RELS_TABLE.search((assoc_q.customer_id == cust_id) &
-                                                        (assoc_q.user_id     == user_id))
-        if not assoc_data:
-            flask_restful.abort(400, message=f"Bad Request - user '{user_id}' is not "
-                                             f"associated with ticket customer '{cust_id}'")
-        if comment_id is None:
-            data['_created'] = datetime.datetime.now().isoformat()
-        else:
-            data['_updated'] = datetime.datetime.now().isoformat()
+                                  obj=attachment)
 
-        return data, comment
+        return data, attachment
 
-    def _put(self, data, comment_id, obj):
-        """
-        Process a PUT update to an existing comment.
-        """
-        comment    = obj
-        comment_id = int(comment_id)
-
-        # Ensure that user and customer have not been changed (they can only be written once)
-        if data['user_id'] != comment['user_id']:
-            flask_restful.abort(400, message=f"Bad Request - cannot change user ID in "
-                                             f"comment '{comment_id}'")
-        if data['ticket_id'] != comment['ticket_id']:
-            flask_restful.abort(400, message=f"Bad Request - cannot change ticket ID in "
-                                             f"comment '{comment_id}'")
-
-        # Remove keys that are not in the new resource
-        keys_to_remove = [stored_key for stored_key in comment.keys()
-                          if stored_key not in data]
-        for old_key in keys_to_remove:
-            DB_COMMENT_TABLE.update(delete(old_key), doc_ids=[comment_id])
-        DB_COMMENT_TABLE.update(data, doc_ids=[comment_id])
-        return Comment.get_self_url(comment_id=comment_id)
+    # Note: we don't know yet if it is beneficial to support PUT requests for attachments, so
+    # the PUT method is commented out for now.
+    #
+    # def _put(self, data, comment_id, obj):
+    #     """
+    #     Process a PUT update to an existing comment.
+    #     """
+    #     comment    = obj
+    #     comment_id = int(comment_id)
+    #
+    #     # Ensure that user and customer have not been changed (they can only be written once)
+    #     if data['user_id'] != comment['user_id']:
+    #         flask_restful.abort(400, message=f"Bad Request - cannot change user ID in "
+    #                                          f"comment '{comment_id}'")
+    #     if data['ticket_id'] != comment['ticket_id']:
+    #         flask_restful.abort(400, message=f"Bad Request - cannot change ticket ID in "
+    #                                          f"comment '{comment_id}'")
+    #
+    #     # Remove keys that are not in the new resource
+    #     keys_to_remove = [stored_key for stored_key in comment.keys()
+    #                       if stored_key not in data]
+    #     for old_key in keys_to_remove:
+    #         DB_COMMENT_TABLE.update(delete(old_key), doc_ids=[comment_id])
+    #     DB_COMMENT_TABLE.update(data, doc_ids=[comment_id])
+    #     return Comment.get_self_url(comment_id=comment_id)
 
 
 class CustomerUserAssociation(flask_restful.Resource, ApiResource,
@@ -1824,6 +1835,7 @@ CustomerList.SINGLE_RESOURCE_CLASS                = Customer
 CustomerUserAssociationList.SINGLE_RESOURCE_CLASS = CustomerUserAssociation
 TicketList.SINGLE_RESOURCE_CLASS                  = Ticket
 CommentList.SINGLE_RESOURCE_CLASS                 = Comment
+AttachmentList.SINGLE_RESOURCE_CLASS              = Attachment
 
 # ===================================================
 # Registering the resource classes with our Flask app
@@ -1832,5 +1844,6 @@ for resource_class in [Root,
                        UserList, User, UserCustomerList, UserTicketList,
                        Customer, CustomerList, CustomerUserList, CustomerTicketList,
                        CustomerUserAssociationList, CustomerUserAssociation,
-                       Ticket, TicketList, Comment, CommentList]:
+                       Ticket, TicketList, Comment, CommentList, AttachmentList,
+                       Attachment]:
     API.add_resource(resource_class, resource_class.URL)

@@ -156,5 +156,19 @@
             "_created": "2020-05-14T14:09:26.813168",
             "_updated": "2020-05-14T14:09:26.813168"
         }
+    },
+    "attachments": {
+        "1": {
+            "ticket_id": 1,
+            "name": "error_logs.txt",
+            "content_type": "text/plain",
+            "_created": "2020-05-14T14:09:25.431621"
+        },
+        "2": {
+            "ticket_id": 2,
+            "name": "my_screenshot.jpg",
+            "content_type": "image/jpeg",
+            "_created": "2020-05-14T14:09:26.813168"
+        }
     }
 }
