@@ -585,6 +585,7 @@ class Root(flask_restful.Resource, ApiResource):
                 "customers"                  : CustomerList.get_self_url(),
                 "tickets"                    : TicketList.get_self_url(),
                 "comments"                   : CommentList.get_self_url(),
+                "attachments"                : AttachmentList.get_self_url(),
                 "customer_user_associations" : CustomerUserAssociationList.get_self_url(),
             })
         }
@@ -838,26 +839,60 @@ class AttachmentList(flask_restful.Resource, ApiResourceList):
         try:
             # Get the filename of the attachment and append it to the attachment ID to create
             # a unique filename for storage. The unique filename will have a format like:
+            #
             # <id>__<name>
-            # example: 1__errors.log
+            #
+            # example:
+            # 1__errors.log
+            #
+            # Structure of saved attachments:
+            #
+            # attachment_storage/
+            #   <ticket_id>/
+            #     <unique_filename>
+            #
+            # Example:
+            #
+            # attachment_storage/
+            #   1/
+            #     1__errors.log
+            #   2/
+            #     2__some_image.jpg
+            #     3__some_doc.docx
+            #   3/
+            #     4__requirements.txt
+
             # The filename is expected to exist in the data because it is a mandatory key.
             filename        = data['filename']
             unique_filename = f"{new_attachment_id}__{filename}"
 
             # Decode attachment data
-            decoded_attachment_data = base64.urlsafe_b64decode(data['attachment_data'])
+            decoded_attachment_data = base64.b64decode(data['attachment_data'])
 
             # Create a directory to save the attachment to if it doesn't exist and then save
             # the attachment file.
-            dir_path  = os.path.join(_ATTACHMENT_FOLDER, data['ticket_id'])
-            file_path = os.path.join(dir_path, unique_filename)
+            dir_path     = os.path.join(_ATTACHMENT_FOLDER, str(data['ticket_id']))
+            path_to_file = os.path.join(dir_path, unique_filename)
             os.makedirs(dir_path, exist_ok=True)
-            with open(file_path, "wb") as attachment_file:
+            with open(path_to_file, "wb") as attachment_file:
                 attachment_file.write(decoded_attachment_data)
-        except Exception as e:
-            # Do stuff here if the saving fails
-            pass
-        return new_attachment_id
+        except OSError:
+            # Trying to save the decoded attachment file to disk went wrong. Rollback the
+            # database entry and return a 500 error.
+            # Note that since Python 3.3, IOError became an alias for OSError, hence OSError is
+            # the actual exception that will occur.
+            DB_ATTACHMENT_TABLE.remove(doc_ids=[new_attachment_id])
+            flask_restful.abort(500, message="Error occured while trying to save attachment "
+                                             "file data")
+        except Exception:
+            # Some error occured while trying to decode the attachment file data. Rollback the
+            # database entry and return a 500 error.
+            DB_ATTACHMENT_TABLE.remove(doc_ids=[new_attachment_id])
+            flask_restful.abort(500, message="Error occured while trying to decode "
+                                             "attachment file data")
+        else:
+            # Everything went fine. Return the new attachment ID.
+            return new_attachment_id
 
 
 class CustomerUserAssociationList(flask_restful.Resource, ApiResourceList):
@@ -1197,12 +1232,13 @@ class Ticket(flask_restful.Resource, ApiResource):
         res = []
         for attachment in attachment_data:
             d = {
-                "id"           : attachment.doc_id,
-                "content_type" : attachment['content_type'],
-                "name"         : attachment['name'],
-                "_created"     : attachment.get('_created', ''),
+                "id"              : attachment.doc_id,
+                "filename"        : attachment['filename'],
+                "content_type"    : attachment['content_type'],
+                "attachment_data" : attachment['attachment_data'],
+                "_created"        : attachment.get('_created', ''),
                 # pylint: disable=no-member
-                "_links"   : self.make_links(
+                "_links"          : self.make_links(
                                     {"self" : Attachment.get_self_url(attachment.doc_id)})
             }
             if "_updated" in attachment:
@@ -1511,7 +1547,6 @@ class Attachment(flask_restful.Resource, ApiResource, _TicketDataEmbedder):
         Return information about an attachment.
         """
         attachment = DB_ATTACHMENT_TABLE.get(doc_id=int(attachment_id))
-        print(attachment)
         if not attachment:
             flask_restful.abort(404, message=f"attachment '{attachment_id}' not found!")
         ticket_data   = DB_TICKET_TABLE.get(doc_id=attachment['ticket_id'])
