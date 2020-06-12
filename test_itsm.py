@@ -1,3 +1,4 @@
+import base64
 import flask
 import json
 import os
@@ -74,6 +75,7 @@ def test_root_resource(client):
             'customers': {'href': '/customers'},
             'tickets': {'href': '/tickets'},
             'comments': {'href': '/comments'},
+            'attachments': {'href': '/attachments'},
             'customer_user_associations': {'href': '/customer_user_associations'}
         }
     }
@@ -815,3 +817,75 @@ def test_create_comment(client):
 
     # Should be the same as what we got in our POST response
     assert post_response == comment
+
+
+def test_attachments_list(client):
+    # Get the url to the attachments list resource, then get the list of attachments that are
+    # currently stored in the database.
+    attachments_url = _get_root_links(client)['attachments']
+    attachments     = client.get(attachments_url, **JSON_HDRS_READ).get_json()
+
+    # The test jpeg image attachment's base64 encoding is quite large - so here we use the
+    # base64 library to create the encoding and store it in a variable instead of having the
+    # literal string in the assert data.
+    with open("test_data/mt-fuji.jpeg", "rb") as image_attachment:
+        encoded_image_attachment = base64.b64encode(image_attachment.read()).decode()
+
+    # Make sure that what we see is exactly what was stored in the database
+    assert attachments == {
+        "total_queried": 2,
+        "attachments": [
+            {
+                "ticket_id": 1,
+                "filename": "test.txt",
+                "content_type": "text/plain",
+                "attachment_data": "VGhpcyBpcyBhIHRlc3QgZmlsZSB0byBjaGVjayB0aGF0IHRoZSByZXN0IEFQSSB3b3Jrcwo=",
+                "_created": "2020-06-12T12:09:25.431621",
+                "_updated": "2020-06-12T12:09:25.431621",
+                "_links": {
+                    "self": {
+                        "href": "/attachments/1"
+                    }
+                }
+            },
+            {
+                "ticket_id": 2,
+                "filename": "mt-fuji.jpeg",
+                "content_type": "image/jpeg",
+                "attachment_data": f"{encoded_image_attachment}",
+                "_created": "2020-06-12T14:09:26.813168",
+                "_updated": "2020-06-12T14:09:26.813168",
+                "_links": {
+                    "self": {
+                        "href": "/attachments/2"
+                    }
+                }
+            }
+        ],
+        "_links": {
+            "self": {
+                "href": "/attachments"
+            },
+            "contained_in": {
+                "href": "/"
+            }
+        }
+    }
+
+
+def test_get_attachment(client):
+    # 1. get ticket url
+    ticket_url = _get_root_links(client)['tickets'] + "/1"
+    # 2. get ticket
+    ticket = client.get(ticket_url, **JSON_HDRS_READ).get_json()
+    # 3. get attachment url
+    # 4. get attachment
+    # assert stuff
+
+
+def test_embedded_attachments_in_ticket(client):
+    pass
+
+
+def test_post_attachment(client):
+    pass

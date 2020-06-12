@@ -119,8 +119,7 @@ def _dict_sanity_check(data, mandatory_keys, optional_keys, obj=None):
     now_time_string = datetime.datetime.now().isoformat()
     if obj is None:
         res['_created'] = now_time_string
-    else:
-        res['_updated'] = now_time_string
+    res['_updated'] = now_time_string
     return res
 
 
