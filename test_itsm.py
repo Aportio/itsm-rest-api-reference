@@ -452,8 +452,7 @@ def test_customer_ticket_list(client):
     }
     # Only compare the keys we defined in the should image. Don't bother about links and
     # created timestamps
-    assert set(should_ticket.items()).issubset(
-                    set([(k,v) for k,v in ticket.items() if k in should_ticket]))
+    assert should_ticket.items() <= ticket.items()
 
 
 def test_user_customer_list(client):
@@ -513,8 +512,7 @@ def test_user_ticket_list(client):
     }
     # Only compare the keys we defined in the should image. Don't bother about links and
     # created timestamps
-    assert set(should_ticket.items()).issubset(
-                    set([(k,v) for k,v in ticket.items() if k in should_ticket]))
+    assert should_ticket.items() <= ticket.items()
 
 
 def test_create_edit_ticket(client):
@@ -660,8 +658,7 @@ def test_embedded_comments(client):
     }
     # Only compare the keys we defined in the should image. Don't bother about links and
     # created timestamps, and even the embedded comments right now.
-    assert set(should_ticket.items()).issubset(
-                    set([(k,v) for k,v in ticket.items() if k in should_ticket]))
+    assert should_ticket.items() <= ticket.items()
     assert ticket['classification'] == {'l1': 'incident', 'l2': 'hardware'}
 
     # Now let's examine the embedded comments and worknotes
@@ -691,8 +688,7 @@ def test_read_comment(client):
         'text'      : 'Can I please have an update on this?',
         'type'      : 'COMMENT'
     }
-    assert set(should_comment.items()).issubset(
-                    set([(k,v) for k,v in comment.items() if k in should_comment]))
+    assert should_comment.items() <= comment.items()
     assert comment['_embedded']['ticket']['id'] == 1
     assert comment['_embedded']['user']['id'] == 1
     assert comment['_embedded']['customer']['id'] == 1
@@ -895,9 +891,9 @@ def test_get_attachment(client):
         "_updated"        : "2020-06-12T12:09:25.431621",
     }
 
-    # Check that the data from the attachment matches the dict with the "should" data
-    assert set(should_attachment.items()).issubset(
-                set([(k,v) for k,v in attachment.items() if k in should_attachment]))
+    # Check that all data from the "should" dictionary is the same inside the returned
+    # attachment data.
+    assert should_attachment.items() <= attachment.items()
     assert attachment['_embedded']['ticket']['id'] == 1
 
 
@@ -917,8 +913,7 @@ def test_embedded_attachments_in_ticket(client):
 
     # Only compare the keys we defined in the should image. Don't bother about links and
     # created timestamps, and even the embedded comments right now.
-    assert set(should_ticket.items()).issubset(
-                    set([(k,v) for k,v in ticket.items() if k in should_ticket]))
+    assert should_ticket.items() <= ticket.items()
     assert ticket['classification'] == {'l1': 'incident', 'l2': 'hardware'}
 
     # Now examine the embedded attachments
