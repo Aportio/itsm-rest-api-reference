@@ -999,7 +999,7 @@ def test_post_attachment(client):
     # under the correct ticket ID with the correct name
     ticket_id     = str(attachment_data['ticket_id'])
     attachment_id = str(attachment_data['id'])
-    path_to_attach_file = os.path.join(f"attachment_storage/{ticket_id}/"
+    path_to_attach_file = os.path.join("attachment_storage", f"ticket__{ticket_id}",
                                        f"{attachment_id}__text_to_post.txt")
     assert os.path.isfile(path_to_attach_file)
 

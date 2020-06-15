@@ -867,17 +867,20 @@ class AttachmentList(flask_restful.Resource, ApiResourceList):
         new_attachment_id = DB_ATTACHMENT_TABLE.insert(data)
 
         try:
+            # Decode the attachment data
+            decoded_attachment_data = base64.b64decode(attachment_data)
+
             # The filename is expected to exist in the data because it is a mandatory key.
             filename        = data['filename']
             unique_filename = f"{new_attachment_id}__{filename}"
 
-            # Decode the attachment data
-            decoded_attachment_data = base64.b64decode(attachment_data)
-
-            # Create a directory to save the attachment to if it doesn't exist and then save
-            # the attachment file.
-            dir_path     = os.path.join(_ATTACHMENT_FOLDER, str(data['ticket_id']))
+            # Create the paths to the directory and the attachment file
+            dir_path     = os.path.join(_ATTACHMENT_FOLDER,
+                                        f"ticket__{str(data['ticket_id'])}")
             path_to_file = os.path.join(dir_path, unique_filename)
+
+            # Make the directory for the attachment if it doesn't already exist, then save the
+            # attachment file.
             os.makedirs(dir_path, exist_ok=True)
             with open(path_to_file, "wb") as attachment_file:
                 attachment_file.write(decoded_attachment_data)
@@ -1556,7 +1559,8 @@ class Attachment(flask_restful.Resource, ApiResource, _TicketDataEmbedder):
         ticket_data = DB_TICKET_TABLE.get(doc_id=attachment['ticket_id'])
         res         = dict(attachment)
         # Load the attachment file as encoded base64 and update the response
-        path_to_file = os.path.join(_ATTACHMENT_FOLDER, str(attachment['ticket_id']),
+        path_to_file = os.path.join(_ATTACHMENT_FOLDER,
+                                    f"ticket__{str(attachment['ticket_id'])}",
                                     f"{str(attachment.doc_id)}__{attachment['filename']}")
         with open(path_to_file, "rb") as attachment_file:
             encoded_attachment = base64.b64encode(attachment_file.read()).decode()
