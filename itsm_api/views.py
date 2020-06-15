@@ -844,19 +844,21 @@ class AttachmentList(flask_restful.Resource, ApiResourceList):
         # The directory structure of saved attachment files looks like this:
         #
         # attachment_storage/
-        #   <ticket_id>/
-        #     <unique_filename>
+        #     ticket__<ticket_id>/
+        #         <unique_filename>
         #
         # For example:
         #
         # attachment_storage/
-        #   1/
-        #     1__errors.log
-        #   2/
-        #     2__some_image.jpg
-        #     3__some_doc.docx
-        #   3/
-        #     4__requirements.txt
+        #     ticket__1/
+        #         1__errors.log
+        #
+        #     ticket__2/
+        #         2__some_image.jpg
+        #         3__some_doc.docx
+        #
+        #     ticket__3/
+        #         4__requirements.txt
         #
         # Note here that the numbered directories are Ticket IDs, and the numbers prefixing
         # the file name are the attachment IDs.
