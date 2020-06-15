@@ -825,12 +825,6 @@ def test_attachments_list(client):
     attachments_url = _get_root_links(client)['attachments']
     attachments     = client.get(attachments_url, **JSON_HDRS_READ).get_json()
 
-    # The test jpeg image attachment's base64 encoding is quite large - so here we use the
-    # base64 library to create the encoding and store it in a variable instead of having the
-    # literal string in the assert data.
-    with open("test_data/mt-fuji.jpeg", "rb") as image_attachment:
-        encoded_image_attachment = base64.b64encode(image_attachment.read()).decode()
-
     # Make sure that what we see is exactly what was stored in the database
     assert attachments == {
         "total_queried": 2,
