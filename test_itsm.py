@@ -839,7 +839,6 @@ def test_attachments_list(client):
                 "ticket_id": 1,
                 "filename": "test.txt",
                 "content_type": "text/plain",
-                "attachment_data": "VGhpcyBpcyBhIHRlc3QgZmlsZSB0byBjaGVjayB0aGF0IHRoZSByZXN0IEFQSSB3b3Jrcwo=",
                 "_created": "2020-06-12T12:09:25.431621",
                 "_updated": "2020-06-12T12:09:25.431621",
                 "_links": {
@@ -852,7 +851,6 @@ def test_attachments_list(client):
                 "ticket_id": 2,
                 "filename": "mt-fuji.jpeg",
                 "content_type": "image/jpeg",
-                "attachment_data": f"{encoded_image_attachment}",
                 "_created": "2020-06-12T14:09:26.813168",
                 "_updated": "2020-06-12T14:09:26.813168",
                 "_links": {
@@ -935,8 +933,6 @@ def test_embedded_attachments_in_ticket(client):
 
     assert attachment['filename']        == "test.txt"
     assert attachment['content_type']    == "text/plain"
-    assert attachment['attachment_data'] == ("VGhpcyBpcyBhIHRlc3QgZmlsZSB0byBja"
-                                            "GVjayB0aGF0IHRoZSByZXN0IEFQSSB3b3Jrcwo=")
     assert attachment['_created']        == attachment['_updated']
 
 
@@ -989,7 +985,6 @@ def test_post_attachment(client):
     assert newest_attachment_entry['ticket_id'] == 1
     assert newest_attachment_entry['filename'] == "text_to_post.txt"
     assert newest_attachment_entry['content_type'] == "text/plain"
-    assert newest_attachment_entry['attachment_data'] == encoded_image_attachment
     assert newest_attachment_entry['_created'] == newest_attachment_entry['_updated']
     self_url = newest_attachment_entry['_links']['self']['href']
     assert self_url == "/attachments/3"
@@ -1000,11 +995,10 @@ def test_post_attachment(client):
     assert get_resp.is_json and get_resp.status_code == 200
 
     attachment_data = get_resp.get_json()
-    assert attachment_data['id'] == 3
     assert attachment_data['ticket_id'] == newest_attachment_entry['ticket_id']
     assert attachment_data['filename'] == newest_attachment_entry['filename']
     assert attachment_data['content_type'] == newest_attachment_entry['content_type']
-    assert attachment_data['attachment_data'] == newest_attachment_entry['attachment_data']
+    assert attachment_data['attachment_data'] == encoded_image_attachment
     assert attachment_data['_created'] == newest_attachment_entry['_created']
     assert attachment_data['_updated'] == newest_attachment_entry['_updated']
     assert attachment_data['_links'] == {
@@ -1021,9 +1015,10 @@ def test_post_attachment(client):
     assert os.path.isfile(path_to_attach_file)
 
     # Check that the contents of that file match the contents of the original file
-    with open("test_data/text_to_post.txt", "r") as original_file:
-        with open("attachment_storage/1/3__text_to_post.txt", "r") as posted_file:
+    original_file_path = os.path.join("test_data", "text_to_post.txt")
+    with open(original_file_path, "r") as original_file:
+        with open(path_to_attach_file, "r") as posted_file:
             assert posted_file.read() == original_file.read()
 
     # Remove the directory holding the attachment file that was created from this test
-    shutil.rmtree(os.path.join("attachment_storage", ticket_id))
+    os.remove(path_to_attach_file)

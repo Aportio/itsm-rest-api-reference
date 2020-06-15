@@ -833,6 +833,9 @@ class AttachmentList(flask_restful.Resource, ApiResourceList):
         """
         Process the addition of an attachment to a ticket.
         """
+        # We first need to get the base64 encoded attachment out of the data, so that the
+        # attachment file is not saved to disk twice (as a file and as a base64 string)
+        attachment_data = data.pop('attachment_data')
         new_attachment_id = DB_ATTACHMENT_TABLE.insert(data)
         # Try to decode and save the attachment data to server-side storage.
         try:
@@ -865,8 +868,8 @@ class AttachmentList(flask_restful.Resource, ApiResourceList):
             filename        = data['filename']
             unique_filename = f"{new_attachment_id}__{filename}"
 
-            # Decode attachment data
-            decoded_attachment_data = base64.b64decode(data['attachment_data'])
+            # Decode the attachment data
+            decoded_attachment_data = base64.b64decode(attachment_data)
 
             # Create a directory to save the attachment to if it doesn't exist and then save
             # the attachment file.
@@ -1234,7 +1237,6 @@ class Ticket(flask_restful.Resource, ApiResource):
                 "id"              : attachment.doc_id,
                 "filename"        : attachment['filename'],
                 "content_type"    : attachment['content_type'],
-                "attachment_data" : attachment['attachment_data'],
                 "_created"        : attachment.get('_created', ''),
                 # pylint: disable=no-member
                 "_links"          : self.make_links(
@@ -1549,15 +1551,18 @@ class Attachment(flask_restful.Resource, ApiResource, _TicketDataEmbedder):
         if not attachment:
             flask_restful.abort(404, message=f"attachment '{attachment_id}' not found!")
         ticket_data   = DB_TICKET_TABLE.get(doc_id=attachment['ticket_id'])
-        # customer_data = DB_CUSTOMER_TABLE.get(doc_id=attachment['customer_id'])
-        # user_data     = DB_USER_TABLE.get(doc_id=attachment['user_id'])
         res = dict(attachment)
+        # Load the attachment file as encoded base64 and update the response
+        path_to_attach_file = os.path.join(_ATTACHMENT_FOLDER, str(attachment['ticket_id']),
+                                        f"{str(attachment.doc_id)}__{attachment['filename']}")
+        with open(path_to_attach_file, "rb") as attachment_file:
+	    # Note that decode() changes the base64 into a string
+            encoded_attachment = base64.b64encode(attachment_file.read()).decode()
         res.update({
             "id" : attachment.doc_id,
+            "attachment_data": encoded_attachment,
             "_embedded" : {
                 "ticket"   : self.embed_ticket_data_in_result([ticket_data])[0]
-                # "customer" : self.embed_customer_data_in_result([customer_data])[0],
-                # "user"     : self.embed_user_data_in_result([user_data])[0]
             },
             '_links' : self.make_links({
                            "self" :         Attachment.get_self_url(attachment.doc_id),
