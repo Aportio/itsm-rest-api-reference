@@ -680,8 +680,8 @@ def test_read_comment(client):
     ticket_url  = _get_root_links(client)['tickets'] + "/1"
     ticket      = client.get(ticket_url, **JSON_HDRS_READ).get_json()
     comment_url = ticket['_embedded']['comments'][0]['_links']['self']['href']
+    comment     = client.get(comment_url, **JSON_HDRS_READ).get_json()
 
-    comment = client.get(comment_url, **JSON_HDRS_READ).get_json()
     should_comment = {
         'user_id'   : 1,
         'ticket_id' : 1,
@@ -940,10 +940,10 @@ def test_post_attachment(client):
 
     # Now try with all the mandatory keys, but for an attachment that doesn't exist
     post_resp = client.post(attachments_url, **JSON_HDRS_READWRITE,
-            data = json.dumps({"ticket_id"       : "999",
-                               "filename"        : "somefile.txt",
-                               "content_type"    : "text/plain",
-                               "attachment_data" : "Just gibberish"}))
+                            data=json.dumps({"ticket_id"       : "999",
+                                             "filename"        : "somefile.txt",
+                                             "content_type"    : "text/plain",
+                                             "attachment_data" : "Just gibberish"}))
 
     assert post_resp.is_json and post_resp.status_code == 400
     resp_message = post_resp.get_json()['message']
@@ -957,10 +957,10 @@ def test_post_attachment(client):
 
     # Post the data and check that it was created
     post_resp = client.post(attachments_url, **JSON_HDRS_READWRITE,
-            data = json.dumps({"ticket_id": "1",
-                               "filename": "text_to_post.txt",
-                               "content_type": "text/plain",
-                               "attachment_data": encoded_image_attachment}))
+                            data=json.dumps({"ticket_id": "1",
+                                             "filename": "text_to_post.txt",
+                                             "content_type": "text/plain",
+                                             "attachment_data": encoded_image_attachment}))
 
     assert post_resp.is_json and post_resp.status_code == 201
     assert post_resp.headers.get('location') == "http://localhost/attachments/3"
@@ -991,14 +991,14 @@ def test_post_attachment(client):
     assert attachment_data['_created'] == newest_attachment_entry['_created']
     assert attachment_data['_updated'] == newest_attachment_entry['_updated']
     assert attachment_data['_links'] == {
-        'self': {'href': '/attachments/3'},
-        'contained_in': {'href': '/attachments'}
+        'self'         : {'href': '/attachments/3'},
+        'contained_in' : {'href': '/attachments'}
     }
 
     # Finally, check that the correct attachment file was saved to the attachments directory
     # under the correct ticket ID with the correct name
-    ticket_id     = str(attachment_data['ticket_id'])
-    attachment_id = str(attachment_data['id'])
+    ticket_id           = str(attachment_data['ticket_id'])
+    attachment_id       = str(attachment_data['id'])
     path_to_attach_file = os.path.join("attachment_storage", f"ticket__{ticket_id}",
                                        f"{attachment_id}__text_to_post.txt")
     assert os.path.isfile(path_to_attach_file)
