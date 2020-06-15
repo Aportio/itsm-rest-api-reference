@@ -1550,8 +1550,8 @@ class Attachment(flask_restful.Resource, ApiResource, _TicketDataEmbedder):
         attachment = DB_ATTACHMENT_TABLE.get(doc_id=int(attachment_id))
         if not attachment:
             flask_restful.abort(404, message=f"attachment '{attachment_id}' not found!")
-        ticket_data   = DB_TICKET_TABLE.get(doc_id=attachment['ticket_id'])
-        res = dict(attachment)
+        ticket_data = DB_TICKET_TABLE.get(doc_id=attachment['ticket_id'])
+        res         = dict(attachment)
         # Load the attachment file as encoded base64 and update the response
         path_to_attach_file = os.path.join(_ATTACHMENT_FOLDER, str(attachment['ticket_id']),
                                         f"{str(attachment.doc_id)}__{attachment['filename']}")
@@ -1559,13 +1559,13 @@ class Attachment(flask_restful.Resource, ApiResource, _TicketDataEmbedder):
 	    # Note that decode() changes the base64 into a string
             encoded_attachment = base64.b64encode(attachment_file.read()).decode()
         res.update({
-            "id" : attachment.doc_id,
-            "attachment_data": encoded_attachment,
-            "_embedded" : {
-                "ticket"   : self.embed_ticket_data_in_result([ticket_data])[0]
+            "id"              : attachment.doc_id,
+            "attachment_data" : encoded_attachment,
+            "_embedded"       : {
+                "ticket" : self.embed_ticket_data_in_result([ticket_data])[0]
             },
             '_links' : self.make_links({
-                           "self" :         Attachment.get_self_url(attachment.doc_id),
+                           "self"         : Attachment.get_self_url(attachment.doc_id),
                            "contained_in" : AttachmentList.get_self_url(),
                        })
         })

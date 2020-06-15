@@ -664,7 +664,7 @@ def test_embedded_comments(client):
                     set([(k,v) for k,v in ticket.items() if k in should_ticket]))
     assert ticket['classification'] == {'l1': 'incident', 'l2': 'hardware'}
 
-    # Now let's examine the embeded comments and worknotes
+    # Now let's examine the embedded comments and worknotes
     comments  = ticket['_embedded']['comments']
     worknotes = ticket['_embedded']['worknotes']
     assert len(comments) == len(worknotes) == 1
@@ -686,10 +686,10 @@ def test_read_comment(client):
 
     comment = client.get(comment_url, **JSON_HDRS_READ).get_json()
     should_comment = {
-        'user_id': 1,
-        'ticket_id': 1,
-        'text': 'Can I please have an update on this?',
-        'type': 'COMMENT'
+        'user_id'   : 1,
+        'ticket_id' : 1,
+        'text'      : 'Can I please have an update on this?',
+        'type'      : 'COMMENT'
     }
     assert set(should_comment.items()).issubset(
                     set([(k,v) for k,v in comment.items() if k in should_comment]))
@@ -931,9 +931,9 @@ def test_embedded_attachments_in_ticket(client):
     attachments = ticket['_embedded']['attachments']
     attachment  = attachments[0]
 
-    assert attachment['filename']        == "test.txt"
-    assert attachment['content_type']    == "text/plain"
-    assert attachment['_created']        == attachment['_updated']
+    assert attachment['filename'] == "test.txt"
+    assert attachment['content_type'] == "text/plain"
+    assert attachment['_created'] == attachment['_updated']
 
 
 def test_post_attachment(client):
