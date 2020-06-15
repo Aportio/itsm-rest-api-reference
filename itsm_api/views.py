@@ -1579,10 +1579,6 @@ class Attachment(flask_restful.Resource, ApiResource, _TicketDataEmbedder):
         else:
             attachment = None
 
-        def field_exists(field):
-            if not field:
-                raise ValueError(f"All fields must exist in the request body")
-
         # Some validator methods are set to lambdas that just return their value because they
         # are mandatory fields but they don't currently need any validation.
         data = _dict_sanity_check(data,
