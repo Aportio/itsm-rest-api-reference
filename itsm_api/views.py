@@ -1878,6 +1878,5 @@ for resource_class in [Root,
                        UserList, User, UserCustomerList, UserTicketList,
                        Customer, CustomerList, CustomerUserList, CustomerTicketList,
                        CustomerUserAssociationList, CustomerUserAssociation,
-                       Ticket, TicketList, Comment, CommentList, AttachmentList,
-                       Attachment]:
+                       Ticket, TicketList, Comment, CommentList, Attachment, AttachmentList]:
     API.add_resource(resource_class, resource_class.URL)
