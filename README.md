@@ -67,11 +67,11 @@ System requirements:
 
 Install the required packages:
 
-    $ pip install requirements/deploy.txt
+    $ pip install -r requirements/deploy.txt
 
 If you wish to work on the code, please also run:
 
-    $ pip install requirements/develop.txt
+    $ pip install -r requirements/develop.txt
 
 Copy the example database file to the correct location:
 
