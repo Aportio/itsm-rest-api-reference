@@ -1261,7 +1261,7 @@ class Ticket(flask_restful.Resource, ApiResource):
                                              (comments_q.type      == Comment.TYPE_COMMENT))
         worknotes  = DB_COMMENT_TABLE.search((comments_q.ticket_id == ticket_id) &
                                              (comments_q.type      == Comment.TYPE_WORKNOTE))
-        # Receive information about all attachments folr this ticket
+        # Receive information about all attachments for this ticket
         attachment_q = Query()
         attachments  = DB_ATTACHMENT_TABLE.search(attachment_q.ticket_id == ticket_id)
         res = {
@@ -1556,7 +1556,6 @@ class Attachment(flask_restful.Resource, ApiResource, _TicketDataEmbedder):
         path_to_attach_file = os.path.join(_ATTACHMENT_FOLDER, str(attachment['ticket_id']),
                                         f"{str(attachment.doc_id)}__{attachment['filename']}")
         with open(path_to_attach_file, "rb") as attachment_file:
-	    # Note that decode() changes the base64 into a string
             encoded_attachment = base64.b64encode(attachment_file.read()).decode()
         res.update({
             "id"              : attachment.doc_id,
