@@ -833,37 +833,40 @@ class AttachmentList(flask_restful.Resource, ApiResourceList):
         """
         Process the addition of an attachment to a ticket.
         """
+        # Attachment files have a unique name generated for them when saving to server-side
+        # storage that looks like so:
+        #
+        # <attachment_id>__<filename>
+        #
+        # For example:
+        # 1__errors.log
+        #
+        # The directory structure of saved attachment files looks like this:
+        #
+        # attachment_storage/
+        #   <ticket_id>/
+        #     <unique_filename>
+        #
+        # For example:
+        #
+        # attachment_storage/
+        #   1/
+        #     1__errors.log
+        #   2/
+        #     2__some_image.jpg
+        #     3__some_doc.docx
+        #   3/
+        #     4__requirements.txt
+        #
+        # Note here that the numbered directories are Ticket IDs, and the numbers prefixing
+        # the file name are the attachment IDs.
+
         # We first need to get the base64 encoded attachment out of the data, so that the
         # attachment file is not saved to disk twice (as a file and as a base64 string)
-        attachment_data = data.pop('attachment_data')
+        attachment_data   = data.pop('attachment_data')
         new_attachment_id = DB_ATTACHMENT_TABLE.insert(data)
-        # Try to decode and save the attachment data to server-side storage.
-        try:
-            # Get the filename of the attachment and append it to the attachment ID to create
-            # a unique filename for storage. The unique filename will have a format like:
-            #
-            # <id>__<name>
-            #
-            # example:
-            # 1__errors.log
-            #
-            # Structure of saved attachments:
-            #
-            # attachment_storage/
-            #   <ticket_id>/
-            #     <unique_filename>
-            #
-            # Example:
-            #
-            # attachment_storage/
-            #   1/
-            #     1__errors.log
-            #   2/
-            #     2__some_image.jpg
-            #     3__some_doc.docx
-            #   3/
-            #     4__requirements.txt
 
+        try:
             # The filename is expected to exist in the data because it is a mandatory key.
             filename        = data['filename']
             unique_filename = f"{new_attachment_id}__{filename}"
