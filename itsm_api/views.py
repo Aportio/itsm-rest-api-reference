@@ -1553,9 +1553,9 @@ class Attachment(flask_restful.Resource, ApiResource, _TicketDataEmbedder):
         ticket_data = DB_TICKET_TABLE.get(doc_id=attachment['ticket_id'])
         res         = dict(attachment)
         # Load the attachment file as encoded base64 and update the response
-        path_to_attach_file = os.path.join(_ATTACHMENT_FOLDER, str(attachment['ticket_id']),
-                                        f"{str(attachment.doc_id)}__{attachment['filename']}")
-        with open(path_to_attach_file, "rb") as attachment_file:
+        path_to_file = os.path.join(_ATTACHMENT_FOLDER, str(attachment['ticket_id']),
+                                    f"{str(attachment.doc_id)}__{attachment['filename']}")
+        with open(path_to_file, "rb") as attachment_file:
             encoded_attachment = base64.b64encode(attachment_file.read()).decode()
         res.update({
             "id"              : attachment.doc_id,
