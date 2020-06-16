@@ -6,10 +6,12 @@ flask_restful.
 
 """
 
+import base64
 import datetime
 import flask
 import flask_restful
 import json
+import os
 
 from flask_accept         import accept
 from tinydb               import TinyDB, Query, where
@@ -20,6 +22,8 @@ from validator_collection import validators
 from itsm_api      import app
 
 API = flask_restful.Api(app)    # Initialize the API (managed by flask_restful)
+
+_ATTACHMENT_FOLDER = "attachment_storage"
 
 
 # =============================================================
@@ -39,6 +43,7 @@ def init_db():
     global DB_USER_CUSTOMER_RELS_TABLE  # pylint: disable=global-variable-undefined
     global DB_TICKET_TABLE              # pylint: disable=global-variable-undefined
     global DB_COMMENT_TABLE             # pylint: disable=global-variable-undefined
+    global DB_ATTACHMENT_TABLE          # pylint: disable=global-variable-undefined
 
     db = TinyDB(app.config['DB_NAME'])
 
@@ -47,6 +52,7 @@ def init_db():
     DB_USER_CUSTOMER_RELS_TABLE = db.table('user_customer_rels')
     DB_TICKET_TABLE             = db.table('tickets')
     DB_COMMENT_TABLE            = db.table('comments')
+    DB_ATTACHMENT_TABLE         = db.table('attachments')
 
 
 def _str_len_check(text, min_len, max_len):
@@ -456,7 +462,7 @@ class ApiResourceList(ApiResource):
             data = flask.request.json
             if not data:
                 raise Exception("expected request data")
-            data, _ = self.SINGLE_RESOURCE_CLASS.sanity_check(data)
+            data, _         = self.SINGLE_RESOURCE_CLASS.sanity_check(data)
             new_id          = self._post(data)  # pylint: disable=no-member
             new_url         = self.SINGLE_RESOURCE_CLASS.get_self_url(new_id)
             new_obj         = self.SINGLE_RESOURCE_CLASS()
@@ -549,28 +555,6 @@ class _TicketDataEmbedder:
         return res
 
 
-class _CommentDataEmbedder:
-    """
-    A mixin that provides a function to embed a comment list in a result.
-    """
-
-    def embed_comment_data_in_result(self, comment_data):
-        res = []
-        for comment in comment_data:
-            d = {
-                "id"       : comment.doc_id,
-                "user_id"  : comment['user_id'],
-                "text"     : comment['text'],
-                "_created" : comment.get('_created', ''),
-                # pylint: disable=no-member
-                "_links"   : self.make_links({"self" : Comment.get_self_url(comment.doc_id)})
-            }
-            if "_updated" in comment:
-                d['_updated'] = comment['_updated']
-            res.append(d)
-        return res
-
-
 # ===============================
 # The actual resources in our API
 # ===============================
@@ -600,6 +584,7 @@ class Root(flask_restful.Resource, ApiResource):
                 "customers"                  : CustomerList.get_self_url(),
                 "tickets"                    : TicketList.get_self_url(),
                 "comments"                   : CommentList.get_self_url(),
+                "attachments"                : AttachmentList.get_self_url(),
                 "customer_user_associations" : CustomerUserAssociationList.get_self_url(),
             })
         }
@@ -644,7 +629,7 @@ class UserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedder):
                 "users" : self.embed_user_data_in_result(user_data)
             },
             "_links" : self.make_links({
-                           "self" :         UserList.get_self_url(),
+                           "self"         : UserList.get_self_url(),
                            "contained_in" : Root.get_self_url()
                        })
         }
@@ -804,6 +789,120 @@ class CommentList(flask_restful.Resource, ApiResourceList):
         """
         new_comment_id = DB_COMMENT_TABLE.insert(data)
         return new_comment_id
+
+
+class AttachmentList(flask_restful.Resource, ApiResourceList):
+    """
+    A list of attachments.
+
+    Similar to the comment list, this resource is not 'user friendly' to the
+    extent that it does not contain embedded resources. Instead, it is merely
+    used to cleanly and RESTfully express the association of attachments to
+    tickets as well as the contents of those attachments.
+
+    The Ticket resource provides more user friendly means to get the attachments
+    associated with that ticket, by displaying those as embedded resources.
+
+    """
+
+    URL = "/attachments"
+
+    # All list resources get a query parameter from the parent class, even if they don't
+    # all support it.
+    # pylint: disable=unused-argument
+    def _get(self, query=None):
+        """
+        Return the list of all attachments.
+        """
+        attachments = DB_ATTACHMENT_TABLE.all()
+        for attachment in attachments:
+            attachment['_links'] = self.make_links({
+                'self' : Attachment.get_self_url(attachment.doc_id)
+            })
+        res = {
+            "total_queried" : len(attachments),
+            "attachments"   : attachments,
+            "_links" : self.make_links({
+                           "self"         : AttachmentList.get_self_url(),
+                           "contained_in" : Root.get_self_url()
+                       })
+        }
+        return res
+
+    def _post(self, data):
+        """
+        Process the addition of an attachment to a ticket.
+        """
+        # Attachment files have a unique name generated for them when saving to server-side
+        # storage that looks like so:
+        #
+        # <attachment_id>__<filename>
+        #
+        # For example:
+        # 1__errors.log
+        #
+        # The directory structure of saved attachment files looks like this:
+        #
+        # attachment_storage/
+        #     ticket__<ticket_id>/
+        #         <unique_filename>
+        #
+        # For example:
+        #
+        # attachment_storage/
+        #     ticket__1/
+        #         1__errors.log
+        #
+        #     ticket__2/
+        #         2__some_image.jpg
+        #         3__some_doc.docx
+        #
+        #     ticket__3/
+        #         4__requirements.txt
+        #
+        # Note here that the numbered directories are Ticket IDs, and the numbers prefixing
+        # the file name are the attachment IDs.
+
+        # We first need to get the base64 encoded attachment out of the data, so that the
+        # attachment file is not saved to disk twice (as a file and as a base64 string)
+        attachment_data   = data.pop('attachment_data')
+        new_attachment_id = DB_ATTACHMENT_TABLE.insert(data)
+
+        try:
+            # Decode the attachment data
+            decoded_attachment_data = base64.b64decode(attachment_data)
+
+            # The filename is expected to exist in the data because it is a mandatory key.
+            filename        = data['filename']
+            unique_filename = f"{new_attachment_id}__{filename}"
+
+            # Create the paths to the directory and the attachment file
+            dir_path     = os.path.join(_ATTACHMENT_FOLDER,
+                                        f"ticket__{str(data['ticket_id'])}")
+            path_to_file = os.path.join(dir_path, unique_filename)
+
+            # Make the directory for the attachment if it doesn't already exist, then save the
+            # attachment file.
+            os.makedirs(dir_path, exist_ok=True)
+            with open(path_to_file, "wb") as attachment_file:
+                attachment_file.write(decoded_attachment_data)
+        except OSError:
+            # Trying to save the decoded attachment file to disk went wrong. Rollback the
+            # database entry and return a 500 error.
+            # Note that since Python 3.3, IOError became an alias for OSError, hence OSError is
+            # the actual exception that will occur.
+            DB_ATTACHMENT_TABLE.remove(doc_ids=[new_attachment_id])
+            flask_restful.abort(500, message="Error occured while trying to save attachment "
+                                             "file data")
+        except Exception:
+            # Some error occured while trying to decode the attachment file data. Rollback the
+            # database entry and return a 500 error.
+            DB_ATTACHMENT_TABLE.remove(doc_ids=[new_attachment_id])
+            flask_restful.abort(500, message="Error occured while trying to decode "
+                                             "attachment file data")
+
+        # If we get here, everything went fine. Return the new attachment ID.
+        return new_attachment_id
 
 
 class CustomerUserAssociationList(flask_restful.Resource, ApiResourceList):
@@ -1036,10 +1135,10 @@ class Customer(flask_restful.Resource, ApiResource):
         }
         res.update(cust)
         link_spec = {
-            "self" :         Customer.get_self_url(cust.doc_id),
+            "self"         : Customer.get_self_url(cust.doc_id),
             "contained_in" : CustomerList.get_self_url(),
-            "users" :        CustomerUserList.get_self_url(cust.doc_id),
-            "tickets" :      CustomerTicketList.get_self_url(cust.doc_id)
+            "users"        : CustomerUserList.get_self_url(cust.doc_id),
+            "tickets"      : CustomerTicketList.get_self_url(cust.doc_id)
         }
 
         # A customer may have a parent customer
@@ -1051,7 +1150,7 @@ class Customer(flask_restful.Resource, ApiResource):
         return res
 
 
-class Ticket(flask_restful.Resource, ApiResource, _CommentDataEmbedder):
+class Ticket(flask_restful.Resource, ApiResource):
     """
     An individual service desk ticket.
 
@@ -1117,6 +1216,46 @@ class Ticket(flask_restful.Resource, ApiResource, _CommentDataEmbedder):
             raise ValueError(f"unknown ticket '{ticket_id}'")
         return ticket_id
 
+    def _embed_comment_data_in_result(self, comment_data):
+        """
+        Produce data about comments for embedding in ticket resource.
+        """
+        res = []
+        for comment in comment_data:
+            d = {
+                "id"       : comment.doc_id,
+                "user_id"  : comment['user_id'],
+                "text"     : comment['text'],
+                "_created" : comment.get('_created', ''),
+                # pylint: disable=no-member
+                "_links"   : self.make_links({"self" : Comment.get_self_url(comment.doc_id)})
+            }
+            if "_updated" in comment:
+                d['_updated'] = comment['_updated']
+            res.append(d)
+        return res
+
+    def _embed_attachment_data_in_result(self, attachment_data):
+        """
+        Produce data about attachments for embedding in ticket resource.
+        """
+        res = []
+        for attachment in attachment_data:
+            d = {
+                "id"              : attachment.doc_id,
+                "filename"        : attachment['filename'],
+                "content_type"    : attachment['content_type'],
+                "_created"        : attachment.get('_created', ''),
+                # pylint: disable=no-member
+                "_links"          : self.make_links(
+                                        {"self" : Attachment.get_self_url(attachment.doc_id)}
+                                    )
+            }
+            if "_updated" in attachment:
+                d['_updated'] = attachment['_updated']
+            res.append(d)
+        return res
+
     def _get(self, ticket_id):
         """
         Return information about a ticket.
@@ -1125,24 +1264,29 @@ class Ticket(flask_restful.Resource, ApiResource, _CommentDataEmbedder):
         ticket    = DB_TICKET_TABLE.get(doc_id=ticket_id)
         if not ticket:
             flask_restful.abort(404, message=f"Ticket '{ticket_id}' not found!")
+        # Receive information about all comments and worknotes for this ticket
         comments_q = Query()
         comments   = DB_COMMENT_TABLE.search((comments_q.ticket_id == ticket_id) &
                                              (comments_q.type      == Comment.TYPE_COMMENT))
         worknotes  = DB_COMMENT_TABLE.search((comments_q.ticket_id == ticket_id) &
                                              (comments_q.type      == Comment.TYPE_WORKNOTE))
+        # Receive information about all attachments for this ticket
+        attachment_q = Query()
+        attachments  = DB_ATTACHMENT_TABLE.search(attachment_q.ticket_id == ticket_id)
         res = {
             "id" : ticket.doc_id,
         }
         res.update(ticket)
         res['_embedded'] = {
-            "comments" : self.embed_comment_data_in_result(comments),
-            "worknotes" : self.embed_comment_data_in_result(worknotes)
+            "comments"    : self._embed_comment_data_in_result(comments),
+            "worknotes"   : self._embed_comment_data_in_result(worknotes),
+            "attachments" : self._embed_attachment_data_in_result(attachments),
         }
         res['_links'] = self.make_links({
-                            "self" :         Ticket.get_self_url(ticket.doc_id),
+                            "self"         : Ticket.get_self_url(ticket.doc_id),
                             "contained_in" : TicketList.get_self_url(),
-                            "customer" :     Customer.get_self_url(res['customer_id']),
-                            "user" :         User.get_self_url(res['user_id'])
+                            "customer"     : Customer.get_self_url(res['customer_id']),
+                            "user"         : User.get_self_url(res['user_id'])
                         })
         return res
 
@@ -1313,7 +1457,7 @@ class Comment(flask_restful.Resource, ApiResource,
                 "customer" : self.embed_customer_data_in_result([customer_data])[0]
             },
             '_links' : self.make_links({
-                           "self" :         Comment.get_self_url(comment.doc_id),
+                           "self"         : Comment.get_self_url(comment.doc_id),
                            "contained_in" : CommentList.get_self_url(),
                        })
         })
@@ -1388,6 +1532,110 @@ class Comment(flask_restful.Resource, ApiResource,
             DB_COMMENT_TABLE.update(delete(old_key), doc_ids=[comment_id])
         DB_COMMENT_TABLE.update(data, doc_ids=[comment_id])
         return Comment.get_self_url(comment_id=comment_id)
+
+
+class Attachment(flask_restful.Resource, ApiResource, _TicketDataEmbedder):
+    """
+    A resource to represent an attachment for a ticket.
+    """
+
+    URL     = AttachmentList.URL + "/<attachment_id>"
+
+    @classmethod
+    def exists(cls, attachment_id):
+        """
+        Validate to ensure that a specified attachment exists.
+        """
+        attachment_id = int(attachment_id)
+        attachment    = DB_ATTACHMENT_TABLE.get(doc_id=attachment_id)
+        if not attachment:
+            raise ValueError(f"unknown attachment '{attachment_id}'")
+        return attachment_id
+
+    def _get(self, attachment_id):
+        """
+        Return information about an attachment.
+        """
+        attachment = DB_ATTACHMENT_TABLE.get(doc_id=int(attachment_id))
+        if not attachment:
+            flask_restful.abort(404, message=f"attachment '{attachment_id}' not found!")
+        ticket_data = DB_TICKET_TABLE.get(doc_id=attachment['ticket_id'])
+        res         = dict(attachment)
+        # Load the attachment file as encoded base64 and update the response.
+        try:
+            path_to_file = os.path.join(_ATTACHMENT_FOLDER,
+                                        f"ticket__{str(attachment['ticket_id'])}",
+                                        f"{str(attachment.doc_id)}__{attachment['filename']}")
+            with open(path_to_file, "rb") as attachment_file:
+                encoded_attachment = base64.b64encode(attachment_file.read()).decode()
+        except FileNotFoundError:
+            # Attachment was in the database but not found on disk, return a 404
+            flask_restful.abort(404, message=(f"file for attachment '{attachment_id}' not "
+                                              "found!"))
+        res.update({
+            "id"              : attachment.doc_id,
+            "attachment_data" : encoded_attachment,
+            "_embedded"       : {
+                "ticket" : self.embed_ticket_data_in_result([ticket_data])[0]
+            },
+            '_links' : self.make_links({
+                           "self"         : Attachment.get_self_url(attachment.doc_id),
+                           "contained_in" : AttachmentList.get_self_url(),
+                       })
+        })
+        return res
+
+    @classmethod
+    def sanity_check(cls, data, attachment_id=None):
+        """
+        Perform a sanity check for POST/PUT of attachment data.
+        """
+        if attachment_id is not None:
+            attachment_id = int(attachment_id)
+            attachment    = DB_ATTACHMENT_TABLE.get(doc_id=attachment_id)
+            if not attachment:
+                flask_restful.abort(404, message=f"attachment '{attachment_id}' not found!")
+        else:
+            attachment = None
+
+        # Some validator methods are set to lambdas that just return their value because they
+        # are mandatory fields but they don't currently need any validation.
+        data = _dict_sanity_check(data,
+                                  mandatory_keys = [
+                                      ("ticket_id", Ticket.exists),
+                                      ("filename", lambda x: x),
+                                      ("content_type", lambda x: x),
+                                      ("attachment_data", lambda x: x)],
+                                  optional_keys = [],
+                                  obj=attachment)
+
+        return data, attachment
+
+    # Note: we don't know yet if it is beneficial to support PUT requests for attachments, so
+    # the PUT method is commented out for now.
+    #
+    # def _put(self, data, comment_id, obj):
+    #     """
+    #     Process a PUT update to an existing comment.
+    #     """
+    #     comment    = obj
+    #     comment_id = int(comment_id)
+    #
+    #     # Ensure that user and customer have not been changed (they can only be written once)
+    #     if data['user_id'] != comment['user_id']:
+    #         flask_restful.abort(400, message=f"Bad Request - cannot change user ID in "
+    #                                          f"comment '{comment_id}'")
+    #     if data['ticket_id'] != comment['ticket_id']:
+    #         flask_restful.abort(400, message=f"Bad Request - cannot change ticket ID in "
+    #                                          f"comment '{comment_id}'")
+    #
+    #     # Remove keys that are not in the new resource
+    #     keys_to_remove = [stored_key for stored_key in comment.keys()
+    #                       if stored_key not in data]
+    #     for old_key in keys_to_remove:
+    #         DB_COMMENT_TABLE.update(delete(old_key), doc_ids=[comment_id])
+    #     DB_COMMENT_TABLE.update(data, doc_ids=[comment_id])
+    #     return Comment.get_self_url(comment_id=comment_id)
 
 
 class CustomerUserAssociation(flask_restful.Resource, ApiResource,
@@ -1636,6 +1884,7 @@ CustomerList.SINGLE_RESOURCE_CLASS                = Customer
 CustomerUserAssociationList.SINGLE_RESOURCE_CLASS = CustomerUserAssociation
 TicketList.SINGLE_RESOURCE_CLASS                  = Ticket
 CommentList.SINGLE_RESOURCE_CLASS                 = Comment
+AttachmentList.SINGLE_RESOURCE_CLASS              = Attachment
 
 # ===================================================
 # Registering the resource classes with our Flask app
@@ -1644,5 +1893,5 @@ for resource_class in [Root,
                        UserList, User, UserCustomerList, UserTicketList,
                        Customer, CustomerList, CustomerUserList, CustomerTicketList,
                        CustomerUserAssociationList, CustomerUserAssociation,
-                       Ticket, TicketList, Comment, CommentList]:
+                       Ticket, TicketList, Comment, CommentList, Attachment, AttachmentList]:
     API.add_resource(resource_class, resource_class.URL)

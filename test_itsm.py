@@ -1,3 +1,4 @@
+import base64
 import flask
 import json
 import os
@@ -16,7 +17,7 @@ JSON_HDRS_READ = {
 }
 JSON_HDRS_READWRITE = {
     'headers' : {
-        'Accept' : 'application/json',
+        'Accept'       : 'application/json',
         'Content-Type' : 'application/json'
     }
 }
@@ -69,12 +70,13 @@ def test_root_resource(client):
     assert rv.status_code == 200  and  rv.is_json
     assert rv.get_json() == {
         '_links': {
-            'self': {'href': '/'},
-            'users': {'href': '/users'},
-            'customers': {'href': '/customers'},
-            'tickets': {'href': '/tickets'},
-            'comments': {'href': '/comments'},
-            'customer_user_associations': {'href': '/customer_user_associations'}
+            'self'                       : {'href': '/'},
+            'users'                      : {'href': '/users'},
+            'customers'                  : {'href': '/customers'},
+            'tickets'                    : {'href': '/tickets'},
+            'comments'                   : {'href': '/comments'},
+            'attachments'                : {'href': '/attachments'},
+            'customer_user_associations' : {'href': '/customer_user_associations'}
         }
     }
 
@@ -159,10 +161,10 @@ def test_create_edit_user(client):
     assert '_created' in user_data and user_data['_created']
     assert '_updated' in user_data and user_data['_updated'] == user_data['_created']
     assert user_data['_links'] == {
-        'self': {'href': '/users/5'},
-        'contained_in': {'href': '/users'},
-        'customers': {'href': '/users/5/customers'},
-        'tickets': {'href': '/users/5/tickets'}
+        'self'         : {'href': '/users/5'},
+        'contained_in' : {'href': '/users'},
+        'customers'    : {'href': '/users/5/customers'},
+        'tickets'      : {'href': '/users/5/tickets'}
     }
 
     # Edit the user. Try to give it an email address that's already in use
@@ -366,22 +368,22 @@ def test_ticket_list_search(client):
         "_embedded": {
             "tickets": [
                 {
-                    "id": 2,
-                    "aportio_id": "2222",
-                    "customer_id": 2,
-                    "user_id": 2,
-                    "short_title": "Need a new license for Office",
-                    "_created": "2020-04-12T14:39:+13:00",
-                    "status": "CLOSED",
-                    "classification": "service-request",
-                    "_links": {"self": {"href": "/tickets/2"}},
-                    "_updated": "2020-04-12T14:39:+13:00"
+                    "id"             : 2,
+                    "aportio_id"     : "2222",
+                    "customer_id"    : 2,
+                    "user_id"        : 2,
+                    "short_title"    : "Need a new license for Office",
+                    "_created"       : "2020-04-12T14:39:+13:00",
+                    "status"         : "CLOSED",
+                    "classification" : "service-request",
+                    "_links"         : {"self": {"href": "/tickets/2"}},
+                    "_updated"       : "2020-04-12T14:39:+13:00"
                 }
             ]
         },
         "_links": {
-            "self": {"href": "/tickets"},
-            "contained_in": {"href": "/"}
+            "self"         : {"href": "/tickets"},
+            "contained_in" : {"href": "/"}
         }
     }
 
@@ -390,15 +392,15 @@ def test_customer_user_list(client):
     customer_url = _get_root_links(client)['customers'] + "/1"
     customer     = client.get(customer_url, **JSON_HDRS_READ).get_json()
     assert customer == {
-        'id': 1,
-        'name': 'Foo Company',
-        'parent_id': 3,
+        'id'        : 1,
+        'name'      : 'Foo Company',
+        'parent_id' : 3,
         '_links': {
-            'self': {'href': '/customers/1'},
-            'contained_in': {'href': '/customers'},
-            'users': {'href': '/customers/1/users'},
-            'tickets': {'href': '/customers/1/tickets'},
-            'parent': {'href': '/customers/3'}
+            'self'         : {'href': '/customers/1'},
+            'contained_in' : {'href': '/customers'},
+            'users'        : {'href': '/customers/1/users'},
+            'tickets'      : {'href': '/customers/1/tickets'},
+            'parent'       : {'href': '/customers/3'}
         }
     }
 
@@ -424,8 +426,8 @@ def test_customer_user_list(client):
             ]
         },
         '_links': {
-            'self': {'href': '/customers/1/users'},
-            'contained_in': {'href': '/customers/1'}
+            'self'         : {'href': '/customers/1/users'},
+            'contained_in' : {'href': '/customers/1'}
         }
     }
 
@@ -440,18 +442,17 @@ def test_customer_ticket_list(client):
     # Check just the first ticket to confirm general correctness
     ticket = customer_ticket_list['_embedded']['tickets'][0]
     should_ticket = {
-        'id': 1,
-        'aportio_id': '1111',
-        'customer_id': 1,
-        'short_title':
+        'id'             : 1,
+        'aportio_id'     : '1111',
+        'customer_id'    : 1,
+        'short_title'    :
         'Broken laptop',
-        'status': 'OPEN',
-        'classification': 'incident',
+        'status'         : 'OPEN',
+        'classification' : 'incident',
     }
     # Only compare the keys we defined in the should image. Don't bother about links and
     # created timestamps
-    assert set(should_ticket.items()).issubset(
-                    set([(k,v) for k,v in ticket.items() if k in should_ticket]))
+    assert should_ticket.items() <= ticket.items()
 
 
 def test_user_customer_list(client):
@@ -502,17 +503,16 @@ def test_user_ticket_list(client):
     # Check just the first ticket to confirm general correctness
     ticket = user_ticket_list['_embedded']['tickets'][0]
     should_ticket = {
-        'id': 1,
-        'aportio_id': '1111',
-        'customer_id': 1,
-        'short_title': 'Broken laptop',
-        'status': 'OPEN',
-        'classification': 'incident',
+        'id'             : 1,
+        'aportio_id'     : '1111',
+        'customer_id'    : 1,
+        'short_title'    : 'Broken laptop',
+        'status'         : 'OPEN',
+        'classification' : 'incident',
     }
     # Only compare the keys we defined in the should image. Don't bother about links and
     # created timestamps
-    assert set(should_ticket.items()).issubset(
-                    set([(k,v) for k,v in ticket.items() if k in should_ticket]))
+    assert should_ticket.items() <= ticket.items()
 
 
 def test_create_edit_ticket(client):
@@ -569,15 +569,15 @@ def test_create_edit_ticket(client):
 
     # Ceate valid ticket
     rv = client.post(tickets_url, **JSON_HDRS_READWRITE,
-                     data = json.dumps({
-                         "user_id" : 1,
-                         "customer_id" : 1,
-                         "aportio_id" : "12233",
-                         "short_title" : "Laptop is broken",
-                         "long_text" : "It doesn't start up anymore.",
-                         "status" : "OPEN",
-                         "classification" : {"l1" : "service-request"}
-                     }))
+                     data=json.dumps({
+                              "user_id"        : 1,
+                              "customer_id"    : 1,
+                              "aportio_id"     : "12233",
+                              "short_title"    : "Laptop is broken",
+                              "long_text"      : "It doesn't start up anymore.",
+                              "status"         : "OPEN",
+                              "classification" : {"l1" : "service-request"}
+                          }))
     assert rv.is_json  and  rv.status_code == 201
     msg = rv.get_json()
     assert rv.headers.get('location') == "http://localhost/tickets/5"
@@ -649,20 +649,19 @@ def test_embedded_comments(client):
     ticket_url = _get_root_links(client)['tickets'] + "/1"
     ticket     = client.get(ticket_url, **JSON_HDRS_READ).get_json()
     should_ticket = {
-        'id': 1,
-        'aportio_id': '1111',
-        'customer_id': 1,
-        'short_title':
+        'id'             : 1,
+        'aportio_id'     : '1111',
+        'customer_id'    : 1,
+        'short_title'    :
         'Broken laptop',
-        'status': 'OPEN',
+        'status'         : 'OPEN',
     }
     # Only compare the keys we defined in the should image. Don't bother about links and
     # created timestamps, and even the embedded comments right now.
-    assert set(should_ticket.items()).issubset(
-                    set([(k,v) for k,v in ticket.items() if k in should_ticket]))
+    assert should_ticket.items() <= ticket.items()
     assert ticket['classification'] == {'l1': 'incident', 'l2': 'hardware'}
 
-    # Now let's examine the embeded comments and worknotes
+    # Now let's examine the embedded comments and worknotes
     comments  = ticket['_embedded']['comments']
     worknotes = ticket['_embedded']['worknotes']
     assert len(comments) == len(worknotes) == 1
@@ -681,16 +680,15 @@ def test_read_comment(client):
     ticket_url  = _get_root_links(client)['tickets'] + "/1"
     ticket      = client.get(ticket_url, **JSON_HDRS_READ).get_json()
     comment_url = ticket['_embedded']['comments'][0]['_links']['self']['href']
+    comment     = client.get(comment_url, **JSON_HDRS_READ).get_json()
 
-    comment = client.get(comment_url, **JSON_HDRS_READ).get_json()
     should_comment = {
-        'user_id': 1,
-        'ticket_id': 1,
-        'text': 'Can I please have an update on this?',
-        'type': 'COMMENT'
+        'user_id'   : 1,
+        'ticket_id' : 1,
+        'text'      : 'Can I please have an update on this?',
+        'type'      : 'COMMENT'
     }
-    assert set(should_comment.items()).issubset(
-                    set([(k,v) for k,v in comment.items() if k in should_comment]))
+    assert should_comment.items() <= comment.items()
     assert comment['_embedded']['ticket']['id'] == 1
     assert comment['_embedded']['user']['id'] == 1
     assert comment['_embedded']['customer']['id'] == 1
@@ -815,3 +813,201 @@ def test_create_comment(client):
 
     # Should be the same as what we got in our POST response
     assert post_response == comment
+
+
+def test_get_attachments_list(client):
+    # Get the url to the attachments list resource, then get the list of attachments that are
+    # currently stored in the database.
+    attachments_url = _get_root_links(client)['attachments']
+    attachments     = client.get(attachments_url, **JSON_HDRS_READ).get_json()
+
+    # Make sure that what we see is exactly what was stored in the database
+    assert attachments == {
+        "total_queried": 2,
+        "attachments": [
+            {
+                "ticket_id": 1,
+                "filename": "test.txt",
+                "content_type": "text/plain",
+                "_created": "2020-06-12T12:09:25.431621",
+                "_updated": "2020-06-12T12:09:25.431621",
+                "_links": {
+                    "self": {
+                        "href": "/attachments/1"
+                    }
+                }
+            },
+            {
+                "ticket_id": 2,
+                "filename": "mt-fuji.jpeg",
+                "content_type": "image/jpeg",
+                "_created": "2020-06-12T14:09:26.813168",
+                "_updated": "2020-06-12T14:09:26.813168",
+                "_links": {
+                    "self": {
+                        "href": "/attachments/2"
+                    }
+                }
+            }
+        ],
+        "_links": {
+            "self": {
+                "href": "/attachments"
+            },
+            "contained_in": {
+                "href": "/"
+            }
+        }
+    }
+
+
+def test_get_attachment(client):
+    # First check if we get the proper response when trying to get an attachment that doesn't
+    # exist
+    no_attachment_url = _get_root_links(client)['attachments'] + "/999"
+    no_attach_resp    = client.get(no_attachment_url, **JSON_HDRS_READ)
+    assert no_attach_resp.is_json and no_attach_resp.status_code == 404
+
+    resp_message = no_attach_resp.get_json()['message']
+    assert resp_message == "attachment '999' not found!"
+
+    # Get a ticket that has a attachment
+    ticket_url = _get_root_links(client)['tickets'] + "/1"
+    ticket     = client.get(ticket_url, **JSON_HDRS_READ).get_json()
+
+    # Get an attachment from that ticket
+    attachment_url = ticket['_embedded']['attachments'][0]['_links']['self']['href']
+    attachment     = client.get(attachment_url, **JSON_HDRS_READ).get_json()
+
+    # Create a dict that represents what the response for the attachment should look like
+    should_attachment = {
+        'id'              : 1,
+        "ticket_id"       : 1,
+        "filename"        : "test.txt",
+        "content_type"    : "text/plain",
+        "attachment_data" : "VGhpcyBpcyBhIHRlc3QgZmlsZSB0byBja"
+                            "GVjayB0aGF0IHRoZSByZXN0IEFQSSB3b3Jrcwo=",
+        "_created"        : "2020-06-12T12:09:25.431621",
+        "_updated"        : "2020-06-12T12:09:25.431621",
+    }
+
+    # Check that all data from the "should" dictionary is the same inside the returned
+    # attachment data.
+    assert should_attachment.items() <= attachment.items()
+    assert attachment['_embedded']['ticket']['id'] == 1
+
+
+def test_embedded_attachments_in_ticket(client):
+    # Get a ticket that has a attachment
+    ticket_url = _get_root_links(client)['tickets'] + "/1"
+    ticket     = client.get(ticket_url, **JSON_HDRS_READ).get_json()
+
+    should_ticket = {
+        'id'             : 1,
+        'aportio_id'     : '1111',
+        'customer_id'    : 1,
+        'short_title'    :
+        'Broken laptop',
+        'status'         : 'OPEN',
+    }
+
+    # Only compare the keys we defined in the should image. Don't bother about links and
+    # created timestamps, and even the embedded comments right now.
+    assert should_ticket.items() <= ticket.items()
+    assert ticket['classification'] == {'l1': 'incident', 'l2': 'hardware'}
+
+    # Now examine the embedded attachments
+    attachments = ticket['_embedded']['attachments']
+    attachment  = attachments[0]
+
+    assert attachment['filename'] == "test.txt"
+    assert attachment['content_type'] == "text/plain"
+    assert attachment['_created'] == attachment['_updated']
+
+
+def test_post_attachment(client):
+    # Get the url to the attachments list resource
+    attachments_url = _get_root_links(client)['attachments']
+
+    # Try to post a new attachment with missing data.
+    post_resp = client.post(attachments_url, **JSON_HDRS_READWRITE,
+            data = json.dumps({"ticket_id": "1", "filename": "somefile.txt",
+                               "content_type": "text/plain"}))
+
+    assert post_resp.is_json and post_resp.status_code == 400
+    resp_message = post_resp.get_json()['message']
+    assert resp_message == "Bad Request - missing mandatory key(s): attachment_data"
+
+    # Now try with all the mandatory keys, but for an attachment that doesn't exist
+    post_resp = client.post(attachments_url, **JSON_HDRS_READWRITE,
+                            data=json.dumps({"ticket_id"       : "999",
+                                             "filename"        : "somefile.txt",
+                                             "content_type"    : "text/plain",
+                                             "attachment_data" : "Just gibberish"}))
+
+    assert post_resp.is_json and post_resp.status_code == 400
+    resp_message = post_resp.get_json()['message']
+    assert resp_message == "Bad Request - key 'ticket_id': unknown ticket '999'"
+
+    # Now post an attachment with valid data
+    # First, we have to assign a variable with an attachment file that has been base64 encoded
+    # (and decoded into a string)
+    with open("test_data/text_to_post.txt", "rb") as image_attachment:
+        encoded_image_attachment = base64.b64encode(image_attachment.read()).decode()
+
+    # Post the data and check that it was created
+    post_resp = client.post(attachments_url, **JSON_HDRS_READWRITE,
+                            data=json.dumps({"ticket_id"       : "1",
+                                             "filename"        : "text_to_post.txt",
+                                             "content_type"    : "text/plain",
+                                             "attachment_data" : encoded_image_attachment}))
+
+    assert post_resp.is_json and post_resp.status_code == 201
+    assert post_resp.headers.get('location') == "http://localhost/attachments/3"
+
+    # Load the attachments list to confirm that the attachment was saved
+    attachments = client.get(attachments_url, **JSON_HDRS_READ).get_json()
+    assert attachments['total_queried'] == 3
+
+    # Get the newest attachment entry and check the fields
+    newest_attachment_entry = attachments['attachments'][-1]
+    assert newest_attachment_entry['ticket_id'] == 1
+    assert newest_attachment_entry['filename'] == "text_to_post.txt"
+    assert newest_attachment_entry['content_type'] == "text/plain"
+    assert newest_attachment_entry['_created'] == newest_attachment_entry['_updated']
+    self_url = newest_attachment_entry['_links']['self']['href']
+    assert self_url == "/attachments/3"
+
+    # Get the newest attachment using its URL and check its fields (they should be the same
+    # as what we just saw in the attachments list)
+    get_resp = client.get(self_url, **JSON_HDRS_READ)
+    assert get_resp.is_json and get_resp.status_code == 200
+
+    attachment_data = get_resp.get_json()
+    assert attachment_data['ticket_id'] == newest_attachment_entry['ticket_id']
+    assert attachment_data['filename'] == newest_attachment_entry['filename']
+    assert attachment_data['content_type'] == newest_attachment_entry['content_type']
+    assert attachment_data['attachment_data'] == encoded_image_attachment
+    assert attachment_data['_created'] == newest_attachment_entry['_created']
+    assert attachment_data['_updated'] == newest_attachment_entry['_updated']
+    assert attachment_data['_links'] == {
+        'self'         : {'href': '/attachments/3'},
+        'contained_in' : {'href': '/attachments'}
+    }
+
+    # Finally, check that the correct attachment file was saved to the attachments directory
+    # under the correct ticket ID with the correct name
+    ticket_id           = str(attachment_data['ticket_id'])
+    attachment_id       = str(attachment_data['id'])
+    path_to_attach_file = os.path.join("attachment_storage", f"ticket__{ticket_id}",
+                                       f"{attachment_id}__text_to_post.txt")
+    assert os.path.isfile(path_to_attach_file)
+
+    # Check that the contents of that file match the contents of the original file
+    original_file_path = os.path.join("test_data", "text_to_post.txt")
+    with open(original_file_path, "r") as original_file:
+        with open(path_to_attach_file, "r") as posted_file:
+            assert posted_file.read() == original_file.read()
+
+    # Remove the directory holding the attachment file that was created from this test
+    os.remove(path_to_attach_file)
