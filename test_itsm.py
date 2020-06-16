@@ -17,7 +17,7 @@ JSON_HDRS_READ = {
 }
 JSON_HDRS_READWRITE = {
     'headers' : {
-        'Accept' : 'application/json',
+        'Accept'       : 'application/json',
         'Content-Type' : 'application/json'
     }
 }
@@ -161,10 +161,10 @@ def test_create_edit_user(client):
     assert '_created' in user_data and user_data['_created']
     assert '_updated' in user_data and user_data['_updated'] == user_data['_created']
     assert user_data['_links'] == {
-        'self': {'href': '/users/5'},
-        'contained_in': {'href': '/users'},
-        'customers': {'href': '/users/5/customers'},
-        'tickets': {'href': '/users/5/tickets'}
+        'self'         : {'href': '/users/5'},
+        'contained_in' : {'href': '/users'},
+        'customers'    : {'href': '/users/5/customers/'},
+        'tickets'      : {'href': '/users/5/tickets'}
     }
 
     # Edit the user. Try to give it an email address that's already in use
@@ -368,22 +368,22 @@ def test_ticket_list_search(client):
         "_embedded": {
             "tickets": [
                 {
-                    "id": 2,
-                    "aportio_id": "2222",
-                    "customer_id": 2,
-                    "user_id": 2,
-                    "short_title": "Need a new license for Office",
-                    "_created": "2020-04-12T14:39:+13:00",
-                    "status": "CLOSED",
-                    "classification": "service-request",
-                    "_links": {"self": {"href": "/tickets/2"}},
-                    "_updated": "2020-04-12T14:39:+13:00"
+                    "id"             : 2,
+                    "aportio_id"     : "2222",
+                    "customer_id"    : 2,
+                    "user_id"        : 2,
+                    "short_title"    : "Need a new license for Office",
+                    "_created"       : "2020-04-12T14:39:+13:00",
+                    "status"         : "CLOSED",
+                    "classification" : "service-request",
+                    "_links"         : {"self": {"href": "/tickets/2"}},
+                    "_updated"       : "2020-04-12T14:39:+13:00"
                 }
             ]
         },
         "_links": {
-            "self": {"href": "/tickets"},
-            "contained_in": {"href": "/"}
+            "self"         : {"href": "/tickets"},
+            "contained_in" : {"href": "/"}
         }
     }
 
@@ -392,15 +392,15 @@ def test_customer_user_list(client):
     customer_url = _get_root_links(client)['customers'] + "/1"
     customer     = client.get(customer_url, **JSON_HDRS_READ).get_json()
     assert customer == {
-        'id': 1,
-        'name': 'Foo Company',
-        'parent_id': 3,
+        'id'        : 1,
+        'name'      : 'Foo Company',
+        'parent_id' : 3,
         '_links': {
-            'self': {'href': '/customers/1'},
-            'contained_in': {'href': '/customers'},
-            'users': {'href': '/customers/1/users'},
-            'tickets': {'href': '/customers/1/tickets'},
-            'parent': {'href': '/customers/3'}
+            'self'         : {'href': '/customers/1'},
+            'contained_in' : {'href': '/customers'},
+            'users'        : {'href': '/customers/1/users/'},
+            'tickets'      : {'href': '/customers/1/tickets'},
+            'parent'       : {'href': '/customers/3'}
         }
     }
 
@@ -426,8 +426,8 @@ def test_customer_user_list(client):
             ]
         },
         '_links': {
-            'self': {'href': '/customers/1/users'},
-            'contained_in': {'href': '/customers/1'}
+            'self'         : {'href': '/customers/1/users/'},
+            'contained_in' : {'href': '/customers/1'}
         }
     }
 
@@ -442,13 +442,13 @@ def test_customer_ticket_list(client):
     # Check just the first ticket to confirm general correctness
     ticket = customer_ticket_list['_embedded']['tickets'][0]
     should_ticket = {
-        'id': 1,
-        'aportio_id': '1111',
-        'customer_id': 1,
-        'short_title':
+        'id'             : 1,
+        'aportio_id'     : '1111',
+        'customer_id'    : 1,
+        'short_title'    :
         'Broken laptop',
-        'status': 'OPEN',
-        'classification': 'incident',
+        'status'         : 'OPEN',
+        'classification' : 'incident',
     }
     # Only compare the keys we defined in the should image. Don't bother about links and
     # created timestamps
@@ -503,12 +503,12 @@ def test_user_ticket_list(client):
     # Check just the first ticket to confirm general correctness
     ticket = user_ticket_list['_embedded']['tickets'][0]
     should_ticket = {
-        'id': 1,
-        'aportio_id': '1111',
-        'customer_id': 1,
-        'short_title': 'Broken laptop',
-        'status': 'OPEN',
-        'classification': 'incident',
+        'id'             : 1,
+        'aportio_id'     : '1111',
+        'customer_id'    : 1,
+        'short_title'    : 'Broken laptop',
+        'status'         : 'OPEN',
+        'classification' : 'incident',
     }
     # Only compare the keys we defined in the should image. Don't bother about links and
     # created timestamps
@@ -569,15 +569,15 @@ def test_create_edit_ticket(client):
 
     # Ceate valid ticket
     rv = client.post(tickets_url, **JSON_HDRS_READWRITE,
-                     data = json.dumps({
-                         "user_id" : 1,
-                         "customer_id" : 1,
-                         "aportio_id" : "12233",
-                         "short_title" : "Laptop is broken",
-                         "long_text" : "It doesn't start up anymore.",
-                         "status" : "OPEN",
-                         "classification" : {"l1" : "service-request"}
-                     }))
+                     data=json.dumps({
+                              "user_id"        : 1,
+                              "customer_id"    : 1,
+                              "aportio_id"     : "12233",
+                              "short_title"    : "Laptop is broken",
+                              "long_text"      : "It doesn't start up anymore.",
+                              "status"         : "OPEN",
+                              "classification" : {"l1" : "service-request"}
+                          }))
     assert rv.is_json  and  rv.status_code == 201
     msg = rv.get_json()
     assert rv.headers.get('location') == "http://localhost/tickets/5"
@@ -649,12 +649,12 @@ def test_embedded_comments(client):
     ticket_url = _get_root_links(client)['tickets'] + "/1"
     ticket     = client.get(ticket_url, **JSON_HDRS_READ).get_json()
     should_ticket = {
-        'id': 1,
-        'aportio_id': '1111',
-        'customer_id': 1,
-        'short_title':
+        'id'             : 1,
+        'aportio_id'     : '1111',
+        'customer_id'    : 1,
+        'short_title'    :
         'Broken laptop',
-        'status': 'OPEN',
+        'status'         : 'OPEN',
     }
     # Only compare the keys we defined in the should image. Don't bother about links and
     # created timestamps, and even the embedded comments right now.
@@ -957,10 +957,10 @@ def test_post_attachment(client):
 
     # Post the data and check that it was created
     post_resp = client.post(attachments_url, **JSON_HDRS_READWRITE,
-                            data=json.dumps({"ticket_id": "1",
-                                             "filename": "text_to_post.txt",
-                                             "content_type": "text/plain",
-                                             "attachment_data": encoded_image_attachment}))
+                            data=json.dumps({"ticket_id"       : "1",
+                                             "filename"        : "text_to_post.txt",
+                                             "content_type"    : "text/plain",
+                                             "attachment_data" : encoded_image_attachment}))
 
     assert post_resp.is_json and post_resp.status_code == 201
     assert post_resp.headers.get('location') == "http://localhost/attachments/3"

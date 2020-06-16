@@ -629,7 +629,7 @@ class UserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedder):
                 "users" : self.embed_user_data_in_result(user_data)
             },
             "_links" : self.make_links({
-                           "self" :         UserList.get_self_url(),
+                           "self"         : UserList.get_self_url(),
                            "contained_in" : Root.get_self_url()
                        })
         }
@@ -1135,10 +1135,10 @@ class Customer(flask_restful.Resource, ApiResource):
         }
         res.update(cust)
         link_spec = {
-            "self" :         Customer.get_self_url(cust.doc_id),
+            "self"         : Customer.get_self_url(cust.doc_id),
             "contained_in" : CustomerList.get_self_url(),
-            "users" :        CustomerUserList.get_self_url(cust.doc_id),
-            "tickets" :      CustomerTicketList.get_self_url(cust.doc_id)
+            "users"        : CustomerUserList.get_self_url(cust.doc_id),
+            "tickets"      : CustomerTicketList.get_self_url(cust.doc_id)
         }
 
         # A customer may have a parent customer
@@ -1248,7 +1248,8 @@ class Ticket(flask_restful.Resource, ApiResource):
                 "_created"        : attachment.get('_created', ''),
                 # pylint: disable=no-member
                 "_links"          : self.make_links(
-                                    {"self" : Attachment.get_self_url(attachment.doc_id)})
+                                        {"self" : Attachment.get_self_url(attachment.doc_id)}
+                                    )
             }
             if "_updated" in attachment:
                 d['_updated'] = attachment['_updated']
@@ -1282,10 +1283,10 @@ class Ticket(flask_restful.Resource, ApiResource):
             "attachments" : self._embed_attachment_data_in_result(attachments),
         }
         res['_links'] = self.make_links({
-                            "self" :         Ticket.get_self_url(ticket.doc_id),
+                            "self"         : Ticket.get_self_url(ticket.doc_id),
                             "contained_in" : TicketList.get_self_url(),
-                            "customer" :     Customer.get_self_url(res['customer_id']),
-                            "user" :         User.get_self_url(res['user_id'])
+                            "customer"     : Customer.get_self_url(res['customer_id']),
+                            "user"         : User.get_self_url(res['user_id'])
                         })
         return res
 
@@ -1456,7 +1457,7 @@ class Comment(flask_restful.Resource, ApiResource,
                 "customer" : self.embed_customer_data_in_result([customer_data])[0]
             },
             '_links' : self.make_links({
-                           "self" :         Comment.get_self_url(comment.doc_id),
+                           "self"         : Comment.get_self_url(comment.doc_id),
                            "contained_in" : CommentList.get_self_url(),
                        })
         })
