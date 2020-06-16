@@ -815,7 +815,7 @@ def test_create_comment(client):
     assert post_response == comment
 
 
-def test_attachments_list(client):
+def test_get_attachments_list(client):
     # Get the url to the attachments list resource, then get the list of attachments that are
     # currently stored in the database.
     attachments_url = _get_root_links(client)['attachments']
@@ -862,7 +862,7 @@ def test_attachments_list(client):
 
 
 def test_get_attachment(client):
-    # First check we get the proper response when trying to get an attachment that doesn't
+    # First check if we get the proper response when trying to get an attachment that doesn't
     # exist
     no_attachment_url = _get_root_links(client)['attachments'] + "/999"
     no_attach_resp    = client.get(no_attachment_url, **JSON_HDRS_READ)

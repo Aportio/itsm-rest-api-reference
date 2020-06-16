@@ -796,7 +796,7 @@ class AttachmentList(flask_restful.Resource, ApiResourceList):
     A list of attachments.
 
     Similar to the comment list, this resource is not 'user friendly' to the
-    extend that it does not contain embedded resources. Instead, it is merely
+    extent that it does not contain embedded resources. Instead, it is merely
     used to cleanly and RESTfully express the association of attachments to
     tickets as well as the contents of those attachments.
 
