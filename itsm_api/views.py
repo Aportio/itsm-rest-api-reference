@@ -900,9 +900,9 @@ class AttachmentList(flask_restful.Resource, ApiResourceList):
             DB_ATTACHMENT_TABLE.remove(doc_ids=[new_attachment_id])
             flask_restful.abort(500, message="Error occured while trying to decode "
                                              "attachment file data")
-        else:
-            # Everything went fine. Return the new attachment ID.
-            return new_attachment_id
+
+        # If we get here, everything went fine. Return the new attachment ID.
+        return new_attachment_id
 
 
 class CustomerUserAssociationList(flask_restful.Resource, ApiResourceList):
@@ -1572,19 +1572,18 @@ class Attachment(flask_restful.Resource, ApiResource, _TicketDataEmbedder):
             # Attachment was in the database but not found on disk, return a 404
             flask_restful.abort(404, message=(f"file for attachment '{attachment_id}' not "
                                               "found!"))
-        else:
-            res.update({
-                "id"              : attachment.doc_id,
-                "attachment_data" : encoded_attachment,
-                "_embedded"       : {
-                    "ticket" : self.embed_ticket_data_in_result([ticket_data])[0]
-                },
-                '_links' : self.make_links({
-                               "self"         : Attachment.get_self_url(attachment.doc_id),
-                               "contained_in" : AttachmentList.get_self_url(),
-                           })
-            })
-            return res
+        res.update({
+            "id"              : attachment.doc_id,
+            "attachment_data" : encoded_attachment,
+            "_embedded"       : {
+                "ticket" : self.embed_ticket_data_in_result([ticket_data])[0]
+            },
+            '_links' : self.make_links({
+                           "self"         : Attachment.get_self_url(attachment.doc_id),
+                           "contained_in" : AttachmentList.get_self_url(),
+                       })
+        })
+        return res
 
     @classmethod
     def sanity_check(cls, data, attachment_id=None):
