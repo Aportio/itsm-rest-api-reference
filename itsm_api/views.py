@@ -576,6 +576,78 @@ class Root(flask_restful.Resource, ApiResource):
     def _get(self):
         """
         Return the root resource, which includes links to all collections.
+        ---
+        tags:
+        - Root
+        summary: GET Root resource
+        description: Return the root resource, which includes links to all collections.
+        responses:
+          '200':
+            description: Successful GET request. Returns resources.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    _links:
+                      type: object
+                      properties:
+                        tickets:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                        comments:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                        customer_user_associations:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                        customers:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                        users:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                examples:
+                  '0':
+                    value: |
+                      {
+                          "_links": {
+                              "self": {
+                                  "href": "/"
+                              },
+                              "users": {
+                                  "href": "/users"
+                              },
+                              "customers": {
+                                  "href": "/customers"
+                              },
+                              "tickets": {
+                                  "href": "/tickets"
+                              },
+                              "comments": {
+                                  "href": "/comments"
+                              },
+                              "customer_user_associations": {
+                                  "href": "/customer_user_associations"
+                              }
+                          }
+                      }
+
         """
         return {
             "_links" : self.make_links({
@@ -617,6 +689,126 @@ class UserList(flask_restful.Resource, ApiResourceList, _UserDataEmbedder):
     def _get(self, query=None):
         """
         Return the user table data.
+        ---
+        tags:
+        - Users
+        summary: GET Users resource
+        description: Return the user table data.
+        responses:
+          '200':
+            description: Successful GET request. Returns user table data.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    _embedded:
+                      type: object
+                      properties:
+                        users:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              _links:
+                                type: object
+                                properties:
+                                  self:
+                                    type: object
+                                    properties:
+                                      href:
+                                        type: string
+                              _created:
+                                type: string
+                              id:
+                                type: integer
+                              email:
+                                type: array
+                                items:
+                                  type: string
+                    _links:
+                      type: object
+                      properties:
+                        contained_in:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    total_queried:
+                      type: integer
+                examples:
+                  '0':
+                    value: |
+                      {
+                          "total_queried": 4,
+                          "_embedded": {
+                              "users": [
+                                  {
+                                      "id": 1,
+                                      "email": [
+                                          "some@user.com"
+                                      ],
+                                      "_created": "",
+                                      "_links": {
+                                          "self": {
+                                              "href": "/users/1"
+                                          }
+                                      }
+                                  },
+                                  {
+                                      "id": 2,
+                                      "email": [
+                                          "another@user.com",
+                                          "with-multiple@emails.com"
+                                      ],
+                                      "_created": "",
+                                      "_links": {
+                                          "self": {
+                                              "href": "/users/2"
+                                          }
+                                      }
+                                  },
+                                  {
+                                      "id": 3,
+                                      "email": [
+                                          "foo@foobar.com"
+                                      ],
+                                      "_created": "",
+                                      "_links": {
+                                          "self": {
+                                              "href": "/users/3"
+                                          }
+                                      }
+                                  },
+                                  {
+                                      "id": 4,
+                                      "email": [
+                                          "someone@somewhere.com"
+                                      ],
+                                      "_created": "",
+                                      "_links": {
+                                          "self": {
+                                              "href": "/users/4"
+                                          }
+                                      }
+                                  }
+                              ]
+                          },
+                          "_links": {
+                              "self": {
+                                  "href": "/users"
+                              },
+                              "contained_in": {
+                                  "href": "/"
+                              }
+                          }
+                      }
+
         """
         if not query:
             user_data = DB_USER_TABLE.all()
