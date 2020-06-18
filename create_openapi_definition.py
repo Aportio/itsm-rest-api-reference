@@ -9,19 +9,21 @@ RESOURCES = [
 
     # Top-level list resources
     views.UserList,
-    # views.CustomerList,
-    # views.TicketList,
-    # views.CommentList,
-    # views.CustomerUserAssociationList,
+    views.CustomerList,
+    views.TicketList,
+    views.CommentList,
+    views.AttachmentList,
+    views.CustomerUserAssociationList,
 
-    # # Individual resources
+    # Individual resources
     # views.User,
     # views.Customer,
     # views.Ticket,
     # views.Comment,
+    # views.Attachment,
     # views.CustomerUserAssociation,
-    # # Second-level list resources
 
+    # Second-level list resources
     # views.UserCustomerList,
     # views.CustomerUserList,
     # views.CustomerTicketList,
@@ -51,6 +53,22 @@ openapi_definition = {
         {
             "name": "Tickets",
             "description": "Requests against ticket resources"
+        },
+        {
+            "name": "Customers",
+            "description": "Requests against customer resources"
+        },
+        {
+            "name": "Comments",
+            "description": "Requests against comment resources"
+        },
+        {
+            "name": "Attachments",
+            "description": "Requests against attachment resources"
+        },
+        {
+            "name": "CustomerUserAssociations",
+            "description": "Requests against customer-user association resources"
         }
     ],
     "paths": {
@@ -59,7 +77,8 @@ openapi_definition = {
 
 
 def add_get_definition(resource):
-    # Get the path to the resource. This will be used as a key in the definition dict.
+    # Get the path to the resource. This will be used as a key in "paths" dictionary in the
+    # definition dict.
     path = resource.URL
 
     if not openapi_definition["paths"].get(path):
@@ -92,17 +111,23 @@ def add_post_definition(resource):
 
 if __name__ == "__main__":
     # Go through the list of resources that we want to create definitions for.
+    # Fix this up later so it looks cleaner.
     for res in RESOURCES:
         # If the resource has a GET method, add that to the definition.
         if "_get" in dir(res):
             add_get_definition(res)
 
         # If the resource has a POST method, add that to the definition.
+        # Note: POST for the Users resource is only there for demo purposes - ignore that POST
+        # method.
         if "_post" in dir(res):
-            add_post_definition(res)
+            if type(res) == views.UserList:
+                pass
+            else:
+                add_post_definition(res)
 
     # Get the date and time for right now, then generate a name for the definition file
-    now = datetime.datetime.now()
+    now      = datetime.datetime.now()
     filename = f"Aportio REST API definition {now}"
 
     # Save the definition to the definition file

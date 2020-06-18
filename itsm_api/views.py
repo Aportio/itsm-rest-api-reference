@@ -862,6 +862,105 @@ class CustomerList(flask_restful.Resource, ApiResourceList, _CustomerDataEmbedde
     def _get(self, query=None):
         """
         Return the customer list.
+        ---
+        tags:
+        - Customers
+        summary: GET Customers resource
+        description: Return the Customer table data.
+        responses:
+          '200':
+            description: Successful GET request. Returns Customer table data.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    _embedded:
+                      type: object
+                      properties:
+                        customers:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              _links:
+                                type: object
+                                properties:
+                                  self:
+                                    type: object
+                                    properties:
+                                      href:
+                                        type: string
+                              _created:
+                                type: string
+                              name:
+                                type: string
+                              id:
+                                type: integer
+                    _links:
+                      type: object
+                      properties:
+                        contained_in:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    total_queried:
+                      type: integer
+                examples:
+                  '0':
+                    value: |
+                      {
+                          "total_queried": 3,
+                          "_embedded": {
+                              "customers": [
+                                  {
+                                      "id": 1,
+                                      "name": "Foo Company",
+                                      "_created": "",
+                                      "_links": {
+                                          "self": {
+                                              "href": "/customers/1"
+                                          }
+                                      }
+                                  },
+                                  {
+                                      "id": 2,
+                                      "name": "Bar Company",
+                                      "_created": "",
+                                      "_links": {
+                                          "self": {
+                                              "href": "/customers/2"
+                                          }
+                                      }
+                                  },
+                                  {
+                                      "id": 3,
+                                      "name": "Foobar Company",
+                                      "_created": "",
+                                      "_links": {
+                                          "self": {
+                                              "href": "/customers/3"
+                                          }
+                                      }
+                                  }
+                              ]
+                          },
+                          "_links": {
+                              "self": {
+                                  "href": "/customers"
+                              },
+                              "contained_in": {
+                                  "href": "/"
+                              }
+                          }
+                      }
+
         """
         if not query:
             cust_data = DB_CUSTOMER_TABLE.all()
@@ -909,6 +1008,148 @@ class TicketList(flask_restful.Resource, ApiResourceList, _TicketDataEmbedder):
     def _get(self, query=None):
         """
         Return the ticket table data.
+        ---
+        tags:
+        - Tickets
+        summary: GET Tickets resource
+        description: Return the tickets table data.
+        responses:
+          '200':
+            description: Successful GET request. Returns the tickets table data.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    _embedded:
+                      type: object
+                      properties:
+                        tickets:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              short_title:
+                                type: string
+                              user_id:
+                                type: integer
+                              _links:
+                                type: object
+                                properties:
+                                  self:
+                                    type: object
+                                    properties:
+                                      href:
+                                        type: string
+                              _created:
+                                type: string
+                              aportio_id:
+                                type: string
+                              id:
+                                type: integer
+                              customer_id:
+                                type: integer
+                              classification:
+                                type: string
+                              status:
+                                type: string
+                    _links:
+                      type: object
+                      properties:
+                        contained_in:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    total_queried:
+                      type: integer
+                examples:
+                  '0':
+                    value: |
+                      {
+                          "total_queried": 4,
+                          "_embedded": {
+                              "tickets": [
+                                  {
+                                      "id": 1,
+                                      "aportio_id": "1111",
+                                      "customer_id": 1,
+                                      "user_id": 1,
+                                      "short_title": "Broken laptop",
+                                      "_created": "2020-04-12T14:39:+13:00",
+                                      "status": "OPEN",
+                                      "classification": "incident",
+                                      "_links": {
+                                          "self": {
+                                              "href": "/tickets/1"
+                                          }
+                                      }
+                                  },
+                                  {
+                                      "id": 2,
+                                      "aportio_id": "2222",
+                                      "customer_id": 2,
+                                      "user_id": 2,
+                                      "short_title": "Need a new license for Office",
+                                      "_created": "2020-04-12T14:39:+13:00",
+                                      "status": "CLOSED",
+                                      "classification": "service-request",
+                                      "_links": {
+                                          "self": {
+                                              "href": "/tickets/2"
+                                          }
+                                      },
+                                      "_updated": "2020-04-12T14:39:+13:00"
+                                  },
+                                  {
+                                      "id": 3,
+                                      "aportio_id": "4321",
+                                      "customer_id": 1,
+                                      "user_id": 3,
+                                      "short_title": "This is a test",
+                                      "_created": "2020-05-13T21:32:07.199672",
+                                      "status": "OPEN",
+                                      "classification": "(none)",
+                                      "_links": {
+                                          "self": {
+                                              "href": "/tickets/3"
+                                          }
+                                      },
+                                      "_updated": "2020-05-13T21:32:07.199672"
+                                  },
+                                  {
+                                      "id": 4,
+                                      "aportio_id": "1239",
+                                      "customer_id": 1,
+                                      "user_id": 4,
+                                      "short_title": "This is a test",
+                                      "_created": "2020-05-14T07:52:35.192934",
+                                      "status": "OPEN",
+                                      "classification": "(none)",
+                                      "_links": {
+                                          "self": {
+                                              "href": "/tickets/4"
+                                          }
+                                      },
+                                      "_updated": "2020-05-14T07:52:35.192934"
+                                  }
+                              ]
+                          },
+                          "_links": {
+                              "self": {
+                                  "href": "/tickets"
+                              },
+                              "contained_in": {
+                                  "href": "/"
+                              }
+                          }
+                      }
+
         """
         if not query:
             ticket_data = DB_TICKET_TABLE.all()
@@ -930,6 +1171,182 @@ class TicketList(flask_restful.Resource, ApiResourceList, _TicketDataEmbedder):
     def _post(self, data):
         """
         Process the addition of a ticket.
+        ---
+        tags:
+        - Tickets
+        summary: POST a new Ticket
+        description: Create a new Ticket in the ticket table.
+        requestBody:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  short_title:
+                    type: string
+                  long_text:
+                    type: string
+                  user_id:
+                    type: integer
+                  custom_fields:
+                    type: object
+                    properties:
+                      foo:
+                        type: string
+                      something_else:
+                        type: array
+                        items:
+                          type: integer
+                  aportio_id:
+                    type: string
+                  customer_id:
+                    type: integer
+                  classification:
+                    type: object
+                    properties:
+                      l1:
+                        type: string
+                  status:
+                    type: string
+              examples:
+                '0':
+                  value: |-
+                    {
+                        "user_id": 1,
+                        "customer_id": 1,
+                        "aportio_id": "12331",
+                        "short_title": "Laptop is broken",
+                        "long_text": "My laptop broke, please advise.",
+                        "status": "OPEN",
+                        "classification": {"l1": "service-request"},
+                        "custom_fields": {
+                            "foo": "bar",
+                            "something_else": [1, 2, "xyz"]
+                        }
+                    }
+        responses:
+          '201':
+            description: Successful POST request. Creates a Ticket and returns the created ticket's info.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    _links:
+                      type: object
+                      properties:
+                        contained_in:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                        user:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                        customer:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    custom_fields:
+                      type: object
+                      properties:
+                        foo:
+                          type: string
+                        something_else:
+                          type: array
+                          items:
+                            type: integer
+                    aportio_id:
+                      type: string
+                    _updated:
+                      type: string
+                    classification:
+                      type: object
+                      properties:
+                        l1:
+                          type: string
+                    long_text:
+                      type: string
+                    short_title:
+                      type: string
+                    _embedded:
+                      type: object
+                      properties:
+                        worknotes:
+                          type: array
+                          items:
+                            type: string
+                        attachments:
+                          type: array
+                          items:
+                            type: string
+                        comments:
+                          type: array
+                          items:
+                            type: string
+                    user_id:
+                      type: integer
+                    _created:
+                      type: string
+                    id:
+                      type: integer
+                    customer_id:
+                      type: integer
+                    status:
+                      type: string
+                examples:
+                  '0':
+                    value: |
+                      {
+                        "_created": "2020-06-18T11:06:25.211798", 
+                        "_embedded": {
+                          "attachments": [], 
+                          "comments": [], 
+                          "worknotes": []
+                        }, 
+                        "_links": {
+                          "contained_in": {
+                            "href": "/tickets"
+                          }, 
+                          "customer": {
+                            "href": "/customers/1"
+                          }, 
+                          "self": {
+                            "href": "/tickets/5"
+                          }, 
+                          "user": {
+                            "href": "/users/1"
+                          }
+                        }, 
+                        "_updated": "2020-06-18T11:06:25.211798", 
+                        "aportio_id": "12331", 
+                        "classification": {
+                          "l1": "service-request"
+                        }, 
+                        "custom_fields": {
+                          "foo": "bar", 
+                          "something_else": [
+                            1, 
+                            2, 
+                            "xyz"
+                          ]
+                        }, 
+                        "customer_id": 1, 
+                        "id": 5, 
+                        "long_text": "My laptop broke, please advise.", 
+                        "short_title": "Laptop is broken", 
+                        "status": "OPEN", 
+                        "user_id": 1
+                      }
+
         """
         new_ticket_id = DB_TICKET_TABLE.insert(data)
         return new_ticket_id
@@ -959,6 +1376,102 @@ class CommentList(flask_restful.Resource, ApiResourceList):
     def _get(self, query=None):
         """
         Return the list of all comments/worknotes.
+        ---
+        tags:
+        - Comments
+        summary: GET Comments resource
+        description: Auto generated using Swagger Inspector
+        responses:
+          '200':
+            description: Auto generated using Swagger Inspector
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    comments:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          user_id:
+                            type: integer
+                          _links:
+                            type: object
+                            properties:
+                              self:
+                                type: object
+                                properties:
+                                  href:
+                                    type: string
+                          _created:
+                            type: string
+                          _updated:
+                            type: string
+                          text:
+                            type: string
+                          ticket_id:
+                            type: integer
+                          type:
+                            type: string
+                    _links:
+                      type: object
+                      properties:
+                        contained_in:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    total_queried:
+                      type: integer
+                examples:
+                  '0':
+                    value: |
+                      {
+                          "total_queried": 2,
+                          "comments": [
+                              {
+                                  "user_id": 2,
+                                  "ticket_id": 1,
+                                  "text": "Has there been a follow up?",
+                                  "type": "WORKNOTE",
+                                  "_created": "2020-05-14T14:09:25.431621",
+                                  "_updated": "2020-05-14T14:09:25.431621",
+                                  "_links": {
+                                      "self": {
+                                          "href": "/comments/1"
+                                      }
+                                  }
+                              },
+                              {
+                                  "user_id": 1,
+                                  "ticket_id": 1,
+                                  "text": "Can I please have an update on this?",
+                                  "type": "COMMENT",
+                                  "_created": "2020-05-14T14:09:26.813168",
+                                  "_updated": "2020-05-14T14:09:26.813168",
+                                  "_links": {
+                                      "self": {
+                                          "href": "/comments/2"
+                                      }
+                                  }
+                              }
+                          ],
+                          "_links": {
+                              "self": {
+                                  "href": "/comments"
+                              },
+                              "contained_in": {
+                                  "href": "/"
+                              }
+                          }
+                      }
+
         """
         comments = DB_COMMENT_TABLE.all()
         for comment in comments:
@@ -978,6 +1491,195 @@ class CommentList(flask_restful.Resource, ApiResourceList):
     def _post(self, data):
         """
         Process the addition of a comment to a ticket.
+        ---
+        tags:
+        - Comments
+        summary: POST a new Comment
+        description: Create a new Comment in the comments table.
+        requestBody:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: integer
+                  text:
+                    type: string
+                  ticket_id:
+                    type: integer
+                  type:
+                    type: string
+              examples:
+                '0':
+                  value: |-
+                    {
+                        "user_id": 1,
+                        "ticket_id": 1,
+                        "text": "This is another comment",
+                        "type": "WORKNOTE"
+                    }
+        responses:
+          '201':
+            description: Successful POST request. Creates a Comment and returns the created comment's info.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    _embedded:
+                      type: object
+                      properties:
+                        ticket:
+                          type: object
+                          properties:
+                            short_title:
+                              type: string
+                            _links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                            user_id:
+                              type: integer
+                            _created:
+                              type: string
+                            aportio_id:
+                              type: string
+                            id:
+                              type: integer
+                            classification:
+                              type: string
+                            customer_id:
+                              type: integer
+                            status:
+                              type: string
+                        user:
+                          type: object
+                          properties:
+                            _links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                            _created:
+                              type: string
+                            id:
+                              type: integer
+                            email:
+                              type: array
+                              items:
+                                type: string
+                        customer:
+                          type: object
+                          properties:
+                            _links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                            _created:
+                              type: string
+                            name:
+                              type: string
+                            id:
+                              type: integer
+                    _links:
+                      type: object
+                      properties:
+                        contained_in:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    user_id:
+                      type: integer
+                    _created:
+                      type: string
+                    _updated:
+                      type: string
+                    id:
+                      type: integer
+                    text:
+                      type: string
+                    ticket_id:
+                      type: integer
+                    type:
+                      type: string
+                examples:
+                  '0':
+                    value: |
+                      {
+                        "_created": "2020-06-18T11:44:23.678125", 
+                        "_embedded": {
+                          "customer": {
+                            "_created": "", 
+                            "_links": {
+                              "self": {
+                                "href": "/customers/1"
+                              }
+                            }, 
+                            "id": 1, 
+                            "name": "Foo Company"
+                          }, 
+                          "ticket": {
+                            "_created": "2020-04-12T14:39:+13:00", 
+                            "_links": {
+                              "self": {
+                                "href": "/tickets/1"
+                              }
+                            }, 
+                            "aportio_id": "1111", 
+                            "classification": "incident", 
+                            "customer_id": 1, 
+                            "id": 1, 
+                            "short_title": "Broken laptop", 
+                            "status": "OPEN", 
+                            "user_id": 1
+                          }, 
+                          "user": {
+                            "_created": "", 
+                            "_links": {
+                              "self": {
+                                "href": "/users/1"
+                              }
+                            }, 
+                            "email": [
+                              "some@user.com"
+                            ], 
+                            "id": 1
+                          }
+                        }, 
+                        "_links": {
+                          "contained_in": {
+                            "href": "/comments"
+                          }, 
+                          "self": {
+                            "href": "/comments/3"
+                          }
+                        }, 
+                        "_updated": "2020-06-18T11:44:23.677883", 
+                        "id": 3, 
+                        "text": "This is another comment", 
+                        "ticket_id": 1, 
+                        "type": "WORKNOTE", 
+                        "user_id": 1
+                      }
+
         """
         new_comment_id = DB_COMMENT_TABLE.insert(data)
         return new_comment_id
@@ -1005,6 +1707,98 @@ class AttachmentList(flask_restful.Resource, ApiResourceList):
     def _get(self, query=None):
         """
         Return the list of all attachments.
+        ---
+        tags:
+        - Attachments
+        summary: GET Attachments resource
+        description: Return the attachments table data.
+        responses:
+          '200':
+            description: Successful Get request. Returns the attachments table data.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    attachments:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          filename:
+                            type: string
+                          content_type:
+                            type: string
+                          _links:
+                            type: object
+                            properties:
+                              self:
+                                type: object
+                                properties:
+                                  href:
+                                    type: string
+                          _created:
+                            type: string
+                          _updated:
+                            type: string
+                          ticket_id:
+                            type: integer
+                    _links:
+                      type: object
+                      properties:
+                        contained_in:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    total_queried:
+                      type: integer
+                examples:
+                  '0':
+                    value: |
+                      {
+                          "total_queried": 2,
+                          "attachments": [
+                              {
+                                  "ticket_id": 1,
+                                  "filename": "test.txt",
+                                  "content_type": "text/plain",
+                                  "_created": "2020-06-12T12:09:25.431621",
+                                  "_updated": "2020-06-12T12:09:25.431621",
+                                  "_links": {
+                                      "self": {
+                                          "href": "/attachments/1"
+                                      }
+                                  }
+                              },
+                              {
+                                  "ticket_id": 2,
+                                  "filename": "mt-fuji.jpeg",
+                                  "content_type": "image/jpeg",
+                                  "_created": "2020-06-12T14:09:26.813168",
+                                  "_updated": "2020-06-12T14:09:26.813168",
+                                  "_links": {
+                                      "self": {
+                                          "href": "/attachments/2"
+                                      }
+                                  }
+                              }
+                          ],
+                          "_links": {
+                              "self": {
+                                  "href": "/attachments"
+                              },
+                              "contained_in": {
+                                  "href": "/"
+                              }
+                          }
+                      }
+
         """
         attachments = DB_ATTACHMENT_TABLE.all()
         for attachment in attachments:
@@ -1024,6 +1818,137 @@ class AttachmentList(flask_restful.Resource, ApiResourceList):
     def _post(self, data):
         """
         Process the addition of an attachment to a ticket.
+        ---
+        tags:
+        - Attachments
+        summary: POST a new Ticket
+        description: Create a new Ticket in the tickets table.
+        requestBody:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  filename:
+                    type: string
+                  content_type:
+                    type: string
+                  ticket_id:
+                    type: integer
+                  attachment_data:
+                    type: string
+              examples:
+                '0':
+                  value: |-
+                    {
+                        "ticket_id": 1,
+                        "filename": "text_to_post.txt",
+                        "content_type": "text/plain",
+                        "attachment_data": "VGhpcyBpcyBhIGZpbGUgdG8gY2hlY2sgdGhhdCBwb3N0aW5nIGEgbmV3IGF0dGFjaG1lbnQgd29ya3MK"
+                    }
+        responses:
+          '201':
+            description: Auto generated using Swagger Inspector
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    filename:
+                      type: string
+                    content_type:
+                      type: string
+                    _embedded:
+                      type: object
+                      properties:
+                        ticket:
+                          type: object
+                          properties:
+                            short_title:
+                              type: string
+                            _links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                            user_id:
+                              type: integer
+                            _created:
+                              type: string
+                            aportio_id:
+                              type: string
+                            id:
+                              type: integer
+                            classification:
+                              type: string
+                            customer_id:
+                              type: integer
+                            status:
+                              type: string
+                    _links:
+                      type: object
+                      properties:
+                        contained_in:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    _created:
+                      type: string
+                    _updated:
+                      type: string
+                    id:
+                      type: integer
+                    ticket_id:
+                      type: integer
+                    attachment_data:
+                      type: string
+                examples:
+                  '0':
+                    value: |
+                      {
+                        "_created": "2020-06-18T12:26:36.960430", 
+                        "_embedded": {
+                          "ticket": {
+                            "_created": "2020-04-12T14:39:+13:00", 
+                            "_links": {
+                              "self": {
+                                "href": "/tickets/1"
+                              }
+                            }, 
+                            "aportio_id": "1111", 
+                            "classification": "incident", 
+                            "customer_id": 1, 
+                            "id": 1, 
+                            "short_title": "Broken laptop", 
+                            "status": "OPEN", 
+                            "user_id": 1
+                          }
+                        }, 
+                        "_links": {
+                          "contained_in": {
+                            "href": "/attachments"
+                          }, 
+                          "self": {
+                            "href": "/attachments/3"
+                          }
+                        }, 
+                        "_updated": "2020-06-18T12:26:36.960430", 
+                        "attachment_data": "VGhpcyBpcyBhIGZpbGUgdG8gY2hlY2sgdGhhdCBwb3N0aW5nIGEgbmV3IGF0dGFjaG1lbnQgd29ya3MK", 
+                        "content_type": "text/plain", 
+                        "filename": "text_to_post.txt", 
+                        "id": 3, 
+                        "ticket_id": 1
+                      }
+
         """
         # Attachment files have a unique name generated for them when saving to server-side
         # storage that looks like so:
@@ -1119,6 +2044,122 @@ class CustomerUserAssociationList(flask_restful.Resource, ApiResourceList):
     def _get(self, query=None):
         """
         Return the list of associations.
+        ---
+        tags:
+        - CustomerUserAssociations
+        summary: POST CustomerUserAssociation resource
+        description: Auto generated using Swagger Inspector
+        responses:
+          '200':
+            description: Auto generated using Swagger Inspector
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    associations:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          user_id:
+                            type: integer
+                          _links:
+                            type: object
+                            properties:
+                              self:
+                                type: object
+                                properties:
+                                  href:
+                                    type: string
+                          customer_id:
+                            type: integer
+                    _links:
+                      type: object
+                      properties:
+                        contained_in:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    total_queried:
+                      type: integer
+                examples:
+                  '0':
+                    value: |
+                      {
+                          "total_queried": 6,
+                          "associations": [
+                              {
+                                  "user_id": 1,
+                                  "customer_id": 1,
+                                  "_links": {
+                                      "self": {
+                                          "href": "/customer_user_associations/1"
+                                      }
+                                  }
+                              },
+                              {
+                                  "user_id": 1,
+                                  "customer_id": 2,
+                                  "_links": {
+                                      "self": {
+                                          "href": "/customer_user_associations/2"
+                                      }
+                                  }
+                              },
+                              {
+                                  "user_id": 1,
+                                  "customer_id": 3,
+                                  "_links": {
+                                      "self": {
+                                          "href": "/customer_user_associations/3"
+                                      }
+                                  }
+                              },
+                              {
+                                  "user_id": 2,
+                                  "customer_id": 2,
+                                  "_links": {
+                                      "self": {
+                                          "href": "/customer_user_associations/4"
+                                      }
+                                  }
+                              },
+                              {
+                                  "user_id": 3,
+                                  "customer_id": 1,
+                                  "_links": {
+                                      "self": {
+                                          "href": "/customer_user_associations/5"
+                                      }
+                                  }
+                              },
+                              {
+                                  "user_id": 3,
+                                  "customer_id": 3,
+                                  "_links": {
+                                      "self": {
+                                          "href": "/customer_user_associations/6"
+                                      }
+                                  }
+                              }
+                          ],
+                          "_links": {
+                              "self": {
+                                  "href": "/customer_user_associations"
+                              },
+                              "contained_in": {
+                                  "href": "/"
+                              }
+                          }
+                      }
+
         """
         associations = DB_USER_CUSTOMER_RELS_TABLE.all()
         for association in associations:
@@ -1146,6 +2187,140 @@ class CustomerUserAssociationList(flask_restful.Resource, ApiResourceList):
                 "user_id"     : "<user_id>",
                 "customer_id" : "<customer_id>"
             }
+        ---
+        tags:
+        - CustomerUserAssociations
+        summary: POST CustomerUserAssociation resource
+        description: Create a new CustomerUserAssociation in the customer-user association table.
+        requestBody:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: integer
+                  customer_id:
+                    type: integer
+              examples:
+                '0':
+                  value: |-
+                    {
+                        "user_id": 3,
+                        "customer_id": 2
+                    }
+        responses:
+          '201':
+            description: Auto generated using Swagger Inspector
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    _embedded:
+                      type: object
+                      properties:
+                        user:
+                          type: object
+                          properties:
+                            _links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                            _created:
+                              type: string
+                            id:
+                              type: integer
+                            email:
+                              type: array
+                              items:
+                                type: string
+                        customer:
+                          type: object
+                          properties:
+                            _links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                            _created:
+                              type: string
+                            name:
+                              type: string
+                            id:
+                              type: integer
+                    _links:
+                      type: object
+                      properties:
+                        contained_in:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    user_id:
+                      type: integer
+                    _created:
+                      type: string
+                    _updated:
+                      type: string
+                    id:
+                      type: integer
+                    customer_id:
+                      type: integer
+                examples:
+                  '0':
+                    value: |
+                      {
+                        "_created": "2020-06-18T12:36:53.428798", 
+                        "_embedded": {
+                          "customer": {
+                            "_created": "", 
+                            "_links": {
+                              "self": {
+                                "href": "/customers/2"
+                              }
+                            }, 
+                            "id": 2, 
+                            "name": "Bar Company"
+                          }, 
+                          "user": {
+                            "_created": "", 
+                            "_links": {
+                              "self": {
+                                "href": "/users/3"
+                              }
+                            }, 
+                            "email": [
+                              "foo@foobar.com"
+                            ], 
+                            "id": 3
+                          }
+                        }, 
+                        "_links": {
+                          "contained_in": {
+                            "href": "/customer_user_associations"
+                          }, 
+                          "self": {
+                            "href": "/customer_user_associations/7"
+                          }
+                        }, 
+                        "_updated": "2020-06-18T12:36:53.428798", 
+                        "customer_id": 2, 
+                        "id": 7, 
+                        "user_id": 3
+                      }
 
         """
         cust_id = data['customer_id']
