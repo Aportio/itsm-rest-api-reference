@@ -16,7 +16,7 @@ RESOURCES = [
     views.CustomerUserAssociationList,
 
     # Individual resources
-    # views.User,
+    views.User,
     # views.Customer,
     # views.Ticket,
     # views.Comment,

@@ -1,0 +1,118 @@
+tags:
+- Users
+summary: GET Users resource
+description: Return the user table data.
+responses:
+  '200':
+    description: Successful GET request. Returns user table data.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            _embedded:
+              type: object
+              properties:
+                users:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      _links:
+                        type: object
+                        properties:
+                          self:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                      _created:
+                        type: string
+                      id:
+                        type: integer
+                      email:
+                        type: array
+                        items:
+                          type: string
+            _links:
+              type: object
+              properties:
+                contained_in:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                self:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+            total_queried:
+              type: integer
+        examples:
+          '0':
+            value: |
+              {
+                  "total_queried": 4,
+                  "_embedded": {
+                      "users": [
+                          {
+                              "id": 1,
+                              "email": [
+                                  "some@user.com"
+                              ],
+                              "_created": "",
+                              "_links": {
+                                  "self": {
+                                      "href": "/users/1"
+                                  }
+                              }
+                          },
+                          {
+                              "id": 2,
+                              "email": [
+                                  "another@user.com",
+                                  "with-multiple@emails.com"
+                              ],
+                              "_created": "",
+                              "_links": {
+                                  "self": {
+                                      "href": "/users/2"
+                                  }
+                              }
+                          },
+                          {
+                              "id": 3,
+                              "email": [
+                                  "foo@foobar.com"
+                              ],
+                              "_created": "",
+                              "_links": {
+                                  "self": {
+                                      "href": "/users/3"
+                                  }
+                              }
+                          },
+                          {
+                              "id": 4,
+                              "email": [
+                                  "someone@somewhere.com"
+                              ],
+                              "_created": "",
+                              "_links": {
+                                  "self": {
+                                      "href": "/users/4"
+                                  }
+                              }
+                          }
+                      ]
+                  },
+                  "_links": {
+                      "self": {
+                          "href": "/users"
+                      },
+                      "contained_in": {
+                          "href": "/"
+                      }
+                  }
+              }

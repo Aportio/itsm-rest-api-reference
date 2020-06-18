@@ -1,0 +1,174 @@
+tags:
+- Tickets
+summary: POST a new Ticket
+description: Create a new Ticket in the ticket table.
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          short_title:
+            type: string
+          long_text:
+            type: string
+          user_id:
+            type: integer
+          custom_fields:
+            type: object
+            properties:
+              foo:
+                type: string
+              something_else:
+                type: array
+                items:
+                  type: integer
+          aportio_id:
+            type: string
+          customer_id:
+            type: integer
+          classification:
+            type: object
+            properties:
+              l1:
+                type: string
+          status:
+            type: string
+      examples:
+        '0':
+          value: |-
+            {
+                "user_id": 1,
+                "customer_id": 1,
+                "aportio_id": "12331",
+                "short_title": "Laptop is broken",
+                "long_text": "My laptop broke, please advise.",
+                "status": "OPEN",
+                "classification": {"l1": "service-request"},
+                "custom_fields": {
+                    "foo": "bar",
+                    "something_else": [1, 2, "xyz"]
+                }
+            }
+responses:
+  '201':
+    description: Successful POST request. Creates a Ticket and returns the created ticket's info.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            _links:
+              type: object
+              properties:
+                contained_in:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                self:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                user:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                customer:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+            custom_fields:
+              type: object
+              properties:
+                foo:
+                  type: string
+                something_else:
+                  type: array
+                  items:
+                    type: integer
+            aportio_id:
+              type: string
+            _updated:
+              type: string
+            classification:
+              type: object
+              properties:
+                l1:
+                  type: string
+            long_text:
+              type: string
+            short_title:
+              type: string
+            _embedded:
+              type: object
+              properties:
+                worknotes:
+                  type: array
+                  items:
+                    type: string
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                comments:
+                  type: array
+                  items:
+                    type: string
+            user_id:
+              type: integer
+            _created:
+              type: string
+            id:
+              type: integer
+            customer_id:
+              type: integer
+            status:
+              type: string
+        examples:
+          '0':
+            value: |
+              {
+                "_created": "2020-06-18T11:06:25.211798", 
+                "_embedded": {
+                  "attachments": [], 
+                  "comments": [], 
+                  "worknotes": []
+                }, 
+                "_links": {
+                  "contained_in": {
+                    "href": "/tickets"
+                  }, 
+                  "customer": {
+                    "href": "/customers/1"
+                  }, 
+                  "self": {
+                    "href": "/tickets/5"
+                  }, 
+                  "user": {
+                    "href": "/users/1"
+                  }
+                }, 
+                "_updated": "2020-06-18T11:06:25.211798", 
+                "aportio_id": "12331", 
+                "classification": {
+                  "l1": "service-request"
+                }, 
+                "custom_fields": {
+                  "foo": "bar", 
+                  "something_else": [
+                    1, 
+                    2, 
+                    "xyz"
+                  ]
+                }, 
+                "customer_id": 1, 
+                "id": 5, 
+                "long_text": "My laptop broke, please advise.", 
+                "short_title": "Laptop is broken", 
+                "status": "OPEN", 
+                "user_id": 1
+              }

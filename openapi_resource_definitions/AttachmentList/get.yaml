@@ -1,0 +1,90 @@
+tags:
+- Attachments
+summary: GET Attachments resource
+description: Return the attachments table data.
+responses:
+  '200':
+    description: Successful Get request. Returns the attachments table data.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            attachments:
+              type: array
+              items:
+                type: object
+                properties:
+                  filename:
+                    type: string
+                  content_type:
+                    type: string
+                  _links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  _created:
+                    type: string
+                  _updated:
+                    type: string
+                  ticket_id:
+                    type: integer
+            _links:
+              type: object
+              properties:
+                contained_in:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                self:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+            total_queried:
+              type: integer
+        examples:
+          '0':
+            value: |
+              {
+                  "total_queried": 2,
+                  "attachments": [
+                      {
+                          "ticket_id": 1,
+                          "filename": "test.txt",
+                          "content_type": "text/plain",
+                          "_created": "2020-06-12T12:09:25.431621",
+                          "_updated": "2020-06-12T12:09:25.431621",
+                          "_links": {
+                              "self": {
+                                  "href": "/attachments/1"
+                              }
+                          }
+                      },
+                      {
+                          "ticket_id": 2,
+                          "filename": "mt-fuji.jpeg",
+                          "content_type": "image/jpeg",
+                          "_created": "2020-06-12T14:09:26.813168",
+                          "_updated": "2020-06-12T14:09:26.813168",
+                          "_links": {
+                              "self": {
+                                  "href": "/attachments/2"
+                              }
+                          }
+                      }
+                  ],
+                  "_links": {
+                      "self": {
+                          "href": "/attachments"
+                      },
+                      "contained_in": {
+                          "href": "/"
+                      }
+                  }
+              }
