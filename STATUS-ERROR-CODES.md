@@ -1,6 +1,6 @@
 # Summary of status- and error-codes to be returned by an implementation
 
-The follow HTTP status codes should be used by the ITSM REST implementation.
+The following HTTP status codes should be used by the ITSM REST implementation.
 They are recognized and can be dealt with by our client implementation:
 
 ## Success
@@ -20,7 +20,7 @@ Note that any '4**' error code indicates that it's possible for the client
 to fix the situation by changing something in their request. Thus, for any
 '4**' error, the return body should contain a human readable error message
 explaining the problem. The maintainers of the client code can see those
-messages and can use it to improve the cient implementation.
+messages and can use it to improve the client implementation.
 
 In general, any requests that received a '4**' response will NOT be automatically
 retried by the client, but may be retried at a later time if and when manual fixes
@@ -30,8 +30,8 @@ have been applied to the client code or configuration.
 
 If there is something wrong with the request body (in case of POST or PUT),
 or if the query parameters (for some GET requests) are wrong. This includes
-situation where the request is correctly formatted (correct syntax), but
-where the request is still wrong in a sematic sense. An example here is the
+situations where the request is correctly formatted (correct syntax), but
+where the request is still wrong in a semantic sense. An example here is the
 creation of a user/customer association, where the specified association
 exists already.
 
@@ -39,8 +39,8 @@ exists already.
 
 The client could not be authenticated (note that the official name of this
 return code is "Unauthorized", but by convention, it is used to indicate
-that the authentication failed. This can happen if the client tried to access
-a resource that requires authentication, but that no or incorrect credentials
+failed authentication). This can happen if the client tried to access a
+resource that requires authentication, but that no or incorrect credentials
 were provided. Note that the 'WWW-Authenticate' header needs to be returned
 in that case.
 
@@ -93,7 +93,7 @@ know more, it may as well retry.
     
 ### 502: Bad Gateway
 
-This often is caused either by configuration issues and may be retried.
+This often is caused by configuration issues and may be retried.
       
 ### 503: Service Unavailable
 
