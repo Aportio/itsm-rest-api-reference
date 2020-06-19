@@ -1,0 +1,43 @@
+tags:
+  - Comments
+summary: PUT an update to a single Comment
+description: Auto generated using Swagger Inspector
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          user_id:
+            type: integer
+          text:
+            type: string
+          ticket_id:
+            type: integer
+          type:
+            type: string
+      examples:
+        '0':
+          value: |-
+            {
+                "user_id": 2,
+                "ticket_id": 1,
+                "text": "Has there been any follow up?",
+                "type": "COMMENT"
+            }
+responses:
+  '200':
+    description: Auto generated using Swagger Inspector
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            msg:
+              type: string
+        examples:
+          '0':
+            value: |
+              {
+                "msg": "Ok"
+              }

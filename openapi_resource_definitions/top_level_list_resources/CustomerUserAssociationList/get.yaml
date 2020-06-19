@@ -1,10 +1,10 @@
 tags:
 - CustomerUserAssociations
-summary: POST CustomerUserAssociation resource
-description: Auto generated using Swagger Inspector
+summary: POST a CustomerUserAssociation resource
+description: Create a Customer-User association.
 responses:
   '200':
-    description: Auto generated using Swagger Inspector
+    description: Successful POST request. Returns the created Customer-User association.
     content:
       application/json:
         schema:

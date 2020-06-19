@@ -21,7 +21,7 @@ requestBody:
             }
 responses:
   '201':
-    description: Auto generated using Swagger Inspector
+    description: Successful POST request. Returns the created Customer-User association.
     content:
       application/json:
         schema:

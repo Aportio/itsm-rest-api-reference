@@ -1,24 +1,22 @@
 tags:
-- Attachments
-summary: GET Attachments resource
-description: Return the attachments table data.
+- Comments
+summary: GET Comments resource
+description: Return the CommentsList resource.
 responses:
   '200':
-    description: Successful Get request. Returns the attachments table data.
+    description: Successful GET request. Returns the data in the Comments table.
     content:
       application/json:
         schema:
           type: object
           properties:
-            attachments:
+            comments:
               type: array
               items:
                 type: object
                 properties:
-                  filename:
-                    type: string
-                  content_type:
-                    type: string
+                  user_id:
+                    type: integer
                   _links:
                     type: object
                     properties:
@@ -31,8 +29,12 @@ responses:
                     type: string
                   _updated:
                     type: string
+                  text:
+                    type: string
                   ticket_id:
                     type: integer
+                  type:
+                    type: string
             _links:
               type: object
               properties:
@@ -53,35 +55,37 @@ responses:
             value: |
               {
                   "total_queried": 2,
-                  "attachments": [
+                  "comments": [
                       {
+                          "user_id": 2,
                           "ticket_id": 1,
-                          "filename": "test.txt",
-                          "content_type": "text/plain",
-                          "_created": "2020-06-12T12:09:25.431621",
-                          "_updated": "2020-06-12T12:09:25.431621",
+                          "text": "Has there been a follow up?",
+                          "type": "WORKNOTE",
+                          "_created": "2020-05-14T14:09:25.431621",
+                          "_updated": "2020-05-14T14:09:25.431621",
                           "_links": {
                               "self": {
-                                  "href": "/attachments/1"
+                                  "href": "/comments/1"
                               }
                           }
                       },
                       {
-                          "ticket_id": 2,
-                          "filename": "mt-fuji.jpeg",
-                          "content_type": "image/jpeg",
-                          "_created": "2020-06-12T14:09:26.813168",
-                          "_updated": "2020-06-12T14:09:26.813168",
+                          "user_id": 1,
+                          "ticket_id": 1,
+                          "text": "Can I please have an update on this?",
+                          "type": "COMMENT",
+                          "_created": "2020-05-14T14:09:26.813168",
+                          "_updated": "2020-05-14T14:09:26.813168",
                           "_links": {
                               "self": {
-                                  "href": "/attachments/2"
+                                  "href": "/comments/2"
                               }
                           }
                       }
                   ],
                   "_links": {
                       "self": {
-                          "href": "/attachments"
+                          "href": "/comments"
                       },
                       "contained_in": {
                           "href": "/"
