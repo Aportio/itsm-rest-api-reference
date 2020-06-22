@@ -1,5 +1,5 @@
 """
-create_openapi_definition.py
+create_openapi_definition.py.
 
 This script is used to create a full OpenAPI v3 definition file in yaml, which
 is then uploaded to Aportio's Swaggerhub profile and can be found at
