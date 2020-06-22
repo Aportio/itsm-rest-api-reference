@@ -1,3 +1,43 @@
+"""
+create_openapi_definition.py
+
+This script is used to create a full OpenAPI v3 definition file in yaml, which
+is then uploaded to Aportio's Swaggerhub profile and can be found at
+<insert-aportio-swaggerhub-link-here>.
+
+This file holds the base definition, where various metadata is pre-filled.
+The definitions for the Aportio API's resources can be found in the
+openapi_resource_definition folder. That folder has the following sub-folders:
+
+Root                        - The root resource of the API. Essentially, a list
+                              of the available top-level resources.
+
+top_level_list_resources    - The top-level resources of the API, such as
+                              UserList, TicketList, AttachmentList etc.
+
+individual_resources        - The individual resources, such as getting a
+                              specific User by user_id, or a specific Ticket
+                              by ticket_id.
+
+second_level_list_resources - Second-level list resources, such as the list of
+                              tickets for a given user, or the list of users
+                              for a given customer.
+
+Each of these sub-folders has yet more sub-folders for the resource that
+belongs in that category. For example, the UsersList resource belongs in the
+top-level list resources folder, while the single Ticket resource belongs in
+the individual resources folder.
+Inside each of those resource folders are .yaml files which represent the
+HTTP method that file's definition describes. These are named for the method
+they represent, which is any valid HTTP method that is supported by our API,
+e.g. "get.yaml", "post.yaml", "put.yaml".
+
+Upon running this script, the code here will recursively go through each of
+those directories and find those files, extract their OpenAPI definition, then
+put it into the main OpenAPI definition in this file. After that, the script
+writes this OpenAPI definition to a file with today's date and time.
+
+"""
 import datetime
 import os
 
