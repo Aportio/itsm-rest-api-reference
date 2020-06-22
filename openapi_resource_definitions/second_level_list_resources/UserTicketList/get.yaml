@@ -2,107 +2,107 @@ tags:
   - Users
 summary: GET list of Tickets for a given User
 description: Auto generated using Swagger Inspector
-  responses:
-    '200':
-      description: Auto generated using Swagger Inspector
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              _embedded:
-                type: object
-                properties:
-                  tickets:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        short_title:
-                          type: string
-                        user_id:
-                          type: integer
-                        _links:
-                          type: object
-                          properties:
-                            self:
-                              type: object
-                              properties:
-                                href:
-                                  type: string
-                        _created:
-                          type: string
-                        aportio_id:
-                          type: string
-                        id:
-                          type: integer
-                        customer_id:
-                          type: integer
-                        classification:
-                          type: string
-                        status:
-                          type: string
-              _links:
-                type: object
-                properties:
-                  contained_in:
+responses:
+  '200':
+    description: Auto generated using Swagger Inspector
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            _embedded:
+              type: object
+              properties:
+                tickets:
+                  type: array
+                  items:
                     type: object
                     properties:
-                      href:
+                      short_title:
                         type: string
-                  self:
-                    type: object
-                    properties:
-                      href:
+                      user_id:
+                        type: integer
+                      _links:
+                        type: object
+                        properties:
+                          self:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                      _created:
                         type: string
-              total_queried:
-                type: integer
-          examples:
-            '0':
-              value: |
-                {
-                    "total_queried": 2,
-                    "_embedded": {
-                        "tickets": [
-                            {
-                                "id": 1,
-                                "aportio_id": "1111",
-                                "customer_id": 1,
-                                "user_id": 1,
-                                "short_title": "Broken laptop",
-                                "_created": "2020-04-12T14:39:+13:00",
-                                "status": "OPEN",
-                                "classification": "incident",
-                                "_links": {
-                                    "self": {
-                                        "href": "/tickets/1"
-                                    }
-                                }
-                            },
-                            {
-                                "id": 5,
-                                "aportio_id": "12331",
-                                "customer_id": 1,
-                                "user_id": 1,
-                                "short_title": "Laptop is broken",
-                                "_created": "2020-06-18T11:06:25.211798",
-                                "status": "OPEN",
-                                "classification": "service-request",
-                                "_links": {
-                                    "self": {
-                                        "href": "/tickets/5"
-                                    }
-                                },
-                                "_updated": "2020-06-18T11:06:25.211798"
-                            }
-                        ]
-                    },
-                    "_links": {
-                        "self": {
-                            "href": "/users/1/tickets"
-                        },
-                        "contained_in": {
-                            "href": "/users/1"
-                        }
-                    }
-                }
+                      aportio_id:
+                        type: string
+                      id:
+                        type: integer
+                      customer_id:
+                        type: integer
+                      classification:
+                        type: string
+                      status:
+                        type: string
+            _links:
+              type: object
+              properties:
+                contained_in:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                self:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+            total_queried:
+              type: integer
+        examples:
+          '0':
+            value: |
+              {
+                  "total_queried": 2,
+                  "_embedded": {
+                      "tickets": [
+                          {
+                              "id": 1,
+                              "aportio_id": "1111",
+                              "customer_id": 1,
+                              "user_id": 1,
+                              "short_title": "Broken laptop",
+                              "_created": "2020-04-12T14:39:+13:00",
+                              "status": "OPEN",
+                              "classification": "incident",
+                              "_links": {
+                                  "self": {
+                                      "href": "/tickets/1"
+                                  }
+                              }
+                          },
+                          {
+                              "id": 5,
+                              "aportio_id": "12331",
+                              "customer_id": 1,
+                              "user_id": 1,
+                              "short_title": "Laptop is broken",
+                              "_created": "2020-06-18T11:06:25.211798",
+                              "status": "OPEN",
+                              "classification": "service-request",
+                              "_links": {
+                                  "self": {
+                                      "href": "/tickets/5"
+                                  }
+                              },
+                              "_updated": "2020-06-18T11:06:25.211798"
+                          }
+                      ]
+                  },
+                  "_links": {
+                      "self": {
+                          "href": "/users/1/tickets"
+                      },
+                      "contained_in": {
+                          "href": "/users/1"
+                      }
+                  }
+              }

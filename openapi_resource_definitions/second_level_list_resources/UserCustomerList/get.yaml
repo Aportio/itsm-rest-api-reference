@@ -2,96 +2,96 @@ tags:
   - Users
 summary: GET the list of Customers for a given User
 description: Auto generated using Swagger Inspector
-  responses:
-    '200':
-      description: Auto generated using Swagger Inspector
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              _embedded:
-                type: object
-                properties:
-                  customers:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        _links:
-                          type: object
-                          properties:
-                            self:
-                              type: object
-                              properties:
-                                href:
-                                  type: string
-                        _created:
-                          type: string
-                        name:
-                          type: string
-                        id:
-                          type: integer
-              _links:
-                type: object
-                properties:
-                  contained_in:
+responses:
+  '200':
+    description: Auto generated using Swagger Inspector
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            _embedded:
+              type: object
+              properties:
+                customers:
+                  type: array
+                  items:
                     type: object
                     properties:
-                      href:
+                      _links:
+                        type: object
+                        properties:
+                          self:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                      _created:
                         type: string
-                  self:
-                    type: object
-                    properties:
-                      href:
+                      name:
                         type: string
-              total_queried:
-                type: integer
-          examples:
-            '0':
-              value: |
-                {
-                    "total_queried": 3,
-                    "_embedded": {
-                        "customers": [
-                            {
-                                "id": 1,
-                                "name": "Foo Company",
-                                "_created": "",
-                                "_links": {
-                                    "self": {
-                                        "href": "/customers/1"
-                                    }
-                                }
-                            },
-                            {
-                                "id": 2,
-                                "name": "Bar Company",
-                                "_created": "",
-                                "_links": {
-                                    "self": {
-                                        "href": "/customers/2"
-                                    }
-                                }
-                            },
-                            {
-                                "id": 3,
-                                "name": "Foobar Company",
-                                "_created": "",
-                                "_links": {
-                                    "self": {
-                                        "href": "/customers/3"
-                                    }
-                                }
-                            }
-                        ]
-                    },
-                    "_links": {
-                        "self": {
-                            "href": "/users/1/customers"
-                        },
-                        "contained_in": {
-                            "href": "/users/1"
-                        }
-                    }
-                }
+                      id:
+                        type: integer
+            _links:
+              type: object
+              properties:
+                contained_in:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                self:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+            total_queried:
+              type: integer
+        examples:
+          '0':
+            value: |
+              {
+                  "total_queried": 3,
+                  "_embedded": {
+                      "customers": [
+                          {
+                              "id": 1,
+                              "name": "Foo Company",
+                              "_created": "",
+                              "_links": {
+                                  "self": {
+                                      "href": "/customers/1"
+                                  }
+                              }
+                          },
+                          {
+                              "id": 2,
+                              "name": "Bar Company",
+                              "_created": "",
+                              "_links": {
+                                  "self": {
+                                      "href": "/customers/2"
+                                  }
+                              }
+                          },
+                          {
+                              "id": 3,
+                              "name": "Foobar Company",
+                              "_created": "",
+                              "_links": {
+                                  "self": {
+                                      "href": "/customers/3"
+                                  }
+                              }
+                          }
+                      ]
+                  },
+                  "_links": {
+                      "self": {
+                          "href": "/users/1/customers"
+                      },
+                      "contained_in": {
+                          "href": "/users/1"
+                      }
+                  }
+              }
