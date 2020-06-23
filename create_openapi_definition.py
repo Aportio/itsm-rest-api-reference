@@ -3,7 +3,7 @@ create_openapi_definition.py.
 
 This script is used to create a full OpenAPI v3 definition file in yaml, which
 is then uploaded to Aportio's Swaggerhub profile and can be found at
-<insert-aportio-swaggerhub-link-here>.
+https://app.swaggerhub.com/apis-docs/aportio/Aportio-ITSM-REST-API-Reference/0.1.
 
 This file holds the base definition, where various metadata is pre-filled.
 The definitions for the Aportio API's resources can be found in the
@@ -24,20 +24,22 @@ second_level_list_resources - Second-level list resources, such as the list of
                               for a given customer.
 
 Each of these sub-folders has yet more sub-folders for the resource that
-belongs in that category. For example, the UsersList resource belongs in the
+belongs in that category. For example, the UserList resource belongs in the
 top-level list resources folder, while the single Ticket resource belongs in
 the individual resources folder.
-Inside each of those resource folders are .yaml files which represent the
-HTTP method that file's definition describes. These are named for the method
-they represent, which is any valid HTTP method that is supported by our API,
-e.g. "get.yaml", "post.yaml", "put.yaml".
 
-Upon running this script, the code here will recursively go through each of
-those directories and find those files, extract their OpenAPI definition, then
-put it into the main OpenAPI definition in this file. After that, the script
-writes this OpenAPI definition to a file with today's date and time.
+Inside each of those resource folders are yaml files, which each contain an
+OpenAPI definition that describes how an HTTP method for that resource should
+work. These yaml files are named for the HTTP method that they represent for
+that API resource, which is any valid HTTP method that we support for that
+resource, e.g. "get.yaml", "post.yaml", "put.yaml" etc.
+
+Once finished, the final OpenAPI definition will be written to a file called
+Aportio_REST_API_definition_<datetime>, where "datetime" is the date and
+time that the script was run.
 
 """
+
 import datetime
 import os
 
@@ -91,27 +93,27 @@ openapi_definition = {
             "description": "The root level of the API"
         },
         {
-            "name": "Users",
+            "name": "User",
             "description": "Requests against user resources"
         },
         {
-            "name": "Tickets",
+            "name": "Ticket",
             "description": "Requests against ticket resources"
         },
         {
-            "name": "Customers",
+            "name": "Customer",
             "description": "Requests against customer resources"
         },
         {
-            "name": "Comments",
+            "name": "Comment",
             "description": "Requests against comment resources"
         },
         {
-            "name": "Attachments",
+            "name": "Attachment",
             "description": "Requests against attachment resources"
         },
         {
-            "name": "CustomerUserAssociations",
+            "name": "CustomerUserAssociation",
             "description": "Requests against customer-user association resources"
         }
     ],
@@ -155,7 +157,7 @@ yaml = YAML()
 
 if __name__ == "__main__":
     # Recursively go through the openapi_resource_definitions directory to get each resource's
-    # OpenAPI definition.
+    # OpenAPI definition, and add them to the base openapi definition object.
     for dirpath, dirnames, files in os.walk("openapi_resource_definitions"):
         # If dirnames is an empty list, it means we are at the end of a branch in the directory
         # tree, which means the yaml files for one of the resources should be in this
@@ -199,11 +201,12 @@ if __name__ == "__main__":
                     #       ...
                     openapi_definition['paths'][resource_url_path][http_method] = definition
 
-    # Get the date and time for right now, then generate a name for the definition file
+    # Get the date and time that the script was run, then generate a name for the definition
+    # file.
     now      = datetime.datetime.now()
     filename = f"Aportio_REST_API_definition_{now}.yaml"
 
-    # save the full definition to a file
+    # Save the full definition to a file
     with open(filename, "w") as yaml_file:
         yaml.dump(openapi_definition, yaml_file)
 
