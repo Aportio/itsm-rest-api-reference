@@ -1,7 +1,7 @@
 tags:
   - Comments
-summary: PUT an update to a single Comment
-description: Auto generated using Swagger Inspector
+summary: Update a single comment
+description: Update the details of a specific comment in the comments table.
 requestBody:
   content:
     application/json:
@@ -57,7 +57,6 @@ responses:
               {
                 "message": "Bad Request - missing mandatory key(s): type"
               }
-        examples:
           "Mandatory key 'type' is invalid":
             value: |
               {

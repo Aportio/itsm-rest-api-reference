@@ -1,10 +1,10 @@
 tags:
   - Tickets
-summary: GET a specific Ticket
-description: Auto generated using Swagger Inspector
+summary: Get a specific Ticket
+description: Return the details about a specific ticket from the tickets table.
 responses:
   '200':
-    description: Auto generated using Swagger Inspector
+    description: Successful GET request for a specific ticket. Returns the ticket from the ticket table.
     content:
       application/json:
         schema:
@@ -113,9 +113,6 @@ responses:
                       type: string
             custom_fields:
               type: object
-              properties:
-                department:
-                  type: string
             _created:
               type: string
             aportio_id:
@@ -134,7 +131,7 @@ responses:
             status:
               type: string
         examples:
-          '0':
+          'A single ticket returned':
             value: |
               {
                   "id": 1,
@@ -234,4 +231,38 @@ responses:
                           "href": "/users/1"
                       }
                   }
+              }
+  '404':
+    description: The requested ticket doesn't exist in the database.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          "Requesting a ticket that doesn't exist":
+            value: |
+              {
+                "message": "ticket '999' not found!"
+              }
+  '406':
+    description: Not Acceptable. This usually means the 'Accept' header isn't set properly. 
+                 Acceptable headers are 'application/json' and 'text/html'.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          "Missing/incorrect 'Accept' header":
+            value: |
+              {
+                "message": "The resource identified by the request is only capable of
+                            generating response entities which have content characteristics not
+                            acceptable according to the accept headers sent in the request.
+                            Supported entities are: application/json, text/html"
               }

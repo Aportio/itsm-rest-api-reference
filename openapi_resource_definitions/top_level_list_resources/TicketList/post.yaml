@@ -219,7 +219,6 @@ responses:
               {
                 "message": "Bad Request - key 'aportio_id': a ticket with aportio ID '3412' exists already"
               }
-        examples:
           'Missing the "long_text" mandatory key':
             value: |
               {
