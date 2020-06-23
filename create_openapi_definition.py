@@ -157,7 +157,7 @@ yaml = YAML()
 
 if __name__ == "__main__":
     # Recursively go through the openapi_resource_definitions directory to get each resource's
-    # OpenAPI definition, and add them to the base openapi definition object.
+    # OpenAPI definition, and add it to the base openapi definition object.
     for dirpath, dirnames, files in os.walk("openapi_resource_definitions"):
         # If dirnames is an empty list, it means we are at the end of a branch in the directory
         # tree, which means the yaml files for one of the resources should be in this
