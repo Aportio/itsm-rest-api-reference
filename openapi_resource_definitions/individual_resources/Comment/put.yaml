@@ -17,7 +17,7 @@ requestBody:
           type:
             type: string
       examples:
-        '0':
+        'Request body to update a comment':
           value: |-
             {
                 "user_id": 2,
@@ -27,7 +27,7 @@ requestBody:
             }
 responses:
   '200':
-    description: Auto generated using Swagger Inspector
+    description: Successful PUT request to update a comment.
     content:
       application/json:
         schema:
@@ -36,8 +36,64 @@ responses:
             msg:
               type: string
         examples:
-          '0':
+          'Successful PUT update':
             value: |
               {
                 "msg": "Ok"
+              }
+  '400':
+    description: Bad Request. This usually occurs if there's a missing mandatory key or if
+                 a mandatory key is malformed.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          "Mandatory key 'type' is missing":
+            value: |
+              {
+                "message": "Bad Request - missing mandatory key(s): type"
+              }
+        examples:
+          "Mandatory key 'type' is invalid":
+            value: |
+              {
+                "message": "Bad Request - key 'type': unknown comment type 'NOTE'"
+              }
+  '404':
+    description: The requested comment doesn't exist in the database.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          "Trying to update a comment that doesn't exist":
+            value: |
+              {
+                "message": "comment '999' not found!"
+              }
+  '406':
+    description: Not Acceptable. This usually means the 'Accept' header isn't set properly. 
+                 Acceptable headers are 'application/json' and 'text/html'.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          "Missing/incorrect 'Accept' header":
+            value: |
+              {
+                "message": "The resource identified by the request is only capable of
+                            generating response entities which have content characteristics not
+                            acceptable according to the accept headers sent in the request.
+                            Supported entities are: application/json, text/html"
               }
