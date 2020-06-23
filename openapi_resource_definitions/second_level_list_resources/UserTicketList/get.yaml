@@ -1,5 +1,5 @@
 tags:
-  - Users
+  - User
 summary: Get the list of Tickets for a given User
 description: Return the list of Tickets that belong to a specific User.
 responses:

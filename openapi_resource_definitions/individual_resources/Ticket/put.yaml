@@ -1,5 +1,5 @@
 tags:
-  - Tickets
+  - Ticket
 summary: Update a single ticket
 description: Update the details of a specific ticket in the tickets table.
 requestBody:

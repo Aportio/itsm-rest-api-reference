@@ -1,5 +1,5 @@
 tags:
-  - Tickets
+  - Ticket
 summary: Get a specific Ticket
 description: Return the details about a specific ticket from the tickets table.
 responses:

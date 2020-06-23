@@ -1,5 +1,5 @@
 tags:
-  - Attachments
+  - Attachment
 summary: Get a specific attachment
 description: Return the details about a specific attachment from the attachments table.
 responses:

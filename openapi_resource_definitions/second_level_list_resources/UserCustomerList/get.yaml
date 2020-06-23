@@ -1,5 +1,5 @@
 tags:
-  - Users
+  - User
 summary: Get the list of Customers for a given User
 description: Return the list of Customers that a specific User is associated with.
 responses:

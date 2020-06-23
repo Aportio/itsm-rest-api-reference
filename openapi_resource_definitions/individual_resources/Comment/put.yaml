@@ -1,5 +1,5 @@
 tags:
-  - Comments
+  - Comment
 summary: Update a single comment
 description: Update the details of a specific comment in the comments table.
 requestBody:

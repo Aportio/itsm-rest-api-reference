@@ -1,5 +1,5 @@
 tags:
-- Customers
+- Customer
 summary: Get the list of Customers
 description: Return the list of Customers in the Customer table data.
 responses:

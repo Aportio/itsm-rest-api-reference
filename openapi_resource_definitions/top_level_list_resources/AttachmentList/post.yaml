@@ -1,5 +1,5 @@
 tags:
-- Attachments
+- Attachment
 summary: Create a new Attachment
 description: Create a new Attachment for a Ticket in the tickets table.
 requestBody:

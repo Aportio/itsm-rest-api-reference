@@ -1,5 +1,5 @@
 tags:
-  - Comments
+  - Comment
 summary: Get a specific comment
 description: Return the details about a specific comment from the comments table.
 responses:

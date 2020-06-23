@@ -1,5 +1,5 @@
 tags:
-- CustomerUserAssociations
+- CustomerUserAssociation
 summary: Create a new Customer-User association
 description: Create a new Customer-User association in the customer-user association table.
 requestBody:
