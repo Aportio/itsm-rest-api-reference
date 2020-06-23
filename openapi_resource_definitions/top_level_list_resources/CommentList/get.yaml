@@ -1,10 +1,10 @@
 tags:
 - Comments
-summary: GET Comments resource
-description: Return the CommentsList resource.
+summary: Get the list of Comments
+description: Return the list of comments from the Comments table for every stored ticket.
 responses:
   '200':
-    description: Successful GET request. Returns the data in the Comments table.
+    description: Successful GET request. Returns the Comments table data.
     content:
       application/json:
         schema:
@@ -51,7 +51,7 @@ responses:
             total_queried:
               type: integer
         examples:
-          '0':
+          'Comments returned':
             value: |
               {
                   "total_queried": 2,

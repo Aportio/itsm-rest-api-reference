@@ -1,10 +1,10 @@
 tags:
 - Root
-summary: GET Root resource
-description: Return the root resource, which includes links to all collections.
+summary: Get the Root resource
+description: Return the root resource, which includes links to all the top-level collections.
 responses:
   '200':
-    description: Successful GET request. Returns resources.
+    description: Successful GET request. Returns top-level resources.
     content:
       application/json:
         schema:
@@ -49,7 +49,7 @@ responses:
                     href:
                       type: string
         examples:
-          '0':
+          'Successful GET request':
             value: |
               {
                   "_links": {

@@ -1,6 +1,6 @@
 tags:
 - Users
-summary: GET Users resource
+summary: Get the Users resource
 description: Return the user table data.
 responses:
   '200':
@@ -50,7 +50,7 @@ responses:
             total_queried:
               type: integer
         examples:
-          '0':
+          'Successful GET request':
             value: |
               {
                   "total_queried": 4,
@@ -116,3 +116,5 @@ responses:
                       }
                   }
               }
+  '404':
+    description: Resource doesn't exist on the server.

@@ -1,6 +1,6 @@
 tags:
 - Tickets
-summary: GET Tickets resource
+summary: Get the list of Tickets
 description: Return the tickets table data.
 responses:
   '200':
@@ -58,7 +58,7 @@ responses:
             total_queried:
               type: integer
         examples:
-          '0':
+          'Tickets returned':
             value: |
               {
                   "total_queried": 4,

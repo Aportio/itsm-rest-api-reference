@@ -1,10 +1,10 @@
 tags:
 - CustomerUserAssociations
-summary: POST a CustomerUserAssociation resource
-description: Create a Customer-User association.
+summary: Get the list of Customer-User associations
+description: Return the customer-user associations table data.
 responses:
   '200':
-    description: Successful POST request. Returns the created Customer-User association.
+    description: Successful GET request. Returns the Customer-User associations table data.
     content:
       application/json:
         schema:
@@ -43,7 +43,7 @@ responses:
             total_queried:
               type: integer
         examples:
-          '0':
+          'Customer-User associations returned':
             value: |
               {
                   "total_queried": 6,

@@ -1,7 +1,8 @@
 tags:
 - Tickets
-summary: POST a new Ticket
-description: Create a new Ticket in the ticket table.
+summary: Create a new Ticket
+description: Create a new Ticket in the ticket table. The custom_fields object can contain any
+             other kind of object.
 requestBody:
   content:
     application/json:
@@ -16,13 +17,6 @@ requestBody:
             type: integer
           custom_fields:
             type: object
-            properties:
-              foo:
-                type: string
-              something_else:
-                type: array
-                items:
-                  type: integer
           aportio_id:
             type: string
           customer_id:
@@ -35,7 +29,7 @@ requestBody:
           status:
             type: string
       examples:
-        '0':
+        'Create a new ticket with classification and custom fields':
           value: |-
             {
                 "user_id": 1,
@@ -49,6 +43,17 @@ requestBody:
                     "foo": "bar",
                     "something_else": [1, 2, "xyz"]
                 }
+            }
+        'Create a new ticket with empty classification':
+          value: |-
+            {
+                "user_id": 2,
+                "customer_id": 2,
+                "aportio_id": "2222",
+                "short_title": "Need a new license for Office",
+                "long_text": "I need a new license for Microsoft Office.",
+                "status": "OPEN",
+                "classification": {},
             }
 responses:
   '201':
@@ -83,13 +88,6 @@ responses:
                       type: string
             custom_fields:
               type: object
-              properties:
-                foo:
-                  type: string
-                something_else:
-                  type: array
-                  items:
-                    type: integer
             aportio_id:
               type: string
             _updated:
@@ -129,7 +127,7 @@ responses:
             status:
               type: string
         examples:
-          '0':
+          'Successfully created ticket (w/ classification and custom fields)':
             value: |
               {
                 "_created": "2020-06-18T11:06:25.211798", 
@@ -172,3 +170,83 @@ responses:
                 "status": "OPEN", 
                 "user_id": 1
               }
+          'Successfully created ticket (no classification)':
+            value: |
+              {
+                "_created": "2020-06-23T09:29:33.368377", 
+                "_embedded": {
+                  "attachments": [], 
+                  "comments": [], 
+                  "worknotes": []
+                }, 
+                "_links": {
+                  "contained_in": {
+                    "href": "/tickets"
+                  }, 
+                  "customer": {
+                    "href": "/customers/1"
+                  }, 
+                  "self": {
+                    "href": "/tickets/5"
+                  }, 
+                  "user": {
+                    "href": "/users/1"
+                  }
+                }, 
+                "_updated": "2020-06-23T09:29:33.368377", 
+                "aportio_id": "3412", 
+                "classification": {}, 
+                "customer_id": 1, 
+                "id": 5, 
+                "long_text": "I need a new license for Microsoft Office.", 
+                "short_title": "Need a new license for Office", 
+                "status": "OPEN", 
+                "user_id": 1
+              }
+  '400':
+    description: Bad request. This usually occurs when a mandatory key is missing or is
+                 malformed in the request body, or if the ticket already exists.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          'Ticket already exists':
+            value: |
+              {
+                "message": "Bad Request - key 'aportio_id': a ticket with aportio ID '3412' exists already"
+              }
+        examples:
+          'Missing the "long_text" mandatory key':
+            value: |
+              {
+                "message": "Bad Request - missing mandatory key(s): long_text"
+              }
+  '406':
+    description: Not Acceptable. This usually occurs when a header is missing or malformed.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          'Missing "Accept" header':
+            value: |
+              {
+                "message": "The resource identified by the request is only capable of
+                            generating response entities which have content characteristics
+                            not acceptable according to the accept headers sent in the
+                            request. Supported entities are: application/json"
+              }
+          'Missing "Content-Type" header':
+            value: |
+              {
+                "message": "API only supports 'application/json' Content-Type, received:
+                            application/x-www-form-urlencoded"
+              }
+

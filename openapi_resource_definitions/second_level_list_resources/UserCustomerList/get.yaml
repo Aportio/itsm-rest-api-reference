@@ -1,10 +1,10 @@
 tags:
   - Users
-summary: GET the list of Customers for a given User
-description: Auto generated using Swagger Inspector
+summary: Get the list of Customers for a given User
+description: Return the list of Customers that a specific User is associated with.
 responses:
   '200':
-    description: Auto generated using Swagger Inspector
+    description: Successful GET request. Returns the Customers associated with a given User from the Customers table.
     content:
       application/json:
         schema:
@@ -48,7 +48,7 @@ responses:
             total_queried:
               type: integer
         examples:
-          '0':
+          'Customers returned':
             value: |
               {
                   "total_queried": 3,

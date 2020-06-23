@@ -1,7 +1,7 @@
 tags:
 - CustomerUserAssociations
-summary: POST CustomerUserAssociation resource
-description: Create a new CustomerUserAssociation in the customer-user association table.
+summary: Create a new Customer-User association
+description: Create a new Customer-User association in the customer-user association table.
 requestBody:
   content:
     application/json:
@@ -13,7 +13,7 @@ requestBody:
           customer_id:
             type: integer
       examples:
-        '0':
+        'Create a new Customer-User association':
           value: |-
             {
                 "user_id": 3,
@@ -90,7 +90,7 @@ responses:
             customer_id:
               type: integer
         examples:
-          '0':
+          'Created Customer-User association':
             value: |
               {
                 "_created": "2020-06-18T12:36:53.428798", 
@@ -130,4 +130,55 @@ responses:
                 "customer_id": 2, 
                 "id": 7, 
                 "user_id": 3
+              }
+  '400':
+    description: Bad request. This usually occurs when a mandatory key is missing or is
+                 malformed in the request body, or if the Customer-User association already
+                 exists.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          'Customer-User association already exists':
+            value: |
+              {
+                "message": "Bad Request - association between customer and user exists already"
+              }
+          'Invalid "user_id"':
+            value: |
+              {
+                "message": "Bad Request - key 'user_id': unknown user '999'"
+              }
+          'Missing the "user_id" mandatory key':
+            value: |
+              {
+                "message": "Bad Request - missing mandatory key(s): user_id"
+              }
+  '406':
+    description: Not Acceptable. This usually occurs when a header is missing or malformed.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          'Missing "Accept" header':
+            value: |
+              {
+                "message": "The resource identified by the request is only capable of
+                            generating response entities which have content characteristics
+                            not acceptable according to the accept headers sent in the
+                            request. Supported entities are: application/json"
+              }
+          'Missing "Content-Type" header':
+            value: |
+              {
+                "message": "API only supports 'application/json' Content-Type, received:
+                            application/x-www-form-urlencoded"
               }
