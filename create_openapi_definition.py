@@ -27,6 +27,7 @@ Each of these sub-folders has yet more sub-folders for the resource that
 belongs in that category. For example, the UsersList resource belongs in the
 top-level list resources folder, while the single Ticket resource belongs in
 the individual resources folder.
+
 Inside each of those resource folders are .yaml files which represent the
 HTTP method that file's definition describes. These are named for the method
 they represent, which is any valid HTTP method that is supported by our API,
@@ -34,8 +35,9 @@ e.g. "get.yaml", "post.yaml", "put.yaml".
 
 Upon running this script, the code here will recursively go through each of
 those directories and find those files, extract their OpenAPI definition, then
-put it into the main OpenAPI definition in this file. After that, the script
-writes this OpenAPI definition to a file with today's date and time.
+put it into the main OpenAPI definition inside this file
+(create_openapi_definition.py). After that, the script writes this OpenAPI
+definition to a file with today's date and time.
 
 """
 import datetime
@@ -162,11 +164,13 @@ if __name__ == "__main__":
         # directory.
         if not dirnames:
             # Get the name of the resource that we're processing.
-            # dirpath will look something like:
+            # dirpath is a directory path string that looks like this:
             #
             # openapi_resource_definitions/individual_resources/Attachment
             #
-            # So the resource name will be the last item of dirpath.
+            # Where the last part of the string is the name of the directory that contains the
+            # definition files we need. In this example, "Attachment" is the name of the
+            # resource we need.
             resource_name = os.path.split(dirpath)[-1]
             # Iterate through the list of definition files for each HTTP method inside that
             # resource's folder.
@@ -175,7 +179,7 @@ if __name__ == "__main__":
                 path_to_file = os.path.join(dirpath, def_file)
                 # Get the type of HTTP method from the file name by removing the ".yaml" file
                 # extension from the string.
-                http_method = def_file[:-5]
+                http_method = def_file[:-len(".yaml")]
                 # File names for our resource definitions should be in the form of:
                 # "get.yaml"
                 # "post.yaml"
@@ -189,9 +193,8 @@ if __name__ == "__main__":
                     definition        = yaml.load(yaml_file)
                     resource_url_path = RESOURCE_PATH_LOOKUP[resource_name]
                     # Set the value of the resource path in the base dictionary to the
-                    # definition
-                    # we loaded from the yaml file. It will look something like this in the
-                    # paths dictionary:
+                    # definition we loaded from the yaml file. It will look something like this
+                    # in the paths dictionary:
                     #
                     # paths:
                     #   /:
