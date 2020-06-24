@@ -204,6 +204,8 @@ if __name__ == "__main__":
 
     # Get the date and time that the script was run, then generate a name for the definition
     # file.
+    # We generate the file name with the date and time so that we can keep different versions
+    # of the OpenAPI definition, in case we need to quickly revert back to an older version.
     now      = datetime.datetime.now()
     filename = f"Aportio_REST_API_definition_{now}.yaml"
 
