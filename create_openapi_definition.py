@@ -3,7 +3,7 @@ create_openapi_definition.py.
 
 This script is used to create a full OpenAPI v3 definition file in yaml, which
 is then uploaded to Aportio's Swaggerhub profile and can be found at
-https://app.swaggerhub.com/apis-docs/aportio/Aportio-ITSM-REST-API-Reference/0.1.
+https://app.swaggerhub.com/apis-docs/aportio/Aportio-ITSM-REST-API-Reference/0.1
 
 This file holds the base definition, where various metadata is pre-filled.
 The definitions for the Aportio API's resources can be found in the
@@ -164,11 +164,13 @@ if __name__ == "__main__":
         # directory.
         if not dirnames:
             # Get the name of the resource that we're processing.
-            # dirpath will look something like:
+            # dirpath is a directory path string that looks like this:
             #
             # openapi_resource_definitions/individual_resources/Attachment
             #
-            # So the resource name will be the last item of dirpath.
+            # Where the last part of the string is the name of the directory that contains the
+            # definition files we need. In this example, "Attachment" is the name of the
+            # resource we need.
             resource_name = os.path.split(dirpath)[-1]
             # Iterate through the list of definition files for each HTTP method inside that
             # resource's folder.
@@ -177,7 +179,7 @@ if __name__ == "__main__":
                 path_to_file = os.path.join(dirpath, def_file)
                 # Get the type of HTTP method from the file name by removing the ".yaml" file
                 # extension from the string.
-                http_method = def_file[:-5]
+                http_method = def_file[:-len(".yaml")]
                 # File names for our resource definitions should be in the form of:
                 # "get.yaml"
                 # "post.yaml"
@@ -191,9 +193,8 @@ if __name__ == "__main__":
                     definition        = yaml.load(yaml_file)
                     resource_url_path = RESOURCE_PATH_LOOKUP[resource_name]
                     # Set the value of the resource path in the base dictionary to the
-                    # definition
-                    # we loaded from the yaml file. It will look something like this in the
-                    # paths dictionary:
+                    # definition we loaded from the yaml file. It will look something like this
+                    # in the paths dictionary:
                     #
                     # paths:
                     #   /:
@@ -203,6 +204,8 @@ if __name__ == "__main__":
 
     # Get the date and time that the script was run, then generate a name for the definition
     # file.
+    # We generate the file name with the date and time so that we can keep different versions
+    # of the OpenAPI definition, in case we need to quickly revert back to an older version.
     now      = datetime.datetime.now()
     filename = f"Aportio_REST_API_definition_{now}.yaml"
 
