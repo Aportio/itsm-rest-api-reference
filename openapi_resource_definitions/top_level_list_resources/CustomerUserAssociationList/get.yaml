@@ -1,0 +1,114 @@
+tags:
+- CustomerUserAssociations
+summary: POST a CustomerUserAssociation resource
+description: Create a Customer-User association.
+responses:
+  '200':
+    description: Successful POST request. Returns the created Customer-User association.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            associations:
+              type: array
+              items:
+                type: object
+                properties:
+                  user_id:
+                    type: integer
+                  _links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  customer_id:
+                    type: integer
+            _links:
+              type: object
+              properties:
+                contained_in:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                self:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+            total_queried:
+              type: integer
+        examples:
+          '0':
+            value: |
+              {
+                  "total_queried": 6,
+                  "associations": [
+                      {
+                          "user_id": 1,
+                          "customer_id": 1,
+                          "_links": {
+                              "self": {
+                                  "href": "/customer_user_associations/1"
+                              }
+                          }
+                      },
+                      {
+                          "user_id": 1,
+                          "customer_id": 2,
+                          "_links": {
+                              "self": {
+                                  "href": "/customer_user_associations/2"
+                              }
+                          }
+                      },
+                      {
+                          "user_id": 1,
+                          "customer_id": 3,
+                          "_links": {
+                              "self": {
+                                  "href": "/customer_user_associations/3"
+                              }
+                          }
+                      },
+                      {
+                          "user_id": 2,
+                          "customer_id": 2,
+                          "_links": {
+                              "self": {
+                                  "href": "/customer_user_associations/4"
+                              }
+                          }
+                      },
+                      {
+                          "user_id": 3,
+                          "customer_id": 1,
+                          "_links": {
+                              "self": {
+                                  "href": "/customer_user_associations/5"
+                              }
+                          }
+                      },
+                      {
+                          "user_id": 3,
+                          "customer_id": 3,
+                          "_links": {
+                              "self": {
+                                  "href": "/customer_user_associations/6"
+                              }
+                          }
+                      }
+                  ],
+                  "_links": {
+                      "self": {
+                          "href": "/customer_user_associations"
+                      },
+                      "contained_in": {
+                          "href": "/"
+                      }
+                  }
+              }

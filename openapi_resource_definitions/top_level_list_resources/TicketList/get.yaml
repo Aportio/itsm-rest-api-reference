@@ -1,0 +1,140 @@
+tags:
+- Tickets
+summary: GET Tickets resource
+description: Return the tickets table data.
+responses:
+  '200':
+    description: Successful GET request. Returns the tickets table data.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            _embedded:
+              type: object
+              properties:
+                tickets:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      short_title:
+                        type: string
+                      user_id:
+                        type: integer
+                      _links:
+                        type: object
+                        properties:
+                          self:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                      _created:
+                        type: string
+                      aportio_id:
+                        type: string
+                      id:
+                        type: integer
+                      customer_id:
+                        type: integer
+                      classification:
+                        type: string
+                      status:
+                        type: string
+            _links:
+              type: object
+              properties:
+                contained_in:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                self:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+            total_queried:
+              type: integer
+        examples:
+          '0':
+            value: |
+              {
+                  "total_queried": 4,
+                  "_embedded": {
+                      "tickets": [
+                          {
+                              "id": 1,
+                              "aportio_id": "1111",
+                              "customer_id": 1,
+                              "user_id": 1,
+                              "short_title": "Broken laptop",
+                              "_created": "2020-04-12T14:39:+13:00",
+                              "status": "OPEN",
+                              "classification": "incident",
+                              "_links": {
+                                  "self": {
+                                      "href": "/tickets/1"
+                                  }
+                              }
+                          },
+                          {
+                              "id": 2,
+                              "aportio_id": "2222",
+                              "customer_id": 2,
+                              "user_id": 2,
+                              "short_title": "Need a new license for Office",
+                              "_created": "2020-04-12T14:39:+13:00",
+                              "status": "CLOSED",
+                              "classification": "service-request",
+                              "_links": {
+                                  "self": {
+                                      "href": "/tickets/2"
+                                  }
+                              },
+                              "_updated": "2020-04-12T14:39:+13:00"
+                          },
+                          {
+                              "id": 3,
+                              "aportio_id": "4321",
+                              "customer_id": 1,
+                              "user_id": 3,
+                              "short_title": "This is a test",
+                              "_created": "2020-05-13T21:32:07.199672",
+                              "status": "OPEN",
+                              "classification": "(none)",
+                              "_links": {
+                                  "self": {
+                                      "href": "/tickets/3"
+                                  }
+                              },
+                              "_updated": "2020-05-13T21:32:07.199672"
+                          },
+                          {
+                              "id": 4,
+                              "aportio_id": "1239",
+                              "customer_id": 1,
+                              "user_id": 4,
+                              "short_title": "This is a test",
+                              "_created": "2020-05-14T07:52:35.192934",
+                              "status": "OPEN",
+                              "classification": "(none)",
+                              "_links": {
+                                  "self": {
+                                      "href": "/tickets/4"
+                                  }
+                              },
+                              "_updated": "2020-05-14T07:52:35.192934"
+                          }
+                      ]
+                  },
+                  "_links": {
+                      "self": {
+                          "href": "/tickets"
+                      },
+                      "contained_in": {
+                          "href": "/"
+                      }
+                  }
+              }

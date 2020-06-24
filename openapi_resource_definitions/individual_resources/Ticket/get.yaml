@@ -1,0 +1,237 @@
+tags:
+  - Tickets
+summary: GET a specific Ticket
+description: Auto generated using Swagger Inspector
+responses:
+  '200':
+    description: Auto generated using Swagger Inspector
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            short_title:
+              type: string
+            long_text:
+              type: string
+            user_id:
+              type: integer
+            _embedded:
+              type: object
+              properties:
+                worknotes:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      user_id:
+                        type: integer
+                      _links:
+                        type: object
+                        properties:
+                          self:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                      _created:
+                        type: string
+                      _updated:
+                        type: string
+                      id:
+                        type: integer
+                      text:
+                        type: string
+                comments:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      user_id:
+                        type: integer
+                      _links:
+                        type: object
+                        properties:
+                          self:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                      _created:
+                        type: string
+                      _updated:
+                        type: string
+                      id:
+                        type: integer
+                      text:
+                        type: string
+                attachments:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      filename:
+                        type: string
+                      content_type:
+                        type: string
+                      _links:
+                        type: object
+                        properties:
+                          self:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                      _created:
+                        type: string
+                      _updated:
+                        type: string
+                      id:
+                        type: integer
+            _links:
+              type: object
+              properties:
+                contained_in:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                self:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                user:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                customer:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+            custom_fields:
+              type: object
+              properties:
+                department:
+                  type: string
+            _created:
+              type: string
+            aportio_id:
+              type: string
+            id:
+              type: integer
+            customer_id:
+              type: integer
+            classification:
+              type: object
+              properties:
+                l1:
+                  type: string
+                l2:
+                  type: string
+            status:
+              type: string
+        examples:
+          '0':
+            value: |
+              {
+                  "id": 1,
+                  "aportio_id": "1111",
+                  "customer_id": 1,
+                  "short_title": "Broken laptop",
+                  "long_text": "My laptop is broken. It won't boot anymore. Need help.",
+                  "user_id": 1,
+                  "_created": "2020-04-12T14:39:+13:00",
+                  "status": "OPEN",
+                  "classification": {
+                      "l1": "incident",
+                      "l2": "hardware"
+                  },
+                  "custom_fields": {
+                      "department": "marketing"
+                  },
+                  "_embedded": {
+                      "comments": [
+                          {
+                              "id": 2,
+                              "user_id": 1,
+                              "text": "Can I please have an update on this?",
+                              "_created": "2020-05-14T14:09:26.813168",
+                              "_links": {
+                                  "self": {
+                                      "href": "/comments/2"
+                                  }
+                              },
+                              "_updated": "2020-05-14T14:09:26.813168"
+                          }
+                      ],
+                      "worknotes": [
+                          {
+                              "id": 1,
+                              "user_id": 2,
+                              "text": "Has there been a follow up?",
+                              "_created": "2020-05-14T14:09:25.431621",
+                              "_links": {
+                                  "self": {
+                                      "href": "/comments/1"
+                                  }
+                              },
+                              "_updated": "2020-05-14T14:09:25.431621"
+                          },
+                          {
+                              "id": 3,
+                              "user_id": 1,
+                              "text": "This is another comment",
+                              "_created": "2020-06-18T11:44:23.678125",
+                              "_links": {
+                                  "self": {
+                                      "href": "/comments/3"
+                                  }
+                              },
+                              "_updated": "2020-06-18T11:44:23.677883"
+                          }
+                      ],
+                      "attachments": [
+                          {
+                              "id": 1,
+                              "filename": "test.txt",
+                              "content_type": "text/plain",
+                              "_created": "2020-06-12T12:09:25.431621",
+                              "_links": {
+                                  "self": {
+                                      "href": "/attachments/1"
+                                  }
+                              },
+                              "_updated": "2020-06-12T12:09:25.431621"
+                          },
+                          {
+                              "id": 3,
+                              "filename": "text_to_post.txt",
+                              "content_type": "text/plain",
+                              "_created": "2020-06-18T12:26:36.960430",
+                              "_links": {
+                                  "self": {
+                                      "href": "/attachments/3"
+                                  }
+                              },
+                              "_updated": "2020-06-18T12:26:36.960430"
+                          }
+                      ]
+                  },
+                  "_links": {
+                      "self": {
+                          "href": "/tickets/1"
+                      },
+                      "contained_in": {
+                          "href": "/tickets"
+                      },
+                      "customer": {
+                          "href": "/customers/1"
+                      },
+                      "user": {
+                          "href": "/users/1"
+                      }
+                  }
+              }

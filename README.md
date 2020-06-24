@@ -11,6 +11,10 @@ customers, tickets and comments. Running and exploring the server will offer a g
 as well as live documentation of what is expected of any server-side implementation of
 the API.
 
+Refer to our OpenAPI documentation on
+[Swaggerhub](https://app.swaggerhub.com/apis-docs/aportio/Aportio-ITSM-REST-API-Reference/0.1)
+to get an idea of how requests and responses should be implemented.
+
 ## The basic concept
 
 [Aportio](http://aportio.com) provides a hosted service to automatically ingest, parse,

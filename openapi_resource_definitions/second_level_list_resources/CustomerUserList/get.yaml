@@ -1,0 +1,106 @@
+tags:
+  - Customers
+summary: GET list of Users for a given Customer
+description: Auto generated using Swagger Inspector
+responses:
+  '200':
+    description: Auto generated using Swagger Inspector
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            _embedded:
+              type: object
+              properties:
+                users:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      _links:
+                        type: object
+                        properties:
+                          self:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                      _created:
+                        type: string
+                      id:
+                        type: integer
+                      email:
+                        type: array
+                        items:
+                          type: string
+            _links:
+              type: object
+              properties:
+                contained_in:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                self:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+            total_queried:
+              type: integer
+        examples:
+          '0':
+            value: |
+              {
+                  "total_queried": 3,
+                  "_embedded": {
+                      "users": [
+                          {
+                              "id": 1,
+                              "email": [
+                                  "some@user.com"
+                              ],
+                              "_created": "",
+                              "_links": {
+                                  "self": {
+                                      "href": "/users/1"
+                                  }
+                              }
+                          },
+                          {
+                              "id": 2,
+                              "email": [
+                                  "another@user.com",
+                                  "with-multiple@emails.com"
+                              ],
+                              "_created": "",
+                              "_links": {
+                                  "self": {
+                                      "href": "/users/2"
+                                  }
+                              }
+                          },
+                          {
+                              "id": 3,
+                              "email": [
+                                  "foo@foobar.com"
+                              ],
+                              "_created": "",
+                              "_links": {
+                                  "self": {
+                                      "href": "/users/3"
+                                  }
+                              }
+                          }
+                      ]
+                  },
+                  "_links": {
+                      "self": {
+                          "href": "/customers/1/users"
+                      },
+                      "contained_in": {
+                          "href": "/customers/1"
+                      }
+                  }
+              }

@@ -1,0 +1,133 @@
+tags:
+- CustomerUserAssociations
+summary: POST CustomerUserAssociation resource
+description: Create a new CustomerUserAssociation in the customer-user association table.
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          user_id:
+            type: integer
+          customer_id:
+            type: integer
+      examples:
+        '0':
+          value: |-
+            {
+                "user_id": 3,
+                "customer_id": 2
+            }
+responses:
+  '201':
+    description: Successful POST request. Returns the created Customer-User association.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            _embedded:
+              type: object
+              properties:
+                user:
+                  type: object
+                  properties:
+                    _links:
+                      type: object
+                      properties:
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    _created:
+                      type: string
+                    id:
+                      type: integer
+                    email:
+                      type: array
+                      items:
+                        type: string
+                customer:
+                  type: object
+                  properties:
+                    _links:
+                      type: object
+                      properties:
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    _created:
+                      type: string
+                    name:
+                      type: string
+                    id:
+                      type: integer
+            _links:
+              type: object
+              properties:
+                contained_in:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                self:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+            user_id:
+              type: integer
+            _created:
+              type: string
+            _updated:
+              type: string
+            id:
+              type: integer
+            customer_id:
+              type: integer
+        examples:
+          '0':
+            value: |
+              {
+                "_created": "2020-06-18T12:36:53.428798", 
+                "_embedded": {
+                  "customer": {
+                    "_created": "", 
+                    "_links": {
+                      "self": {
+                        "href": "/customers/2"
+                      }
+                    }, 
+                    "id": 2, 
+                    "name": "Bar Company"
+                  }, 
+                  "user": {
+                    "_created": "", 
+                    "_links": {
+                      "self": {
+                        "href": "/users/3"
+                      }
+                    }, 
+                    "email": [
+                      "foo@foobar.com"
+                    ], 
+                    "id": 3
+                  }
+                }, 
+                "_links": {
+                  "contained_in": {
+                    "href": "/customer_user_associations"
+                  }, 
+                  "self": {
+                    "href": "/customer_user_associations/7"
+                  }
+                }, 
+                "_updated": "2020-06-18T12:36:53.428798", 
+                "customer_id": 2, 
+                "id": 7, 
+                "user_id": 3
+              }

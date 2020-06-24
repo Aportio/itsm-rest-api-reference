@@ -1,0 +1,2698 @@
+openapi: 3.0.1
+info:
+  title: Aportio ITSM REST API reference
+  description: Reference documentation for Aportio's ITSM REST API.
+  version: '0.1'
+tags:
+- name: Root
+  description: The root level of the API
+- name: Users
+  description: Requests against user resources
+- name: Tickets
+  description: Requests against ticket resources
+- name: Customers
+  description: Requests against customer resources
+- name: Comments
+  description: Requests against comment resources
+- name: Attachments
+  description: Requests against attachment resources
+- name: CustomerUserAssociations
+  description: Requests against customer-user association resources
+paths:
+  /:
+    get:
+      tags:
+      - Root
+      summary: GET Root resource
+      description: Return the root resource, which includes links to all collections.
+      responses:
+        '200':
+          description: Successful GET request. Returns resources.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      users:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      customers:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      tickets:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      comments:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      attachments:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      customer_user_associations:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+              examples:
+                '0':
+                  value: |
+                    {
+                        "_links": {
+                            "self": {
+                                "href": "/"
+                            },
+                            "users": {
+                                "href": "/users"
+                            },
+                            "customers": {
+                                "href": "/customers"
+                            },
+                            "tickets": {
+                                "href": "/tickets"
+                            },
+                            "comments": {
+                                "href": "/comments"
+                            },
+                            "attachments": {
+                                "href": "/attachments"
+                            },
+                            "customer_user_associations": {
+                                "href": "/customer_user_associations"
+                            }
+                        }
+                    }
+  /users:
+    get:
+      tags:
+      - Users
+      summary: GET Users resource
+      description: Return the user table data.
+      responses:
+        '200':
+          description: Successful GET request. Returns user table data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _embedded:
+                    type: object
+                    properties:
+                      users:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            _links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                            _created:
+                              type: string
+                            id:
+                              type: integer
+                            email:
+                              type: array
+                              items:
+                                type: string
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  total_queried:
+                    type: integer
+              examples:
+                '0':
+                  value: |
+                    {
+                        "total_queried": 4,
+                        "_embedded": {
+                            "users": [
+                                {
+                                    "id": 1,
+                                    "email": [
+                                        "some@user.com"
+                                    ],
+                                    "_created": "",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/users/1"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": 2,
+                                    "email": [
+                                        "another@user.com",
+                                        "with-multiple@emails.com"
+                                    ],
+                                    "_created": "",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/users/2"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": 3,
+                                    "email": [
+                                        "foo@foobar.com"
+                                    ],
+                                    "_created": "",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/users/3"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": 4,
+                                    "email": [
+                                        "someone@somewhere.com"
+                                    ],
+                                    "_created": "",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/users/4"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "_links": {
+                            "self": {
+                                "href": "/users"
+                            },
+                            "contained_in": {
+                                "href": "/"
+                            }
+                        }
+                    }
+  /customers:
+    get:
+      tags:
+      - Customers
+      summary: GET Customers resource
+      description: Return the Customer table data.
+      responses:
+        '200':
+          description: Successful GET request. Returns Customer table data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _embedded:
+                    type: object
+                    properties:
+                      customers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            _links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                            _created:
+                              type: string
+                            name:
+                              type: string
+                            id:
+                              type: integer
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  total_queried:
+                    type: integer
+              examples:
+                '0':
+                  value: |
+                    {
+                        "total_queried": 3,
+                        "_embedded": {
+                            "customers": [
+                                {
+                                    "id": 1,
+                                    "name": "Foo Company",
+                                    "_created": "",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/customers/1"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": 2,
+                                    "name": "Bar Company",
+                                    "_created": "",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/customers/2"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": 3,
+                                    "name": "Foobar Company",
+                                    "_created": "",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/customers/3"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "_links": {
+                            "self": {
+                                "href": "/customers"
+                            },
+                            "contained_in": {
+                                "href": "/"
+                            }
+                        }
+                    }
+  /tickets:
+    get:
+      tags:
+      - Tickets
+      summary: GET Tickets resource
+      description: Return the tickets table data.
+      responses:
+        '200':
+          description: Successful GET request. Returns the tickets table data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _embedded:
+                    type: object
+                    properties:
+                      tickets:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            short_title:
+                              type: string
+                            user_id:
+                              type: integer
+                            _links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                            _created:
+                              type: string
+                            aportio_id:
+                              type: string
+                            id:
+                              type: integer
+                            customer_id:
+                              type: integer
+                            classification:
+                              type: string
+                            status:
+                              type: string
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  total_queried:
+                    type: integer
+              examples:
+                '0':
+                  value: |
+                    {
+                        "total_queried": 4,
+                        "_embedded": {
+                            "tickets": [
+                                {
+                                    "id": 1,
+                                    "aportio_id": "1111",
+                                    "customer_id": 1,
+                                    "user_id": 1,
+                                    "short_title": "Broken laptop",
+                                    "_created": "2020-04-12T14:39:+13:00",
+                                    "status": "OPEN",
+                                    "classification": "incident",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/tickets/1"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": 2,
+                                    "aportio_id": "2222",
+                                    "customer_id": 2,
+                                    "user_id": 2,
+                                    "short_title": "Need a new license for Office",
+                                    "_created": "2020-04-12T14:39:+13:00",
+                                    "status": "CLOSED",
+                                    "classification": "service-request",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/tickets/2"
+                                        }
+                                    },
+                                    "_updated": "2020-04-12T14:39:+13:00"
+                                },
+                                {
+                                    "id": 3,
+                                    "aportio_id": "4321",
+                                    "customer_id": 1,
+                                    "user_id": 3,
+                                    "short_title": "This is a test",
+                                    "_created": "2020-05-13T21:32:07.199672",
+                                    "status": "OPEN",
+                                    "classification": "(none)",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/tickets/3"
+                                        }
+                                    },
+                                    "_updated": "2020-05-13T21:32:07.199672"
+                                },
+                                {
+                                    "id": 4,
+                                    "aportio_id": "1239",
+                                    "customer_id": 1,
+                                    "user_id": 4,
+                                    "short_title": "This is a test",
+                                    "_created": "2020-05-14T07:52:35.192934",
+                                    "status": "OPEN",
+                                    "classification": "(none)",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/tickets/4"
+                                        }
+                                    },
+                                    "_updated": "2020-05-14T07:52:35.192934"
+                                }
+                            ]
+                        },
+                        "_links": {
+                            "self": {
+                                "href": "/tickets"
+                            },
+                            "contained_in": {
+                                "href": "/"
+                            }
+                        }
+                    }
+    post:
+      tags:
+      - Tickets
+      summary: POST a new Ticket
+      description: Create a new Ticket in the ticket table.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                short_title:
+                  type: string
+                long_text:
+                  type: string
+                user_id:
+                  type: integer
+                custom_fields:
+                  type: object
+                  properties:
+                    foo:
+                      type: string
+                    something_else:
+                      type: array
+                      items:
+                        type: integer
+                aportio_id:
+                  type: string
+                customer_id:
+                  type: integer
+                classification:
+                  type: object
+                  properties:
+                    l1:
+                      type: string
+                status:
+                  type: string
+            examples:
+              '0':
+                value: |-
+                  {
+                      "user_id": 1,
+                      "customer_id": 1,
+                      "aportio_id": "12331",
+                      "short_title": "Laptop is broken",
+                      "long_text": "My laptop broke, please advise.",
+                      "status": "OPEN",
+                      "classification": {"l1": "service-request"},
+                      "custom_fields": {
+                          "foo": "bar",
+                          "something_else": [1, 2, "xyz"]
+                      }
+                  }
+      responses:
+        '201':
+          description: Successful POST request. Creates a Ticket and returns the created
+            ticket's info.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      user:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      customer:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  custom_fields:
+                    type: object
+                    properties:
+                      foo:
+                        type: string
+                      something_else:
+                        type: array
+                        items:
+                          type: integer
+                  aportio_id:
+                    type: string
+                  _updated:
+                    type: string
+                  classification:
+                    type: object
+                    properties:
+                      l1:
+                        type: string
+                  long_text:
+                    type: string
+                  short_title:
+                    type: string
+                  _embedded:
+                    type: object
+                    properties:
+                      worknotes:
+                        type: array
+                        items:
+                          type: string
+                      attachments:
+                        type: array
+                        items:
+                          type: string
+                      comments:
+                        type: array
+                        items:
+                          type: string
+                  user_id:
+                    type: integer
+                  _created:
+                    type: string
+                  id:
+                    type: integer
+                  customer_id:
+                    type: integer
+                  status:
+                    type: string
+              examples:
+                '0':
+                  value: |
+                    {
+                      "_created": "2020-06-18T11:06:25.211798", 
+                      "_embedded": {
+                        "attachments": [], 
+                        "comments": [], 
+                        "worknotes": []
+                      }, 
+                      "_links": {
+                        "contained_in": {
+                          "href": "/tickets"
+                        }, 
+                        "customer": {
+                          "href": "/customers/1"
+                        }, 
+                        "self": {
+                          "href": "/tickets/5"
+                        }, 
+                        "user": {
+                          "href": "/users/1"
+                        }
+                      }, 
+                      "_updated": "2020-06-18T11:06:25.211798", 
+                      "aportio_id": "12331", 
+                      "classification": {
+                        "l1": "service-request"
+                      }, 
+                      "custom_fields": {
+                        "foo": "bar", 
+                        "something_else": [
+                          1, 
+                          2, 
+                          "xyz"
+                        ]
+                      }, 
+                      "customer_id": 1, 
+                      "id": 5, 
+                      "long_text": "My laptop broke, please advise.", 
+                      "short_title": "Laptop is broken", 
+                      "status": "OPEN", 
+                      "user_id": 1
+                    }
+  /comments:
+    get:
+      tags:
+      - Comments
+      summary: GET Comments resource
+      description: Return the CommentsList resource.
+      responses:
+        '200':
+          description: Successful GET request. Returns the data in the Comments table.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        user_id:
+                          type: integer
+                        _links:
+                          type: object
+                          properties:
+                            self:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                        _created:
+                          type: string
+                        _updated:
+                          type: string
+                        text:
+                          type: string
+                        ticket_id:
+                          type: integer
+                        type:
+                          type: string
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  total_queried:
+                    type: integer
+              examples:
+                '0':
+                  value: |
+                    {
+                        "total_queried": 2,
+                        "comments": [
+                            {
+                                "user_id": 2,
+                                "ticket_id": 1,
+                                "text": "Has there been a follow up?",
+                                "type": "WORKNOTE",
+                                "_created": "2020-05-14T14:09:25.431621",
+                                "_updated": "2020-05-14T14:09:25.431621",
+                                "_links": {
+                                    "self": {
+                                        "href": "/comments/1"
+                                    }
+                                }
+                            },
+                            {
+                                "user_id": 1,
+                                "ticket_id": 1,
+                                "text": "Can I please have an update on this?",
+                                "type": "COMMENT",
+                                "_created": "2020-05-14T14:09:26.813168",
+                                "_updated": "2020-05-14T14:09:26.813168",
+                                "_links": {
+                                    "self": {
+                                        "href": "/comments/2"
+                                    }
+                                }
+                            }
+                        ],
+                        "_links": {
+                            "self": {
+                                "href": "/comments"
+                            },
+                            "contained_in": {
+                                "href": "/"
+                            }
+                        }
+                    }
+    post:
+      tags:
+      - Comments
+      summary: POST a new Comment
+      description: Create a new Comment in the comments table.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                text:
+                  type: string
+                ticket_id:
+                  type: integer
+                type:
+                  type: string
+            examples:
+              '0':
+                value: |-
+                  {
+                      "user_id": 1,
+                      "ticket_id": 1,
+                      "text": "This is another comment",
+                      "type": "WORKNOTE"
+                  }
+      responses:
+        '201':
+          description: Successful POST request. Creates a Comment and returns the
+            created comment's info.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _embedded:
+                    type: object
+                    properties:
+                      ticket:
+                        type: object
+                        properties:
+                          short_title:
+                            type: string
+                          _links:
+                            type: object
+                            properties:
+                              self:
+                                type: object
+                                properties:
+                                  href:
+                                    type: string
+                          user_id:
+                            type: integer
+                          _created:
+                            type: string
+                          aportio_id:
+                            type: string
+                          id:
+                            type: integer
+                          classification:
+                            type: string
+                          customer_id:
+                            type: integer
+                          status:
+                            type: string
+                      user:
+                        type: object
+                        properties:
+                          _links:
+                            type: object
+                            properties:
+                              self:
+                                type: object
+                                properties:
+                                  href:
+                                    type: string
+                          _created:
+                            type: string
+                          id:
+                            type: integer
+                          email:
+                            type: array
+                            items:
+                              type: string
+                      customer:
+                        type: object
+                        properties:
+                          _links:
+                            type: object
+                            properties:
+                              self:
+                                type: object
+                                properties:
+                                  href:
+                                    type: string
+                          _created:
+                            type: string
+                          name:
+                            type: string
+                          id:
+                            type: integer
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  user_id:
+                    type: integer
+                  _created:
+                    type: string
+                  _updated:
+                    type: string
+                  id:
+                    type: integer
+                  text:
+                    type: string
+                  ticket_id:
+                    type: integer
+                  type:
+                    type: string
+              examples:
+                '0':
+                  value: |
+                    {
+                      "_created": "2020-06-18T11:44:23.678125", 
+                      "_embedded": {
+                        "customer": {
+                          "_created": "", 
+                          "_links": {
+                            "self": {
+                              "href": "/customers/1"
+                            }
+                          }, 
+                          "id": 1, 
+                          "name": "Foo Company"
+                        }, 
+                        "ticket": {
+                          "_created": "2020-04-12T14:39:+13:00", 
+                          "_links": {
+                            "self": {
+                              "href": "/tickets/1"
+                            }
+                          }, 
+                          "aportio_id": "1111", 
+                          "classification": "incident", 
+                          "customer_id": 1, 
+                          "id": 1, 
+                          "short_title": "Broken laptop", 
+                          "status": "OPEN", 
+                          "user_id": 1
+                        }, 
+                        "user": {
+                          "_created": "", 
+                          "_links": {
+                            "self": {
+                              "href": "/users/1"
+                            }
+                          }, 
+                          "email": [
+                            "some@user.com"
+                          ], 
+                          "id": 1
+                        }
+                      }, 
+                      "_links": {
+                        "contained_in": {
+                          "href": "/comments"
+                        }, 
+                        "self": {
+                          "href": "/comments/3"
+                        }
+                      }, 
+                      "_updated": "2020-06-18T11:44:23.677883", 
+                      "id": 3, 
+                      "text": "This is another comment", 
+                      "ticket_id": 1, 
+                      "type": "WORKNOTE", 
+                      "user_id": 1
+                    }
+  /attachments:
+    get:
+      tags:
+      - Attachments
+      summary: GET the AttachmentsList resource
+      description: Return the attachments table data.
+      responses:
+        '200':
+          description: Successful GET request. Returns the attachments table data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  attachments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        filename:
+                          type: string
+                        content_type:
+                          type: string
+                        _links:
+                          type: object
+                          properties:
+                            self:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                        _created:
+                          type: string
+                        _updated:
+                          type: string
+                        ticket_id:
+                          type: integer
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  total_queried:
+                    type: integer
+              examples:
+                '0':
+                  value: |
+                    {
+                        "total_queried": 2,
+                        "attachments": [
+                            {
+                                "ticket_id": 1,
+                                "filename": "test.txt",
+                                "content_type": "text/plain",
+                                "_created": "2020-06-12T12:09:25.431621",
+                                "_updated": "2020-06-12T12:09:25.431621",
+                                "_links": {
+                                    "self": {
+                                        "href": "/attachments/1"
+                                    }
+                                }
+                            },
+                            {
+                                "ticket_id": 2,
+                                "filename": "mt-fuji.jpeg",
+                                "content_type": "image/jpeg",
+                                "_created": "2020-06-12T14:09:26.813168",
+                                "_updated": "2020-06-12T14:09:26.813168",
+                                "_links": {
+                                    "self": {
+                                        "href": "/attachments/2"
+                                    }
+                                }
+                            }
+                        ],
+                        "_links": {
+                            "self": {
+                                "href": "/attachments"
+                            },
+                            "contained_in": {
+                                "href": "/"
+                            }
+                        }
+                    }
+    post:
+      tags:
+      - Attachments
+      summary: POST a new Ticket
+      description: Create a new Ticket in the tickets table.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filename:
+                  type: string
+                content_type:
+                  type: string
+                ticket_id:
+                  type: integer
+                attachment_data:
+                  type: string
+            examples:
+              '0':
+                value: |-
+                  {
+                      "ticket_id": 1,
+                      "filename": "text_to_post.txt",
+                      "content_type": "text/plain",
+                      "attachment_data": "VGhpcyBpcyBhIGZpbGUgdG8gY2hlY2sgdGhhdCBwb3N0aW5nIGEgbmV3IGF0dGFjaG1lbnQgd29ya3MK"
+                  }
+      responses:
+        '201':
+          description: Auto generated using Swagger Inspector
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  filename:
+                    type: string
+                  content_type:
+                    type: string
+                  _embedded:
+                    type: object
+                    properties:
+                      ticket:
+                        type: object
+                        properties:
+                          short_title:
+                            type: string
+                          _links:
+                            type: object
+                            properties:
+                              self:
+                                type: object
+                                properties:
+                                  href:
+                                    type: string
+                          user_id:
+                            type: integer
+                          _created:
+                            type: string
+                          aportio_id:
+                            type: string
+                          id:
+                            type: integer
+                          classification:
+                            type: string
+                          customer_id:
+                            type: integer
+                          status:
+                            type: string
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  _created:
+                    type: string
+                  _updated:
+                    type: string
+                  id:
+                    type: integer
+                  ticket_id:
+                    type: integer
+                  attachment_data:
+                    type: string
+              examples:
+                '0':
+                  value: |
+                    {
+                      "_created": "2020-06-18T12:26:36.960430", 
+                      "_embedded": {
+                        "ticket": {
+                          "_created": "2020-04-12T14:39:+13:00", 
+                          "_links": {
+                            "self": {
+                              "href": "/tickets/1"
+                            }
+                          }, 
+                          "aportio_id": "1111", 
+                          "classification": "incident", 
+                          "customer_id": 1, 
+                          "id": 1, 
+                          "short_title": "Broken laptop", 
+                          "status": "OPEN", 
+                          "user_id": 1
+                        }
+                      }, 
+                      "_links": {
+                        "contained_in": {
+                          "href": "/attachments"
+                        }, 
+                        "self": {
+                          "href": "/attachments/3"
+                        }
+                      }, 
+                      "_updated": "2020-06-18T12:26:36.960430", 
+                      "attachment_data": "VGhpcyBpcyBhIGZpbGUgdG8gY2hlY2sgdGhhdCBwb3N0aW5nIGEgbmV3IGF0dGFjaG1lbnQgd29ya3MK", 
+                      "content_type": "text/plain", 
+                      "filename": "text_to_post.txt", 
+                      "id": 3, 
+                      "ticket_id": 1
+                    }
+  /customer_user_associations:
+    get:
+      tags:
+      - CustomerUserAssociations
+      summary: POST a CustomerUserAssociation resource
+      description: Create a Customer-User association.
+      responses:
+        '200':
+          description: Successful POST request. Returns the created Customer-User
+            association.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  associations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        user_id:
+                          type: integer
+                        _links:
+                          type: object
+                          properties:
+                            self:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                        customer_id:
+                          type: integer
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  total_queried:
+                    type: integer
+              examples:
+                '0':
+                  value: |
+                    {
+                        "total_queried": 6,
+                        "associations": [
+                            {
+                                "user_id": 1,
+                                "customer_id": 1,
+                                "_links": {
+                                    "self": {
+                                        "href": "/customer_user_associations/1"
+                                    }
+                                }
+                            },
+                            {
+                                "user_id": 1,
+                                "customer_id": 2,
+                                "_links": {
+                                    "self": {
+                                        "href": "/customer_user_associations/2"
+                                    }
+                                }
+                            },
+                            {
+                                "user_id": 1,
+                                "customer_id": 3,
+                                "_links": {
+                                    "self": {
+                                        "href": "/customer_user_associations/3"
+                                    }
+                                }
+                            },
+                            {
+                                "user_id": 2,
+                                "customer_id": 2,
+                                "_links": {
+                                    "self": {
+                                        "href": "/customer_user_associations/4"
+                                    }
+                                }
+                            },
+                            {
+                                "user_id": 3,
+                                "customer_id": 1,
+                                "_links": {
+                                    "self": {
+                                        "href": "/customer_user_associations/5"
+                                    }
+                                }
+                            },
+                            {
+                                "user_id": 3,
+                                "customer_id": 3,
+                                "_links": {
+                                    "self": {
+                                        "href": "/customer_user_associations/6"
+                                    }
+                                }
+                            }
+                        ],
+                        "_links": {
+                            "self": {
+                                "href": "/customer_user_associations"
+                            },
+                            "contained_in": {
+                                "href": "/"
+                            }
+                        }
+                    }
+    post:
+      tags:
+      - CustomerUserAssociations
+      summary: POST CustomerUserAssociation resource
+      description: Create a new CustomerUserAssociation in the customer-user association
+        table.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                customer_id:
+                  type: integer
+            examples:
+              '0':
+                value: |-
+                  {
+                      "user_id": 3,
+                      "customer_id": 2
+                  }
+      responses:
+        '201':
+          description: Successful POST request. Returns the created Customer-User
+            association.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _embedded:
+                    type: object
+                    properties:
+                      user:
+                        type: object
+                        properties:
+                          _links:
+                            type: object
+                            properties:
+                              self:
+                                type: object
+                                properties:
+                                  href:
+                                    type: string
+                          _created:
+                            type: string
+                          id:
+                            type: integer
+                          email:
+                            type: array
+                            items:
+                              type: string
+                      customer:
+                        type: object
+                        properties:
+                          _links:
+                            type: object
+                            properties:
+                              self:
+                                type: object
+                                properties:
+                                  href:
+                                    type: string
+                          _created:
+                            type: string
+                          name:
+                            type: string
+                          id:
+                            type: integer
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  user_id:
+                    type: integer
+                  _created:
+                    type: string
+                  _updated:
+                    type: string
+                  id:
+                    type: integer
+                  customer_id:
+                    type: integer
+              examples:
+                '0':
+                  value: |
+                    {
+                      "_created": "2020-06-18T12:36:53.428798", 
+                      "_embedded": {
+                        "customer": {
+                          "_created": "", 
+                          "_links": {
+                            "self": {
+                              "href": "/customers/2"
+                            }
+                          }, 
+                          "id": 2, 
+                          "name": "Bar Company"
+                        }, 
+                        "user": {
+                          "_created": "", 
+                          "_links": {
+                            "self": {
+                              "href": "/users/3"
+                            }
+                          }, 
+                          "email": [
+                            "foo@foobar.com"
+                          ], 
+                          "id": 3
+                        }
+                      }, 
+                      "_links": {
+                        "contained_in": {
+                          "href": "/customer_user_associations"
+                        }, 
+                        "self": {
+                          "href": "/customer_user_associations/7"
+                        }
+                      }, 
+                      "_updated": "2020-06-18T12:36:53.428798", 
+                      "customer_id": 2, 
+                      "id": 7, 
+                      "user_id": 3
+                    }
+  /users/<user_id>:
+    get:
+      tags:
+      - Users
+      summary: GET a specific User
+      description: Return details about a specific User from the users table.
+      responses:
+        '200':
+          description: Successful GET request. Returns user from user table.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      tickets:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      customers:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  id:
+                    type: integer
+                  email:
+                    type: array
+                    items:
+                      type: string
+              examples:
+                Single email, no custom fields:
+                  value: |
+                    {
+                        "id": 1,
+                        "email": [
+                            "some@user.com"
+                        ],
+                        "_links": {
+                            "self": {
+                                "href": "/users/1"
+                            },
+                            "contained_in": {
+                                "href": "/users"
+                            },
+                            "customers": {
+                                "href": "/users/1/customers"
+                            },
+                            "tickets": {
+                                "href": "/users/1/tickets"
+                            }
+                        }
+                    }
+                Multiple emails with custom fields:
+                  value: |
+                    {
+                        "id": 2,
+                        "email": [
+                            "another@user.com",
+                            "with-multiple@emails.com"
+                        ],
+                        "custom_fields": {
+                            "mobile": "412-333-4444",
+                            "address": {
+                                "street": "456 Elm Street",
+                                "city": "Littleville"
+                            }
+                        },
+                        "_links": {
+                            "self": {
+                                "href": "/users/2"
+                            },
+                            "contained_in": {
+                                "href": "/users"
+                            },
+                            "customers": {
+                                "href": "/users/2/customers"
+                            },
+                            "tickets": {
+                                "href": "/users/2/tickets"
+                            }
+                        }
+                    }
+  /customers/<customer_id>:
+    get:
+      tags:
+      - Customers
+      summary: GET a specific Customer
+      description: Return details about a specific Customer from the customers table.
+      responses:
+        '200':
+          description: Successful GET request. Returns customer from the customer
+            table.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      parent:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      tickets:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      users:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  parent_id:
+                    type: integer
+                  custom_fields:
+                    type: object
+                  name:
+                    type: string
+                  id:
+                    type: integer
+              examples:
+                Customer:
+                  value: |
+                    {
+                        "id": 2,
+                        "name": "Bar Company",
+                        "parent_id": 3,
+                        "custom_fields": {
+                            "phone": "777-321-0987"
+                        },
+                        "_links": {
+                            "self": {
+                                "href": "/customers/2"
+                            },
+                            "contained_in": {
+                                "href": "/customers"
+                            },
+                            "users": {
+                                "href": "/customers/2/users"
+                            },
+                            "tickets": {
+                                "href": "/customers/2/tickets"
+                            },
+                            "parent": {
+                                "href": "/customers/3"
+                            }
+                        }
+                    }
+                Customer (no parent):
+                  value: |
+                    {
+                        "id": 3,
+                        "name": "Foobar Company",
+                        "custom_fields": {
+                            "address": "123 Foo Street, Bar Town 1234"
+                        },
+                        "_links": {
+                            "self": {
+                                "href": "/customers/3"
+                            },
+                            "contained_in": {
+                                "href": "/customers"
+                            },
+                            "users": {
+                                "href": "/customers/3/users"
+                            },
+                            "tickets": {
+                                "href": "/customers/3/tickets"
+                            }
+                        }
+                    }
+                Customer (no custom_fields):
+                  value: |
+                    {
+                        "id": 1,
+                        "name": "Foo Company",
+                        "parent_id": 3,
+                        "_links": {
+                            "self": {
+                                "href": "/customers/1"
+                            },
+                            "contained_in": {
+                                "href": "/customers"
+                            },
+                            "users": {
+                                "href": "/customers/1/users"
+                            },
+                            "tickets": {
+                                "href": "/customers/1/tickets"
+                            },
+                            "parent": {
+                                "href": "/customers/3"
+                            }
+                        }
+                    }
+  /tickets/<ticket_id>:
+    get:
+      tags:
+      - Tickets
+      summary: GET a specific Ticket
+      description: Auto generated using Swagger Inspector
+      responses:
+        '200':
+          description: Auto generated using Swagger Inspector
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  short_title:
+                    type: string
+                  long_text:
+                    type: string
+                  user_id:
+                    type: integer
+                  _embedded:
+                    type: object
+                    properties:
+                      worknotes:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            user_id:
+                              type: integer
+                            _links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                            _created:
+                              type: string
+                            _updated:
+                              type: string
+                            id:
+                              type: integer
+                            text:
+                              type: string
+                      comments:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            user_id:
+                              type: integer
+                            _links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                            _created:
+                              type: string
+                            _updated:
+                              type: string
+                            id:
+                              type: integer
+                            text:
+                              type: string
+                      attachments:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            filename:
+                              type: string
+                            content_type:
+                              type: string
+                            _links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                            _created:
+                              type: string
+                            _updated:
+                              type: string
+                            id:
+                              type: integer
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      user:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      customer:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  custom_fields:
+                    type: object
+                    properties:
+                      department:
+                        type: string
+                  _created:
+                    type: string
+                  aportio_id:
+                    type: string
+                  id:
+                    type: integer
+                  customer_id:
+                    type: integer
+                  classification:
+                    type: object
+                    properties:
+                      l1:
+                        type: string
+                      l2:
+                        type: string
+                  status:
+                    type: string
+              examples:
+                '0':
+                  value: |
+                    {
+                        "id": 1,
+                        "aportio_id": "1111",
+                        "customer_id": 1,
+                        "short_title": "Broken laptop",
+                        "long_text": "My laptop is broken. It won't boot anymore. Need help.",
+                        "user_id": 1,
+                        "_created": "2020-04-12T14:39:+13:00",
+                        "status": "OPEN",
+                        "classification": {
+                            "l1": "incident",
+                            "l2": "hardware"
+                        },
+                        "custom_fields": {
+                            "department": "marketing"
+                        },
+                        "_embedded": {
+                            "comments": [
+                                {
+                                    "id": 2,
+                                    "user_id": 1,
+                                    "text": "Can I please have an update on this?",
+                                    "_created": "2020-05-14T14:09:26.813168",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/comments/2"
+                                        }
+                                    },
+                                    "_updated": "2020-05-14T14:09:26.813168"
+                                }
+                            ],
+                            "worknotes": [
+                                {
+                                    "id": 1,
+                                    "user_id": 2,
+                                    "text": "Has there been a follow up?",
+                                    "_created": "2020-05-14T14:09:25.431621",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/comments/1"
+                                        }
+                                    },
+                                    "_updated": "2020-05-14T14:09:25.431621"
+                                },
+                                {
+                                    "id": 3,
+                                    "user_id": 1,
+                                    "text": "This is another comment",
+                                    "_created": "2020-06-18T11:44:23.678125",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/comments/3"
+                                        }
+                                    },
+                                    "_updated": "2020-06-18T11:44:23.677883"
+                                }
+                            ],
+                            "attachments": [
+                                {
+                                    "id": 1,
+                                    "filename": "test.txt",
+                                    "content_type": "text/plain",
+                                    "_created": "2020-06-12T12:09:25.431621",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/attachments/1"
+                                        }
+                                    },
+                                    "_updated": "2020-06-12T12:09:25.431621"
+                                },
+                                {
+                                    "id": 3,
+                                    "filename": "text_to_post.txt",
+                                    "content_type": "text/plain",
+                                    "_created": "2020-06-18T12:26:36.960430",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/attachments/3"
+                                        }
+                                    },
+                                    "_updated": "2020-06-18T12:26:36.960430"
+                                }
+                            ]
+                        },
+                        "_links": {
+                            "self": {
+                                "href": "/tickets/1"
+                            },
+                            "contained_in": {
+                                "href": "/tickets"
+                            },
+                            "customer": {
+                                "href": "/customers/1"
+                            },
+                            "user": {
+                                "href": "/users/1"
+                            }
+                        }
+                    }
+    put:
+      tags:
+      - Tickets
+      summary: PUT an update to a single Ticket
+      description: Auto generated using Swagger Inspector
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                short_title:
+                  type: string
+                long_text:
+                  type: string
+                user_id:
+                  type: integer
+                aportio_id:
+                  type: string
+                customer_id:
+                  type: integer
+                classification:
+                  type: object
+                  properties:
+                    l1:
+                      type: string
+                    l2:
+                      type: string
+                status:
+                  type: string
+            examples:
+              Update ticket's status and classification:
+                value: |-
+                  {
+                      "user_id"        : 3,
+                      "customer_id"    : 1,
+                      "aportio_id"     : "4321",
+                      "short_title"    : "This is a test",
+                      "long_text"      : "This is a test",
+                      "status"         : "CLOSED",
+                      "classification" : {"l1" : "service-request", "l2" : "hardware"}
+                  }
+      responses:
+        '200':
+          description: Auto generated using Swagger Inspector
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+              examples:
+                Successful PUT request return message:
+                  value: |
+                    {
+                      "msg": "Ok"
+                    }
+  /comments/<comment_id>:
+    get:
+      tags:
+      - Comments
+      summary: GET a single Comment
+      description: Auto generated using Swagger Inspector
+      responses:
+        '200':
+          description: Auto generated using Swagger Inspector
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: integer
+                  _embedded:
+                    type: object
+                    properties:
+                      ticket:
+                        type: object
+                        properties:
+                          short_title:
+                            type: string
+                          user_id:
+                            type: integer
+                          _links:
+                            type: object
+                            properties:
+                              self:
+                                type: object
+                                properties:
+                                  href:
+                                    type: string
+                          _created:
+                            type: string
+                          aportio_id:
+                            type: string
+                          id:
+                            type: integer
+                          customer_id:
+                            type: integer
+                          classification:
+                            type: string
+                          status:
+                            type: string
+                      user:
+                        type: object
+                        properties:
+                          _links:
+                            type: object
+                            properties:
+                              self:
+                                type: object
+                                properties:
+                                  href:
+                                    type: string
+                          _created:
+                            type: string
+                          id:
+                            type: integer
+                          email:
+                            type: array
+                            items:
+                              type: string
+                      customer:
+                        type: object
+                        properties:
+                          _links:
+                            type: object
+                            properties:
+                              self:
+                                type: object
+                                properties:
+                                  href:
+                                    type: string
+                          _created:
+                            type: string
+                          name:
+                            type: string
+                          id:
+                            type: integer
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  _created:
+                    type: string
+                  _updated:
+                    type: string
+                  text:
+                    type: string
+                  id:
+                    type: integer
+                  ticket_id:
+                    type: integer
+                  type:
+                    type: string
+              examples:
+                '0':
+                  value: |
+                    {
+                        "user_id": 2,
+                        "ticket_id": 1,
+                        "text": "Has there been a follow up?",
+                        "type": "WORKNOTE",
+                        "_created": "2020-05-14T14:09:25.431621",
+                        "_updated": "2020-05-14T14:09:25.431621",
+                        "id": 1,
+                        "_embedded": {
+                            "ticket": {
+                                "id": 1,
+                                "aportio_id": "1111",
+                                "customer_id": 1,
+                                "user_id": 1,
+                                "short_title": "Broken laptop",
+                                "_created": "2020-04-12T14:39:+13:00",
+                                "status": "OPEN",
+                                "classification": "incident",
+                                "_links": {
+                                    "self": {
+                                        "href": "/tickets/1"
+                                    }
+                                }
+                            },
+                            "user": {
+                                "id": 2,
+                                "email": [
+                                    "another@user.com",
+                                    "with-multiple@emails.com"
+                                ],
+                                "_created": "",
+                                "_links": {
+                                    "self": {
+                                        "href": "/users/2"
+                                    }
+                                }
+                            },
+                            "customer": {
+                                "id": 1,
+                                "name": "Foo Company",
+                                "_created": "",
+                                "_links": {
+                                    "self": {
+                                        "href": "/customers/1"
+                                    }
+                                }
+                            }
+                        },
+                        "_links": {
+                            "self": {
+                                "href": "/comments/1"
+                            },
+                            "contained_in": {
+                                "href": "/comments"
+                            }
+                        }
+                    }
+    put:
+      tags:
+      - Comments
+      summary: PUT an update to a single Comment
+      description: Auto generated using Swagger Inspector
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                text:
+                  type: string
+                ticket_id:
+                  type: integer
+                type:
+                  type: string
+            examples:
+              '0':
+                value: |-
+                  {
+                      "user_id": 2,
+                      "ticket_id": 1,
+                      "text": "Has there been any follow up?",
+                      "type": "COMMENT"
+                  }
+      responses:
+        '200':
+          description: Auto generated using Swagger Inspector
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+              examples:
+                '0':
+                  value: |
+                    {
+                      "msg": "Ok"
+                    }
+  /attachments/<attachment_id>:
+    get:
+      tags:
+      - Attachments
+      summary: GET a specific Attachment
+      description: Return details about a specific Attachment from the attachments
+        table.
+      responses:
+        '200':
+          description: Successful GET request to a specific attachment. Returns the
+            attachment from the attachments table.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  filename:
+                    type: string
+                  content_type:
+                    type: string
+                  _embedded:
+                    type: object
+                    properties:
+                      ticket:
+                        type: object
+                        properties:
+                          short_title:
+                            type: string
+                          user_id:
+                            type: integer
+                          _links:
+                            type: object
+                            properties:
+                              self:
+                                type: object
+                                properties:
+                                  href:
+                                    type: string
+                          _created:
+                            type: string
+                          aportio_id:
+                            type: string
+                          id:
+                            type: integer
+                          customer_id:
+                            type: integer
+                          classification:
+                            type: string
+                          status:
+                            type: string
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  _created:
+                    type: string
+                  _updated:
+                    type: string
+                  id:
+                    type: integer
+                  ticket_id:
+                    type: integer
+                  attachment_data:
+                    type: string
+              examples:
+                '0':
+                  value: |
+                    {
+                        "ticket_id": 1,
+                        "filename": "test.txt",
+                        "content_type": "text/plain",
+                        "_created": "2020-06-12T12:09:25.431621",
+                        "_updated": "2020-06-12T12:09:25.431621",
+                        "id": 1,
+                        "attachment_data": "VGhpcyBpcyBhIHRlc3QgZmlsZSB0byBjaGVjayB0aGF0IHRoZSByZXN0IEFQSSB3b3Jrcwo=",
+                        "_embedded": {
+                            "ticket": {
+                                "id": 1,
+                                "aportio_id": "1111",
+                                "customer_id": 1,
+                                "user_id": 1,
+                                "short_title": "Broken laptop",
+                                "_created": "2020-04-12T14:39:+13:00",
+                                "status": "OPEN",
+                                "classification": "incident",
+                                "_links": {
+                                    "self": {
+                                        "href": "/tickets/1"
+                                    }
+                                }
+                            }
+                        },
+                        "_links": {
+                            "self": {
+                                "href": "/attachments/1"
+                            },
+                            "contained_in": {
+                                "href": "/attachments"
+                            }
+                        }
+                    }
+  /customer_user_associations/<association_id>: {}
+  /users/<user_id>/customers:
+    get:
+      tags:
+      - Users
+      summary: GET the list of Customers for a given User
+      description: Auto generated using Swagger Inspector
+      responses:
+        '200':
+          description: Auto generated using Swagger Inspector
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _embedded:
+                    type: object
+                    properties:
+                      customers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            _links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                            _created:
+                              type: string
+                            name:
+                              type: string
+                            id:
+                              type: integer
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  total_queried:
+                    type: integer
+              examples:
+                '0':
+                  value: |
+                    {
+                        "total_queried": 3,
+                        "_embedded": {
+                            "customers": [
+                                {
+                                    "id": 1,
+                                    "name": "Foo Company",
+                                    "_created": "",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/customers/1"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": 2,
+                                    "name": "Bar Company",
+                                    "_created": "",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/customers/2"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": 3,
+                                    "name": "Foobar Company",
+                                    "_created": "",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/customers/3"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "_links": {
+                            "self": {
+                                "href": "/users/1/customers"
+                            },
+                            "contained_in": {
+                                "href": "/users/1"
+                            }
+                        }
+                    }
+  /customers/<customer_id>/users:
+    get:
+      tags:
+      - Customers
+      summary: GET list of Users for a given Customer
+      description: Auto generated using Swagger Inspector
+      responses:
+        '200':
+          description: Auto generated using Swagger Inspector
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _embedded:
+                    type: object
+                    properties:
+                      users:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            _links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                            _created:
+                              type: string
+                            id:
+                              type: integer
+                            email:
+                              type: array
+                              items:
+                                type: string
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  total_queried:
+                    type: integer
+              examples:
+                '0':
+                  value: |
+                    {
+                        "total_queried": 3,
+                        "_embedded": {
+                            "users": [
+                                {
+                                    "id": 1,
+                                    "email": [
+                                        "some@user.com"
+                                    ],
+                                    "_created": "",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/users/1"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": 2,
+                                    "email": [
+                                        "another@user.com",
+                                        "with-multiple@emails.com"
+                                    ],
+                                    "_created": "",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/users/2"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": 3,
+                                    "email": [
+                                        "foo@foobar.com"
+                                    ],
+                                    "_created": "",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/users/3"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "_links": {
+                            "self": {
+                                "href": "/customers/1/users"
+                            },
+                            "contained_in": {
+                                "href": "/customers/1"
+                            }
+                        }
+                    }
+  /customers/<customer_id>/tickets:
+    get:
+      tags:
+      - Customers
+      summary: GET list of Tickets for a given Customer
+      description: Auto generated using Swagger Inspector
+      responses:
+        '200':
+          description: Auto generated using Swagger Inspector
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _embedded:
+                    type: object
+                    properties:
+                      tickets:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            short_title:
+                              type: string
+                            user_id:
+                              type: integer
+                            _links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                            _created:
+                              type: string
+                            aportio_id:
+                              type: string
+                            id:
+                              type: integer
+                            customer_id:
+                              type: integer
+                            classification:
+                              type: string
+                            status:
+                              type: string
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  total_queried:
+                    type: integer
+              examples:
+                '0':
+                  value: |
+                    {
+                        "total_queried": 4,
+                        "_embedded": {
+                            "tickets": [
+                                {
+                                    "id": 1,
+                                    "aportio_id": "1111",
+                                    "customer_id": 1,
+                                    "user_id": 1,
+                                    "short_title": "Broken laptop",
+                                    "_created": "2020-04-12T14:39:+13:00",
+                                    "status": "OPEN",
+                                    "classification": "incident",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/tickets/1"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": 3,
+                                    "aportio_id": "4321",
+                                    "customer_id": 1,
+                                    "user_id": 3,
+                                    "short_title": "This is a test",
+                                    "_created": "",
+                                    "status": "CLOSED",
+                                    "classification": "service-request",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/tickets/3"
+                                        }
+                                    },
+                                    "_updated": "2020-06-19T13:40:36.655122"
+                                },
+                                {
+                                    "id": 4,
+                                    "aportio_id": "1239",
+                                    "customer_id": 1,
+                                    "user_id": 4,
+                                    "short_title": "This is a test",
+                                    "_created": "2020-05-14T07:52:35.192934",
+                                    "status": "OPEN",
+                                    "classification": "(none)",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/tickets/4"
+                                        }
+                                    },
+                                    "_updated": "2020-05-14T07:52:35.192934"
+                                },
+                                {
+                                    "id": 5,
+                                    "aportio_id": "12331",
+                                    "customer_id": 1,
+                                    "user_id": 1,
+                                    "short_title": "Laptop is broken",
+                                    "_created": "2020-06-18T11:06:25.211798",
+                                    "status": "OPEN",
+                                    "classification": "service-request",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/tickets/5"
+                                        }
+                                    },
+                                    "_updated": "2020-06-18T11:06:25.211798"
+                                }
+                            ]
+                        },
+                        "_links": {
+                            "self": {
+                                "href": "/customers/1/tickets"
+                            },
+                            "contained_in": {
+                                "href": "/customers/1"
+                            }
+                        }
+                    }
+  /users/<user_id>/tickets:
+    get:
+      tags:
+      - Users
+      summary: GET list of Tickets for a given User
+      description: Auto generated using Swagger Inspector
+      responses:
+        '200':
+          description: Auto generated using Swagger Inspector
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _embedded:
+                    type: object
+                    properties:
+                      tickets:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            short_title:
+                              type: string
+                            user_id:
+                              type: integer
+                            _links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                            _created:
+                              type: string
+                            aportio_id:
+                              type: string
+                            id:
+                              type: integer
+                            customer_id:
+                              type: integer
+                            classification:
+                              type: string
+                            status:
+                              type: string
+                  _links:
+                    type: object
+                    properties:
+                      contained_in:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                  total_queried:
+                    type: integer
+              examples:
+                '0':
+                  value: |
+                    {
+                        "total_queried": 2,
+                        "_embedded": {
+                            "tickets": [
+                                {
+                                    "id": 1,
+                                    "aportio_id": "1111",
+                                    "customer_id": 1,
+                                    "user_id": 1,
+                                    "short_title": "Broken laptop",
+                                    "_created": "2020-04-12T14:39:+13:00",
+                                    "status": "OPEN",
+                                    "classification": "incident",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/tickets/1"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": 5,
+                                    "aportio_id": "12331",
+                                    "customer_id": 1,
+                                    "user_id": 1,
+                                    "short_title": "Laptop is broken",
+                                    "_created": "2020-06-18T11:06:25.211798",
+                                    "status": "OPEN",
+                                    "classification": "service-request",
+                                    "_links": {
+                                        "self": {
+                                            "href": "/tickets/5"
+                                        }
+                                    },
+                                    "_updated": "2020-06-18T11:06:25.211798"
+                                }
+                            ]
+                        },
+                        "_links": {
+                            "self": {
+                                "href": "/users/1/tickets"
+                            },
+                            "contained_in": {
+                                "href": "/users/1"
+                            }
+                        }
+                    }

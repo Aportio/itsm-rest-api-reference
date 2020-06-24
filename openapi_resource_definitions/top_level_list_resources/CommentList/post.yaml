@@ -1,0 +1,187 @@
+tags:
+- Comments
+summary: POST a new Comment
+description: Create a new Comment in the comments table.
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          user_id:
+            type: integer
+          text:
+            type: string
+          ticket_id:
+            type: integer
+          type:
+            type: string
+      examples:
+        '0':
+          value: |-
+            {
+                "user_id": 1,
+                "ticket_id": 1,
+                "text": "This is another comment",
+                "type": "WORKNOTE"
+            }
+responses:
+  '201':
+    description: Successful POST request. Creates a Comment and returns the created comment's info.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            _embedded:
+              type: object
+              properties:
+                ticket:
+                  type: object
+                  properties:
+                    short_title:
+                      type: string
+                    _links:
+                      type: object
+                      properties:
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    user_id:
+                      type: integer
+                    _created:
+                      type: string
+                    aportio_id:
+                      type: string
+                    id:
+                      type: integer
+                    classification:
+                      type: string
+                    customer_id:
+                      type: integer
+                    status:
+                      type: string
+                user:
+                  type: object
+                  properties:
+                    _links:
+                      type: object
+                      properties:
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    _created:
+                      type: string
+                    id:
+                      type: integer
+                    email:
+                      type: array
+                      items:
+                        type: string
+                customer:
+                  type: object
+                  properties:
+                    _links:
+                      type: object
+                      properties:
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    _created:
+                      type: string
+                    name:
+                      type: string
+                    id:
+                      type: integer
+            _links:
+              type: object
+              properties:
+                contained_in:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                self:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+            user_id:
+              type: integer
+            _created:
+              type: string
+            _updated:
+              type: string
+            id:
+              type: integer
+            text:
+              type: string
+            ticket_id:
+              type: integer
+            type:
+              type: string
+        examples:
+          '0':
+            value: |
+              {
+                "_created": "2020-06-18T11:44:23.678125", 
+                "_embedded": {
+                  "customer": {
+                    "_created": "", 
+                    "_links": {
+                      "self": {
+                        "href": "/customers/1"
+                      }
+                    }, 
+                    "id": 1, 
+                    "name": "Foo Company"
+                  }, 
+                  "ticket": {
+                    "_created": "2020-04-12T14:39:+13:00", 
+                    "_links": {
+                      "self": {
+                        "href": "/tickets/1"
+                      }
+                    }, 
+                    "aportio_id": "1111", 
+                    "classification": "incident", 
+                    "customer_id": 1, 
+                    "id": 1, 
+                    "short_title": "Broken laptop", 
+                    "status": "OPEN", 
+                    "user_id": 1
+                  }, 
+                  "user": {
+                    "_created": "", 
+                    "_links": {
+                      "self": {
+                        "href": "/users/1"
+                      }
+                    }, 
+                    "email": [
+                      "some@user.com"
+                    ], 
+                    "id": 1
+                  }
+                }, 
+                "_links": {
+                  "contained_in": {
+                    "href": "/comments"
+                  }, 
+                  "self": {
+                    "href": "/comments/3"
+                  }
+                }, 
+                "_updated": "2020-06-18T11:44:23.677883", 
+                "id": 3, 
+                "text": "This is another comment", 
+                "ticket_id": 1, 
+                "type": "WORKNOTE", 
+                "user_id": 1
+              }

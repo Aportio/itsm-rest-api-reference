@@ -1,0 +1,57 @@
+tags:
+  - Tickets
+summary: PUT an update to a single Ticket
+description: Auto generated using Swagger Inspector
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          short_title:
+            type: string
+          long_text:
+            type: string
+          user_id:
+            type: integer
+          aportio_id:
+            type: string
+          customer_id:
+            type: integer
+          classification:
+            type: object
+            properties:
+              l1:
+                type: string
+              l2:
+                type: string
+          status:
+            type: string
+      examples:
+        "Update ticket's status and classification":
+          value: |-
+            {
+                "user_id"        : 3,
+                "customer_id"    : 1,
+                "aportio_id"     : "4321",
+                "short_title"    : "This is a test",
+                "long_text"      : "This is a test",
+                "status"         : "CLOSED",
+                "classification" : {"l1" : "service-request", "l2" : "hardware"}
+            }
+responses:
+  '200':
+    description: Auto generated using Swagger Inspector
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            msg:
+              type: string
+        examples:
+          'Successful PUT request return message':
+            value: |
+              {
+                "msg": "Ok"
+              }

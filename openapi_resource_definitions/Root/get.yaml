@@ -1,0 +1,78 @@
+tags:
+- Root
+summary: GET Root resource
+description: Return the root resource, which includes links to all collections.
+responses:
+  '200':
+    description: Successful GET request. Returns resources.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            _links:
+              type: object
+              properties:
+                self:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                users:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                customers:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                tickets:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                comments:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                attachments:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                customer_user_associations:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+        examples:
+          '0':
+            value: |
+              {
+                  "_links": {
+                      "self": {
+                          "href": "/"
+                      },
+                      "users": {
+                          "href": "/users"
+                      },
+                      "customers": {
+                          "href": "/customers"
+                      },
+                      "tickets": {
+                          "href": "/tickets"
+                      },
+                      "comments": {
+                          "href": "/comments"
+                      },
+                      "attachments": {
+                          "href": "/attachments"
+                      },
+                      "customer_user_associations": {
+                          "href": "/customer_user_associations"
+                      }
+                  }
+              }

@@ -1,0 +1,165 @@
+tags:
+  - Comments
+summary: GET a single Comment
+description: Auto generated using Swagger Inspector
+responses:
+  '200':
+    description: Auto generated using Swagger Inspector
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            user_id:
+              type: integer
+            _embedded:
+              type: object
+              properties:
+                ticket:
+                  type: object
+                  properties:
+                    short_title:
+                      type: string
+                    user_id:
+                      type: integer
+                    _links:
+                      type: object
+                      properties:
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    _created:
+                      type: string
+                    aportio_id:
+                      type: string
+                    id:
+                      type: integer
+                    customer_id:
+                      type: integer
+                    classification:
+                      type: string
+                    status:
+                      type: string
+                user:
+                  type: object
+                  properties:
+                    _links:
+                      type: object
+                      properties:
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    _created:
+                      type: string
+                    id:
+                      type: integer
+                    email:
+                      type: array
+                      items:
+                        type: string
+                customer:
+                  type: object
+                  properties:
+                    _links:
+                      type: object
+                      properties:
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    _created:
+                      type: string
+                    name:
+                      type: string
+                    id:
+                      type: integer
+            _links:
+              type: object
+              properties:
+                contained_in:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                self:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+            _created:
+              type: string
+            _updated:
+              type: string
+            text:
+              type: string
+            id:
+              type: integer
+            ticket_id:
+              type: integer
+            type:
+              type: string
+        examples:
+          '0':
+            value: |
+              {
+                  "user_id": 2,
+                  "ticket_id": 1,
+                  "text": "Has there been a follow up?",
+                  "type": "WORKNOTE",
+                  "_created": "2020-05-14T14:09:25.431621",
+                  "_updated": "2020-05-14T14:09:25.431621",
+                  "id": 1,
+                  "_embedded": {
+                      "ticket": {
+                          "id": 1,
+                          "aportio_id": "1111",
+                          "customer_id": 1,
+                          "user_id": 1,
+                          "short_title": "Broken laptop",
+                          "_created": "2020-04-12T14:39:+13:00",
+                          "status": "OPEN",
+                          "classification": "incident",
+                          "_links": {
+                              "self": {
+                                  "href": "/tickets/1"
+                              }
+                          }
+                      },
+                      "user": {
+                          "id": 2,
+                          "email": [
+                              "another@user.com",
+                              "with-multiple@emails.com"
+                          ],
+                          "_created": "",
+                          "_links": {
+                              "self": {
+                                  "href": "/users/2"
+                              }
+                          }
+                      },
+                      "customer": {
+                          "id": 1,
+                          "name": "Foo Company",
+                          "_created": "",
+                          "_links": {
+                              "self": {
+                                  "href": "/customers/1"
+                              }
+                          }
+                      }
+                  },
+                  "_links": {
+                      "self": {
+                          "href": "/comments/1"
+                      },
+                      "contained_in": {
+                          "href": "/comments"
+                      }
+                  }
+              }

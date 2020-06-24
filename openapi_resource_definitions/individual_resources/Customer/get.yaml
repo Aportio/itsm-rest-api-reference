@@ -1,0 +1,123 @@
+tags:
+  - Customers
+summary: GET a specific Customer
+description: Return details about a specific Customer from the customers table.
+responses:
+  '200':
+    description: Successful GET request. Returns customer from the customer table.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            _links:
+              type: object
+              properties:
+                contained_in:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                parent:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                tickets:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                self:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                users:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+            parent_id:
+              type: integer
+            custom_fields:
+              type: object
+            name:
+              type: string
+            id:
+              type: integer
+        examples:
+          'Customer':
+            value: |
+              {
+                  "id": 2,
+                  "name": "Bar Company",
+                  "parent_id": 3,
+                  "custom_fields": {
+                      "phone": "777-321-0987"
+                  },
+                  "_links": {
+                      "self": {
+                          "href": "/customers/2"
+                      },
+                      "contained_in": {
+                          "href": "/customers"
+                      },
+                      "users": {
+                          "href": "/customers/2/users"
+                      },
+                      "tickets": {
+                          "href": "/customers/2/tickets"
+                      },
+                      "parent": {
+                          "href": "/customers/3"
+                      }
+                  }
+              }
+          'Customer (no parent)':
+            value: |
+              {
+                  "id": 3,
+                  "name": "Foobar Company",
+                  "custom_fields": {
+                      "address": "123 Foo Street, Bar Town 1234"
+                  },
+                  "_links": {
+                      "self": {
+                          "href": "/customers/3"
+                      },
+                      "contained_in": {
+                          "href": "/customers"
+                      },
+                      "users": {
+                          "href": "/customers/3/users"
+                      },
+                      "tickets": {
+                          "href": "/customers/3/tickets"
+                      }
+                  }
+              }
+          'Customer (no custom_fields)':
+            value: |
+              {
+                  "id": 1,
+                  "name": "Foo Company",
+                  "parent_id": 3,
+                  "_links": {
+                      "self": {
+                          "href": "/customers/1"
+                      },
+                      "contained_in": {
+                          "href": "/customers"
+                      },
+                      "users": {
+                          "href": "/customers/1/users"
+                      },
+                      "tickets": {
+                          "href": "/customers/1/tickets"
+                      },
+                      "parent": {
+                          "href": "/customers/3"
+                      }
+                  }
+              }

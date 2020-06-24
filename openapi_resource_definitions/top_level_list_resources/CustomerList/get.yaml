@@ -1,0 +1,97 @@
+tags:
+- Customers
+summary: GET Customers resource
+description: Return the Customer table data.
+responses:
+  '200':
+    description: Successful GET request. Returns Customer table data.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            _embedded:
+              type: object
+              properties:
+                customers:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      _links:
+                        type: object
+                        properties:
+                          self:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                      _created:
+                        type: string
+                      name:
+                        type: string
+                      id:
+                        type: integer
+            _links:
+              type: object
+              properties:
+                contained_in:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                self:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+            total_queried:
+              type: integer
+        examples:
+          '0':
+            value: |
+              {
+                  "total_queried": 3,
+                  "_embedded": {
+                      "customers": [
+                          {
+                              "id": 1,
+                              "name": "Foo Company",
+                              "_created": "",
+                              "_links": {
+                                  "self": {
+                                      "href": "/customers/1"
+                                  }
+                              }
+                          },
+                          {
+                              "id": 2,
+                              "name": "Bar Company",
+                              "_created": "",
+                              "_links": {
+                                  "self": {
+                                      "href": "/customers/2"
+                                  }
+                              }
+                          },
+                          {
+                              "id": 3,
+                              "name": "Foobar Company",
+                              "_created": "",
+                              "_links": {
+                                  "self": {
+                                      "href": "/customers/3"
+                                  }
+                              }
+                          }
+                      ]
+                  },
+                  "_links": {
+                      "self": {
+                          "href": "/customers"
+                      },
+                      "contained_in": {
+                          "href": "/"
+                      }
+                  }
+              }

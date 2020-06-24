@@ -1,0 +1,106 @@
+tags:
+  - Attachments
+summary: GET a specific Attachment
+description: Return details about a specific Attachment from the attachments table.
+responses:
+  '200':
+    description: Successful GET request to a specific attachment. Returns the attachment from the attachments table.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            filename:
+              type: string
+            content_type:
+              type: string
+            _embedded:
+              type: object
+              properties:
+                ticket:
+                  type: object
+                  properties:
+                    short_title:
+                      type: string
+                    user_id:
+                      type: integer
+                    _links:
+                      type: object
+                      properties:
+                        self:
+                          type: object
+                          properties:
+                            href:
+                              type: string
+                    _created:
+                      type: string
+                    aportio_id:
+                      type: string
+                    id:
+                      type: integer
+                    customer_id:
+                      type: integer
+                    classification:
+                      type: string
+                    status:
+                      type: string
+            _links:
+              type: object
+              properties:
+                contained_in:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                self:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+            _created:
+              type: string
+            _updated:
+              type: string
+            id:
+              type: integer
+            ticket_id:
+              type: integer
+            attachment_data:
+              type: string
+        examples:
+          '0':
+            value: |
+              {
+                  "ticket_id": 1,
+                  "filename": "test.txt",
+                  "content_type": "text/plain",
+                  "_created": "2020-06-12T12:09:25.431621",
+                  "_updated": "2020-06-12T12:09:25.431621",
+                  "id": 1,
+                  "attachment_data": "VGhpcyBpcyBhIHRlc3QgZmlsZSB0byBjaGVjayB0aGF0IHRoZSByZXN0IEFQSSB3b3Jrcwo=",
+                  "_embedded": {
+                      "ticket": {
+                          "id": 1,
+                          "aportio_id": "1111",
+                          "customer_id": 1,
+                          "user_id": 1,
+                          "short_title": "Broken laptop",
+                          "_created": "2020-04-12T14:39:+13:00",
+                          "status": "OPEN",
+                          "classification": "incident",
+                          "_links": {
+                              "self": {
+                                  "href": "/tickets/1"
+                              }
+                          }
+                      }
+                  },
+                  "_links": {
+                      "self": {
+                          "href": "/attachments/1"
+                      },
+                      "contained_in": {
+                          "href": "/attachments"
+                      }
+                  }
+              }

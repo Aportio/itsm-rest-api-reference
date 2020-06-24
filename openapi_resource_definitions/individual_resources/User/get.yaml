@@ -1,0 +1,94 @@
+tags:
+- Users
+summary: GET a specific User
+description: Return details about a specific User from the users table.
+responses:
+  '200':
+    description: Successful GET request. Returns user from user table.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            _links:
+              type: object
+              properties:
+                contained_in:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                tickets:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                self:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+                customers:
+                  type: object
+                  properties:
+                    href:
+                      type: string
+            id:
+              type: integer
+            email:
+              type: array
+              items:
+                type: string
+        examples:
+          'Single email, no custom fields':
+            value: |
+              {
+                  "id": 1,
+                  "email": [
+                      "some@user.com"
+                  ],
+                  "_links": {
+                      "self": {
+                          "href": "/users/1"
+                      },
+                      "contained_in": {
+                          "href": "/users"
+                      },
+                      "customers": {
+                          "href": "/users/1/customers"
+                      },
+                      "tickets": {
+                          "href": "/users/1/tickets"
+                      }
+                  }
+              }
+          'Multiple emails with custom fields':
+            value: |
+              {
+                  "id": 2,
+                  "email": [
+                      "another@user.com",
+                      "with-multiple@emails.com"
+                  ],
+                  "custom_fields": {
+                      "mobile": "412-333-4444",
+                      "address": {
+                          "street": "456 Elm Street",
+                          "city": "Littleville"
+                      }
+                  },
+                  "_links": {
+                      "self": {
+                          "href": "/users/2"
+                      },
+                      "contained_in": {
+                          "href": "/users"
+                      },
+                      "customers": {
+                          "href": "/users/2/customers"
+                      },
+                      "tickets": {
+                          "href": "/users/2/tickets"
+                      }
+                  }
+              }
