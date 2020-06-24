@@ -1,7 +1,12 @@
 tags:
   - Comment
 summary: Update a single comment
-description: Update the details of a specific comment in the comments table.
+description: |
+  Update the details of a specific comment in the comments table.
+  
+  Note that while our API allows for updating the type of comment (e.g. changing a COMMENT to
+  a WORKNOTE), it is understood that many ITSM systems may not allow this kind of change, and
+  therefore should return a 400 in that case.
 requestBody:
   content:
     application/json:
@@ -43,7 +48,8 @@ responses:
               }
   '400':
     description: Bad Request. This usually occurs if there's a missing mandatory key or if
-                 a mandatory key is malformed.
+      a mandatory key is malformed. This should also be returned if the ITSM system doesn't
+      allow any changes to a comment type.
     content:
       application/json:
         schema:
@@ -61,6 +67,11 @@ responses:
             value: |
               {
                 "message": "Bad Request - key 'type': unknown comment type 'NOTE'"
+              }
+          "ITSM system doesn't allow the 'type' to be changed":
+            value: |
+              {
+                "message": "Bad Request - key 'type': changes are not permitted for the 'type' key"
               }
   '404':
     description: The requested comment doesn't exist in the database.
