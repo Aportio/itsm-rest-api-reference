@@ -1447,13 +1447,16 @@ class Comment(flask_restful.Resource, ApiResource,
             flask_restful.abort(404, message=f"Comment '{comment_id}' not found!")
         ticket_data   = DB_TICKET_TABLE.get(doc_id=comment['ticket_id'])
         customer_data = DB_CUSTOMER_TABLE.get(doc_id=ticket_data['customer_id'])
-        user_data     = DB_USER_TABLE.get(doc_id=comment['user_id'])
+        user_data = {}
+        if comment.get('user_id'):
+            user_data     = DB_USER_TABLE.get(doc_id=comment['user_id'])
         res = dict(comment)
         res.update({
             "id" : comment.doc_id,
             "_embedded" : {
                 "ticket"   : self.embed_ticket_data_in_result([ticket_data])[0],
-                "user"     : self.embed_user_data_in_result([user_data])[0],
+                "user"     : self.embed_user_data_in_result([user_data])[0]
+                             if user_data else {},
                 "customer" : self.embed_customer_data_in_result([customer_data])[0]
             },
             '_links' : self.make_links({
@@ -1487,22 +1490,29 @@ class Comment(flask_restful.Resource, ApiResource,
 
         data = _dict_sanity_check(data,
                                   mandatory_keys = [
-                                      ("user_id", User.exists),
                                       ("ticket_id", Ticket.exists),
                                       ("text", validate_str),
                                       ("type", validate_type)],
-                                  optional_keys = [],
+                                  optional_keys = [
+                                      ("user_email", validators.email),
+                                      ("user_id", User.exists)],
                                   obj=comment)
-        # Check that the user is associated with the customer of the ticket.
-        ticket     = DB_TICKET_TABLE.get(doc_id=data['ticket_id'])
-        cust_id    = ticket['customer_id']
-        user_id    = data['user_id']
-        assoc_q    = Query()
-        assoc_data = DB_USER_CUSTOMER_RELS_TABLE.search((assoc_q.customer_id == cust_id) &
-                                                        (assoc_q.user_id     == user_id))
-        if not assoc_data:
-            flask_restful.abort(400, message=f"Bad Request - user '{user_id}' is not "
-                                             f"associated with ticket customer '{cust_id}'")
+
+        if not(data.get('user_id') or data.get('user_email')):
+            raise ValueError(f"missing key(s): either 'user_id' or 'user_email' is required")
+
+        if data.get('user_id'):
+            # Check that the user is associated with the customer of the ticket.
+            ticket     = DB_TICKET_TABLE.get(doc_id=data['ticket_id'])
+            cust_id    = ticket['customer_id']
+            user_id    = data['user_id']
+            assoc_q    = Query()
+            assoc_data = DB_USER_CUSTOMER_RELS_TABLE.search((assoc_q.customer_id == cust_id) &
+                                                            (assoc_q.user_id == user_id))
+            if not assoc_data:
+                flask_restful.abort(400, message=f"Bad Request - user '{user_id}' is not "
+                                                 f"associated with ticket customer "
+                                                 f"'{cust_id}'")
         if comment_id is None:
             data['_created'] = datetime.datetime.now().isoformat()
         else:
