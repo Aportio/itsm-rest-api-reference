@@ -2,6 +2,59 @@ tags:
 - Ticket
 summary: Get the list of Tickets
 description: Return the tickets table data.
+parameters:
+  - name: aportio_id
+    in: query
+    description: Search for a ticket with this Aportio ID.
+    required: false
+    schema:
+      type: integer
+    example: "?aportio_id=12345"
+  - name: customer_id
+    in: query
+    description: Search for tickets that are associated with this customer ID.
+    required: false
+    schema:
+      type: integer
+    example: "?customer_id=3"
+  - name: user_id
+    in: query
+    description: Search for tickets that are associated with this user ID.
+    required: false
+    schema:
+      type: integer
+    example: "?user_id=3"
+  - name: short_title
+    in: query
+    description: Search for tickets that have this title.
+    required: false
+    schema:
+      type: string
+    example: "?short_title=3"
+  - name: status
+    in: query
+    description: Search for tickets that have this status.
+    required: false
+    schema:
+      type: string
+      enum:
+        - OPEN
+        - CLOSED
+    example: "?status=OPEN"
+  - name: classification.*
+    in: query
+    description: Search for tickets that have this classification.
+    required: false
+    schema:
+      type: string
+    example: "?classification.l1=incident"
+  - name: custom_fields.*
+    in: query
+    description: Search for tickets that have this custom field.
+    required: false
+    schema:
+      type: string
+    example: "?custom_fields.foo=bar"
 responses:
   '200':
     description: Successful GET request. Returns the tickets table data.

@@ -2,6 +2,29 @@ tags:
   - Customer
 summary: Get the list of Users for a given Customer
 description: Return the list of Users that belong to a specific Customer.
+parameters:
+  - name: customer_id
+    in: path
+    required: true
+    description: The ID of the customer to get users for.
+    schema:
+      type: integer
+  - name: email
+    in: query
+    description: Search for a user with this email address who is associated with the given
+      customer.
+    required: false
+    schema:
+      type: string
+    example: "?email=someuser@aportio.com"
+  - name: custom_fields.*
+    in: query
+    description: Search for users that have this custom field who are associated with the given
+      customer.
+    required: false
+    schema:
+      type: string
+    example: "?custom_fields.foo=bar"
 responses:
   '200':
     description: Successful GET request. Returns the Users that belong to a given Customer from the Users table.

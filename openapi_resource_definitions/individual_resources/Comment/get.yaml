@@ -2,6 +2,13 @@ tags:
   - Comment
 summary: Get a specific comment
 description: Return the details about a specific comment from the comments table.
+parameters:
+  - name: comment_id
+    in: path
+    required: true
+    description: The ID of the comment to get.
+    schema:
+      type: integer
 responses:
   '200':
     description: Successful GET request for a specific comment. Returns the comment from the comments table.

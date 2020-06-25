@@ -2,6 +2,13 @@ tags:
   - Ticket
 summary: Get a specific Ticket
 description: Return the details about a specific ticket from the tickets table.
+parameters:
+  - name: ticket_id
+    in: path
+    required: true
+    description: The ID of the ticket to get.
+    schema:
+      type: integer
 responses:
   '200':
     description: Successful GET request for a specific ticket. Returns the ticket from the ticket table.

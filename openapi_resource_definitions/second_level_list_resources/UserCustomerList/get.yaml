@@ -2,6 +2,37 @@ tags:
   - User
 summary: Get the list of Customers for a given User
 description: Return the list of Customers that a specific User is associated with.
+parameters:
+  - name: user_id
+    in: path
+    required: true
+    description: The ID of the user to get customers for.
+    schema:
+      type: integer
+    example: "/users/1/customers"
+  - name: name
+    in: query
+    required: false
+    description: Search for customers with this name who are associated with the given user.
+    schema:
+      type: string
+    example: "?name=Foo Company"
+  - name: parent_id
+    in: query
+    description: Search for customers with this customer ID as their parent who are associated
+      with the given user.
+    required: false
+    schema:
+      type: integer
+    example: "?parent_id=3"
+  - name: custom_fields.*
+    in: query
+    description: Search for customers that have this custom field who are associated with the
+      given user.
+    required: false
+    schema:
+      type: string
+    example: "?custom_fields.phone=777-321-0987"
 responses:
   '200':
     description: Successful GET request. Returns the Customers associated with a given User from the Customers table.

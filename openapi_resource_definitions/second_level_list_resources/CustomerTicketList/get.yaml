@@ -2,6 +2,63 @@ tags:
   - Customer
 summary: Get the list of Tickets for a given Customer
 description: Return the list of Tickets that belong to a specific Customer.
+parameters:
+  - name: customer_id
+    in: path
+    required: true
+    description: The ID of the customer to get tickets for.
+    schema:
+      type: integer
+  - name: aportio_id
+    in: query
+    description: Search for a ticket with this Aportio ID that is associated with a given
+      customer.
+    required: false
+    schema:
+      type: integer
+    example: "?aportio_id=12345"
+  - name: user_id
+    in: query
+    description: Search for tickets that are associated with this user and the given customer.
+    required: false
+    schema:
+      type: integer
+    example: "?user_id=3"
+  - name: short_title
+    in: query
+    description: Search for tickets that have this title which are associated with a given
+      customer.
+    required: false
+    schema:
+      type: string
+    example: "?short_title=3"
+  - name: status
+    in: query
+    description: Search for tickets that have this status which are associated with a given
+      customer.
+    required: false
+    schema:
+      type: string
+      enum:
+        - OPEN
+        - CLOSED
+    example: "?status=OPEN"
+  - name: classification.*
+    in: query
+    description: Search for tickets that have this classification which are associated with a
+      given customer.
+    required: false
+    schema:
+      type: string
+    example: "?classification.l1=incident"
+  - name: custom_fields.*
+    in: query
+    description: Search for tickets that have this custom field which are associated with a
+      given customer.
+    required: false
+    schema:
+      type: string
+    example: "?custom_fields.foo=bar"
 responses:
   '200':
     description: Successful GET request. Returns the Tickets for a given Customer from the Tickets table.

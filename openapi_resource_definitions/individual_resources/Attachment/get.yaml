@@ -2,6 +2,13 @@ tags:
   - Attachment
 summary: Get a specific attachment
 description: Return the details about a specific attachment from the attachments table.
+parameters:
+  - name: attachment_id
+    in: path
+    required: true
+    description: The ID of the attachment to get.
+    schema:
+      type: integer
 responses:
   '200':
     description: Successful GET request for a specific attachment. Returns the attachment from the attachments table.

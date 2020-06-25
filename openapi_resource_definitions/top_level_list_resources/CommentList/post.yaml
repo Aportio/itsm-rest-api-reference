@@ -16,6 +16,9 @@ requestBody:
             type: integer
           type:
             type: string
+            enum:
+              - "COMMENT"
+              - "WORKNOTE"
       examples:
         'Create a new Comment':
           value: |-

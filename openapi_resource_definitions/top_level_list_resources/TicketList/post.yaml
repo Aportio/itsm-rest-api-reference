@@ -28,6 +28,9 @@ requestBody:
                 type: string
           status:
             type: string
+            enum:
+              - "OPEN"
+              - "CLOSED"
       examples:
         'Create a new ticket with classification and custom fields':
           value: |-

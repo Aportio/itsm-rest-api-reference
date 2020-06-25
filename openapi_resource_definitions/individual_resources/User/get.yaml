@@ -2,6 +2,13 @@ tags:
 - User
 summary: Get a specific user
 description: Return the details about a specific user from the users table.
+parameters:
+  - name: user_id
+    in: path
+    required: true
+    description: The ID of the user to get.
+    schema:
+      type: integer
 responses:
   '200':
     description: Successful GET request for a specific user. Returns the user from users table.

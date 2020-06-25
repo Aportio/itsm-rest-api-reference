@@ -2,6 +2,21 @@ tags:
 - User
 summary: Get the Users resource
 description: Return the user table data.
+parameters:
+  - name: email
+    in: query
+    description: Search for a user with this email address.
+    required: false
+    schema:
+      type: string
+    example: "?email=someuser@aportio.com"
+  - name: custom_fields.*
+    in: query
+    description: Search for users that have this custom field.
+    required: false
+    schema:
+      type: string
+    example: "?custom_fields.foo=bar"
 responses:
   '200':
     description: Successful GET request. Returns user table data.

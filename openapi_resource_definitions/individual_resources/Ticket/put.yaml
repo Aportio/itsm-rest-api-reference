@@ -2,6 +2,13 @@ tags:
   - Ticket
 summary: Update a single ticket
 description: Update the details of a specific ticket in the tickets table.
+parameters:
+  - name: ticket_id
+    in: path
+    required: true
+    description: The ID of the ticket to update.
+    schema:
+      type: integer
 requestBody:
   content:
     application/json:

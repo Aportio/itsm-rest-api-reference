@@ -7,6 +7,13 @@ description: |
   Note that while our API allows for updating the type of comment (e.g. changing a COMMENT to
   a WORKNOTE), it is understood that many ITSM systems may not allow this kind of change, and
   therefore should return a 400 in that case.
+parameters:
+  - name: comment_id
+    in: path
+    required: true
+    description: The ID of the comment to update.
+    schema:
+      type: integer
 requestBody:
   content:
     application/json:

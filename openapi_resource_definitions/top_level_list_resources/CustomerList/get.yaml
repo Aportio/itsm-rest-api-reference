@@ -2,6 +2,28 @@ tags:
 - Customer
 summary: Get the list of Customers
 description: Return the list of Customers in the Customer table data.
+parameters:
+  - name: name
+    in: query
+    description: Search for a customer with this name.
+    required: false
+    schema:
+      type: string
+    example: "?name=Foo Company"
+  - name: parent_id
+    in: query
+    description: Search for customers with this customer ID as their parent.
+    required: false
+    schema:
+      type: integer
+    example: "?parent_id=3"
+  - name: custom_fields.*
+    in: query
+    description: Search for customers that have this custom field.
+    required: false
+    schema:
+      type: string
+    example: "?custom_fields.phone=777-321-0987"
 responses:
   '200':
     description: Successful GET request. Returns the Customer table data.
