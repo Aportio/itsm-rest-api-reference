@@ -1449,7 +1449,7 @@ class Comment(flask_restful.Resource, ApiResource,
         customer_data = DB_CUSTOMER_TABLE.get(doc_id=ticket_data['customer_id'])
         user_data = {}
         if comment.get('user_id'):
-            user_data     = DB_USER_TABLE.get(doc_id=comment['user_id'])
+            user_data = DB_USER_TABLE.get(doc_id=comment['user_id'])
         res = dict(comment)
         res.update({
             "id" : comment.doc_id,
