@@ -1224,12 +1224,17 @@ class Ticket(flask_restful.Resource, ApiResource):
         for comment in comment_data:
             d = {
                 "id"       : comment.doc_id,
-                "user_id"  : comment['user_id'],
                 "text"     : comment['text'],
                 "_created" : comment.get('_created', ''),
                 # pylint: disable=no-member
                 "_links"   : self.make_links({"self" : Comment.get_self_url(comment.doc_id)})
             }
+            if "user_id" in comment:
+                d['user_id'] = comment['user_id']
+
+            if "user_email" in comment:
+                d['user_email'] = comment['user_email']
+
             if "_updated" in comment:
                 d['_updated'] = comment['_updated']
             res.append(d)
