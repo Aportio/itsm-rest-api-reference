@@ -1455,8 +1455,6 @@ class Comment(flask_restful.Resource, ApiResource,
             "id" : comment.doc_id,
             "_embedded" : {
                 "ticket"   : self.embed_ticket_data_in_result([ticket_data])[0],
-                "user"     : (self.embed_user_data_in_result([user_data])[0]
-                              if user_data else {}),
                 "customer" : self.embed_customer_data_in_result([customer_data])[0]
             },
             '_links' : self.make_links({
@@ -1464,6 +1462,9 @@ class Comment(flask_restful.Resource, ApiResource,
                            "contained_in" : CommentList.get_self_url(),
                        })
         })
+        # Only embed the user in the response if user_data exists
+        if user_data:
+            res['_embedded'].update({"user": self.embed_user_data_in_result([user_data])[0]})
         return res
 
     @classmethod
