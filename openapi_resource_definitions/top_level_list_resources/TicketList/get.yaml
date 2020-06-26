@@ -8,7 +8,7 @@ parameters:
     description: Search for a ticket with this Aportio ID.
     required: false
     schema:
-      type: integer
+      type: string
     example: "?aportio_id=12345"
   - name: customer_id
     in: query
@@ -33,13 +33,11 @@ parameters:
     example: "?short_title=3"
   - name: status
     in: query
-    description: Search for tickets that have this status.
+    description: |
+      Search for tickets that have this status. Available values: OPEN, CLOSED.
     required: false
     schema:
       type: string
-      enum:
-        - OPEN
-        - CLOSED
     example: "?status=OPEN"
   - name: classification.*
     in: query
@@ -190,4 +188,23 @@ responses:
                           "href": "/"
                       }
                   }
+              }
+  '406':
+    description: Not Acceptable. This usually means the 'Accept' header isn't set properly. 
+                 Acceptable headers are 'application/json' and 'text/html'.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          "Missing/incorrect 'Accept' header":
+            value: |
+              {
+                "message": "The resource identified by the request is only capable of
+                            generating response entities which have content characteristics not
+                            acceptable according to the accept headers sent in the request.
+                            Supported entities are: application/json, text/html"
               }

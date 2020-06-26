@@ -100,6 +100,25 @@ paths:
                             }
                         }
                     }
+        '406':
+          description: Not Acceptable. This usually means the 'Accept' header isn't
+            set properly. Acceptable headers are 'application/json' and 'text/html'.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                Missing/incorrect 'Accept' header:
+                  value: |
+                    {
+                      "message": "The resource identified by the request is only capable of
+                                  generating response entities which have content characteristics not
+                                  acceptable according to the accept headers sent in the request.
+                                  Supported entities are: application/json, text/html"
+                    }
   /users:
     get:
       tags:
@@ -235,8 +254,25 @@ paths:
                             }
                         }
                     }
-        '404':
-          description: Resource doesn't exist on the server.
+        '406':
+          description: Not Acceptable. This usually means the 'Accept' header isn't
+            set properly. Acceptable headers are 'application/json' and 'text/html'.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                Missing/incorrect 'Accept' header:
+                  value: |
+                    {
+                      "message": "The resource identified by the request is only capable of
+                                  generating response entities which have content characteristics not
+                                  acceptable according to the accept headers sent in the request.
+                                  Supported entities are: application/json, text/html"
+                    }
   /customers:
     get:
       tags:
@@ -358,6 +394,25 @@ paths:
                             }
                         }
                     }
+        '406':
+          description: Not Acceptable. This usually means the 'Accept' header isn't
+            set properly. Acceptable headers are 'application/json' and 'text/html'.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                Missing/incorrect 'Accept' header:
+                  value: |
+                    {
+                      "message": "The resource identified by the request is only capable of
+                                  generating response entities which have content characteristics not
+                                  acceptable according to the accept headers sent in the request.
+                                  Supported entities are: application/json, text/html"
+                    }
   /tickets:
     get:
       tags:
@@ -370,7 +425,7 @@ paths:
         description: Search for a ticket with this Aportio ID.
         required: false
         schema:
-          type: integer
+          type: string
         example: ?aportio_id=12345
       - name: customer_id
         in: query
@@ -395,13 +450,11 @@ paths:
         example: ?short_title=3
       - name: status
         in: query
-        description: Search for tickets that have this status.
+        description: |
+          Search for tickets that have this status. Available values: OPEN, CLOSED.
         required: false
         schema:
           type: string
-          enum:
-          - OPEN
-          - CLOSED
         example: ?status=OPEN
       - name: classification.*
         in: query
@@ -553,17 +606,48 @@ paths:
                             }
                         }
                     }
+        '406':
+          description: Not Acceptable. This usually means the 'Accept' header isn't
+            set properly. Acceptable headers are 'application/json' and 'text/html'.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                Missing/incorrect 'Accept' header:
+                  value: |
+                    {
+                      "message": "The resource identified by the request is only capable of
+                                  generating response entities which have content characteristics not
+                                  acceptable according to the accept headers sent in the request.
+                                  Supported entities are: application/json, text/html"
+                    }
     post:
       tags:
       - Ticket
       summary: Create a new Ticket
-      description: Create a new Ticket in the ticket table. The custom_fields object
-        can contain any other kind of object.
+      description: |
+        Create a new Ticket in the ticket table.
+
+        The `custom_fields` object can contain any other kinds of objects.
+
+        The `classification` object is required but it can be empty, as shown in the examples.
       requestBody:
         content:
           application/json:
             schema:
               type: object
+              required:
+              - user_id
+              - customer_id
+              - aportio_id
+              - short_title
+              - long_text
+              - status
+              - classification
               properties:
                 short_title:
                   type: string
@@ -579,16 +663,13 @@ paths:
                   type: integer
                 classification:
                   type: object
-                  properties:
-                    l1:
-                      type: string
                 status:
                   type: string
                   enum:
                   - OPEN
                   - CLOSED
             examples:
-              Create a new ticket with classification and custom fields:
+              Create a new ticket with a classification and custom fields:
                 value: |-
                   {
                       "user_id": 1,
@@ -603,7 +684,7 @@ paths:
                           "something_else": [1, 2, "xyz"]
                       }
                   }
-              Create a new ticket with empty classification:
+              Create a new ticket with no classification:
                 value: |-
                   {
                       "user_id": 2,
@@ -907,35 +988,88 @@ paths:
                             }
                         }
                     }
+        '406':
+          description: Not Acceptable. This usually means the 'Accept' header isn't
+            set properly. Acceptable headers are 'application/json' and 'text/html'.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                Missing/incorrect 'Accept' header:
+                  value: |
+                    {
+                      "message": "The resource identified by the request is only capable of
+                                  generating response entities which have content characteristics not
+                                  acceptable according to the accept headers sent in the request.
+                                  Supported entities are: application/json, text/html"
+                    }
     post:
       tags:
       - Comment
       summary: Create a new Comment
-      description: Create a new Comment for a Ticket in the comments table.
+      description: |
+        Create a new Comment for a Ticket in the comments table.
+
+        Note that it is understood that in general, not all ITSMs support commenting on behalf of
+        users, therefore `user_id` may not be applicable in a POST request for a comment.  In that
+        case, a `user_email` will be sent in the request body instead.
+
+        Both `user_id` and `user_email` can be supplied in a request, but it is NOT required to have
+        both present at the same time. However, it IS required for at least one of them to be present
+        in a POST request. Refer to the example request bodies for an idea about how this works.
       requestBody:
         content:
           application/json:
             schema:
               type: object
+              required:
+              - user_id
+              - user_email
+              - text
+              - type
+              - ticket_id
               properties:
                 user_id:
                   type: integer
+                user_email:
+                  type: string
                 text:
                   type: string
                 ticket_id:
-                  type: integer
+                  type: string
                 type:
                   type: string
                   enum:
                   - COMMENT
                   - WORKNOTE
             examples:
-              Create a new Comment:
+              Create a new Comment with 'user_id':
                 value: |-
                   {
                       "user_id": 1,
                       "ticket_id": 1,
                       "text": "This is another comment",
+                      "type": "WORKNOTE"
+                  }
+              Create a new Comment with 'user_email':
+                value: |-
+                  {
+                      "user_email": "foouser@test.com",
+                      "ticket_id": 1,
+                      "text": "This is another comment",
+                      "type": "WORKNOTE"
+                  }
+              Create a new Comment with both 'user_id' and 'user_email':
+                value: |-
+                  {
+                      "user_id": 7,
+                      "user_email": "testuser@test.com",
+                      "ticket_id": 1,
+                      "text": "Will need to check with HR",
                       "type": "WORKNOTE"
                   }
       responses:
@@ -1261,19 +1395,27 @@ paths:
       tags:
       - Attachment
       summary: Create a new Attachment
-      description: Create a new Attachment for a Ticket in the tickets table.
+      description: |
+        Create a new Attachment for a Ticket in the tickets table.
+
+        `attachment_data` is the base64 encoded attachment as a string.
       requestBody:
         content:
           application/json:
             schema:
               type: object
+              required:
+              - ticket_id
+              - filename
+              - content_type
+              - attachment_data
               properties:
                 filename:
                   type: string
                 content_type:
                   type: string
                 ticket_id:
-                  type: integer
+                  type: string
                 attachment_data:
                   type: string
             examples:
@@ -1551,6 +1693,25 @@ paths:
                             }
                         }
                     }
+        '406':
+          description: Not Acceptable. This usually means the 'Accept' header isn't
+            set properly. Acceptable headers are 'application/json' and 'text/html'.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                Missing/incorrect 'Accept' header:
+                  value: |
+                    {
+                      "message": "The resource identified by the request is only capable of
+                                  generating response entities which have content characteristics not
+                                  acceptable according to the accept headers sent in the request.
+                                  Supported entities are: application/json, text/html"
+                    }
     post:
       tags:
       - CustomerUserAssociation
@@ -1562,6 +1723,9 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+              - user_id
+              - customer_id
               properties:
                 user_id:
                   type: integer
@@ -1739,7 +1903,7 @@ paths:
                       "message": "API only supports 'application/json' Content-Type, received:
                                   application/x-www-form-urlencoded"
                     }
-  /users/<user_id>:
+  /users/{user_id}:
     get:
       tags:
       - User
@@ -1752,6 +1916,7 @@ paths:
         description: The ID of the user to get.
         schema:
           type: integer
+        example: /users/5
       responses:
         '200':
           description: Successful GET request for a specific user. Returns the user
@@ -1879,7 +2044,7 @@ paths:
                                   acceptable according to the accept headers sent in the request.
                                   Supported entities are: application/json, text/html"
                     }
-  /customers/<customer_id>:
+  /customers/{customer_id}:
     get:
       tags:
       - Customer
@@ -1893,6 +2058,7 @@ paths:
         description: The ID of the customer to get.
         schema:
           type: integer
+        example: /customers/4
       responses:
         '200':
           description: Successful GET request for a specific customer. Returns the
@@ -2047,7 +2213,7 @@ paths:
                                   acceptable according to the accept headers sent in the request.
                                   Supported entities are: application/json, text/html"
                     }
-  /tickets/<ticket_id>:
+  /tickets/{ticket_id}:
     get:
       tags:
       - Ticket
@@ -2059,7 +2225,8 @@ paths:
         required: true
         description: The ID of the ticket to get.
         schema:
-          type: integer
+          type: string
+        example: /tickets/15
       responses:
         '200':
           description: Successful GET request for a specific ticket. Returns the ticket
@@ -2336,12 +2503,21 @@ paths:
         required: true
         description: The ID of the ticket to update.
         schema:
-          type: integer
+          type: string
+        example: /tickets/3
       requestBody:
         content:
           application/json:
             schema:
               type: object
+              required:
+              - short_title
+              - long_text
+              - user_id
+              - aportio_id
+              - customer_id
+              - classification
+              - status
               properties:
                 short_title:
                   type: string
@@ -2355,11 +2531,6 @@ paths:
                   type: integer
                 classification:
                   type: object
-                  properties:
-                    l1:
-                      type: string
-                    l2:
-                      type: string
                 status:
                   type: string
             examples:
@@ -2443,9 +2614,15 @@ paths:
                       "message": "The resource identified by the request is only capable of
                                   generating response entities which have content characteristics not
                                   acceptable according to the accept headers sent in the request.
-                                  Supported entities are: application/json, text/html"
+                                  Supported entities are: application/json"
                     }
-  /comments/<comment_id>:
+                Missing 'Content-Type' header:
+                  value: |
+                    {
+                      "message": "API only supports 'application/json' Content-Type, received:
+                                  application/x-www-form-urlencoded"
+                    }
+  /comments/{comment_id}:
     get:
       tags:
       - Comment
@@ -2458,6 +2635,7 @@ paths:
         description: The ID of the comment to get.
         schema:
           type: integer
+        example: /comments/7
       responses:
         '200':
           description: Successful GET request for a specific comment. Returns the
@@ -2664,6 +2842,12 @@ paths:
         Note that while our API allows for updating the type of comment (e.g. changing a COMMENT to
         a WORKNOTE), it is understood that many ITSM systems may not allow this kind of change, and
         therefore should return a 400 in that case.
+
+        Also, because not all ITSMs support commenting on behalf of users, a PUT request may or may
+        not contain the `user_id` or `user_email` field. For example, if an ITSM does not support
+        commenting on behalf of users, then `user_id` is not required in the PUT request, but
+        `user_email` must be provided, since that is what would have been used in the POST request to
+        create that comment. Refer to the examples to get an idea of how this can work.
       parameters:
       - name: comment_id
         in: path
@@ -2671,25 +2855,51 @@ paths:
         description: The ID of the comment to update.
         schema:
           type: integer
+        example: /comments/20
       requestBody:
         content:
           application/json:
             schema:
               type: object
+              required:
+              - user_id
+              - user_email
+              - ticket_id
+              - text
+              - type
               properties:
                 user_id:
                   type: integer
+                user_email:
+                  type: string
                 text:
                   type: string
                 ticket_id:
-                  type: integer
+                  type: string
                 type:
                   type: string
             examples:
-              Request body to update a comment:
+              Request body to update a comment (with 'user_id'):
                 value: |-
                   {
                       "user_id": 2,
+                      "ticket_id": 1,
+                      "text": "Has there been any follow up?",
+                      "type": "COMMENT"
+                  }
+              Request body to update a comment (with 'user_email'):
+                value: |-
+                  {
+                      "user_email": "foo-user@test.com",
+                      "ticket_id": 1,
+                      "text": "Has there been any follow up?",
+                      "type": "COMMENT"
+                  }
+              Request body to update a comment (with both 'user_id' and 'user_email'):
+                value: |-
+                  {
+                      "user_id": 7,
+                      "user_email": "someuser@test.com",
                       "ticket_id": 1,
                       "text": "Has there been any follow up?",
                       "type": "COMMENT"
@@ -2769,9 +2979,15 @@ paths:
                       "message": "The resource identified by the request is only capable of
                                   generating response entities which have content characteristics not
                                   acceptable according to the accept headers sent in the request.
-                                  Supported entities are: application/json, text/html"
+                                  Supported entities are: application/json"
                     }
-  /attachments/<attachment_id>:
+                Missing 'Content-Type' header:
+                  value: |
+                    {
+                      "message": "API only supports 'application/json' Content-Type, received:
+                                  application/x-www-form-urlencoded"
+                    }
+  /attachments/{attachment_id}:
     get:
       tags:
       - Attachment
@@ -2785,6 +3001,7 @@ paths:
         description: The ID of the attachment to get.
         schema:
           type: integer
+        example: /attachments/1
       responses:
         '200':
           description: Successful GET request for a specific attachment. Returns the
@@ -2922,8 +3139,8 @@ paths:
                                   acceptable according to the accept headers sent in the request.
                                   Supported entities are: application/json, text/html"
                     }
-  /customer_user_associations/<association_id>: {}
-  /users/<user_id>/customers:
+  /customer_user_associations/{association_id}: {}
+  /users/{user_id}/customers:
     get:
       tags:
       - User
@@ -3056,7 +3273,26 @@ paths:
                             }
                         }
                     }
-  /customers/<customer_id>/users:
+        '406':
+          description: Not Acceptable. This usually means the 'Accept' header isn't
+            set properly. Acceptable headers are 'application/json' and 'text/html'.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                Missing/incorrect 'Accept' header:
+                  value: |
+                    {
+                      "message": "The resource identified by the request is only capable of
+                                  generating response entities which have content characteristics not
+                                  acceptable according to the accept headers sent in the request.
+                                  Supported entities are: application/json, text/html"
+                    }
+  /customers/{customer_id}/users:
     get:
       tags:
       - Customer
@@ -3069,6 +3305,7 @@ paths:
         description: The ID of the customer to get users for.
         schema:
           type: integer
+        example: /customers/14/users
       - name: email
         in: query
         description: Search for a user with this email address who is associated with
@@ -3188,7 +3425,26 @@ paths:
                             }
                         }
                     }
-  /customers/<customer_id>/tickets:
+        '406':
+          description: Not Acceptable. This usually means the 'Accept' header isn't
+            set properly. Acceptable headers are 'application/json' and 'text/html'.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                Missing/incorrect 'Accept' header:
+                  value: |
+                    {
+                      "message": "The resource identified by the request is only capable of
+                                  generating response entities which have content characteristics not
+                                  acceptable according to the accept headers sent in the request.
+                                  Supported entities are: application/json, text/html"
+                    }
+  /customers/{customer_id}/tickets:
     get:
       tags:
       - Customer
@@ -3201,13 +3457,14 @@ paths:
         description: The ID of the customer to get tickets for.
         schema:
           type: integer
+        example: /customers/5/tickets
       - name: aportio_id
         in: query
         description: Search for a ticket with this Aportio ID that is associated with
           a given customer.
         required: false
         schema:
-          type: integer
+          type: string
         example: ?aportio_id=12345
       - name: user_id
         in: query
@@ -3227,14 +3484,12 @@ paths:
         example: ?short_title=3
       - name: status
         in: query
-        description: Search for tickets that have this status which are associated
-          with a given customer.
+        description: |
+          Search for tickets that have this status which are associated with a given customer.
+          Available values: OPEN, CLOSED.
         required: false
         schema:
           type: string
-          enum:
-          - OPEN
-          - CLOSED
         example: ?status=OPEN
       - name: classification.*
         in: query
@@ -3389,7 +3644,26 @@ paths:
                             }
                         }
                     }
-  /users/<user_id>/tickets:
+        '406':
+          description: Not Acceptable. This usually means the 'Accept' header isn't
+            set properly. Acceptable headers are 'application/json' and 'text/html'.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                Missing/incorrect 'Accept' header:
+                  value: |
+                    {
+                      "message": "The resource identified by the request is only capable of
+                                  generating response entities which have content characteristics not
+                                  acceptable according to the accept headers sent in the request.
+                                  Supported entities are: application/json, text/html"
+                    }
+  /users/{user_id}/tickets:
     get:
       tags:
       - User
@@ -3402,13 +3676,14 @@ paths:
         description: The ID of the user to get tickets for.
         schema:
           type: integer
+        example: /users/3/tickets
       - name: aportio_id
         in: query
         description: Search for a ticket with this Aportio ID that is associated with
           a given user.
         required: false
         schema:
-          type: integer
+          type: string
         example: ?aportio_id=12345
       - name: customer_id
         in: query
@@ -3428,14 +3703,12 @@ paths:
         example: ?short_title=3
       - name: status
         in: query
-        description: Search for tickets that have this status which are associated
-          with a given user.
+        description: |
+          Search for tickets that have this status which are associated with a given user.
+          Available values: OPEN, CLOSED.
         required: false
         schema:
           type: string
-          enum:
-          - OPEN
-          - CLOSED
         example: ?status=OPEN
       - name: classification.*
         in: query
@@ -3557,4 +3830,23 @@ paths:
                                 "href": "/users/1"
                             }
                         }
+                    }
+        '406':
+          description: Not Acceptable. This usually means the 'Accept' header isn't
+            set properly. Acceptable headers are 'application/json' and 'text/html'.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                Missing/incorrect 'Accept' header:
+                  value: |
+                    {
+                      "message": "The resource identified by the request is only capable of
+                                  generating response entities which have content characteristics not
+                                  acceptable according to the accept headers sent in the request.
+                                  Supported entities are: application/json, text/html"
                     }

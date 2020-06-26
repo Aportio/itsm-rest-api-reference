@@ -117,3 +117,22 @@ responses:
                       }
                   }
               }
+  '406':
+    description: Not Acceptable. This usually means the 'Accept' header isn't set properly. 
+                 Acceptable headers are 'application/json' and 'text/html'.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          "Missing/incorrect 'Accept' header":
+            value: |
+              {
+                "message": "The resource identified by the request is only capable of
+                            generating response entities which have content characteristics not
+                            acceptable according to the accept headers sent in the request.
+                            Supported entities are: application/json, text/html"
+              }

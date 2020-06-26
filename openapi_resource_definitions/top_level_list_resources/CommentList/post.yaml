@@ -1,31 +1,65 @@
 tags:
 - Comment
 summary: Create a new Comment
-description: Create a new Comment for a Ticket in the comments table.
+description: |
+  Create a new Comment for a Ticket in the comments table.
+
+  Note that it is understood that in general, not all ITSMs support commenting on behalf of
+  users, therefore `user_id` may not be applicable in a POST request for a comment.  In that
+  case, a `user_email` will be sent in the request body instead.
+
+  Both `user_id` and `user_email` can be supplied in a request, but it is NOT required to have
+  both present at the same time. However, it IS required for at least one of them to be present
+  in a POST request. Refer to the example request bodies for an idea about how this works.
 requestBody:
   content:
     application/json:
       schema:
         type: object
+        required:
+          - user_id
+          - user_email
+          - text
+          - type
+          - ticket_id
         properties:
           user_id:
             type: integer
+          user_email:
+            type: string
           text:
             type: string
           ticket_id:
-            type: integer
+            type: string
           type:
             type: string
             enum:
               - "COMMENT"
               - "WORKNOTE"
       examples:
-        'Create a new Comment':
+        "Create a new Comment with 'user_id'":
           value: |-
             {
                 "user_id": 1,
                 "ticket_id": 1,
                 "text": "This is another comment",
+                "type": "WORKNOTE"
+            }
+        "Create a new Comment with 'user_email'":
+          value: |-
+            {
+                "user_email": "foouser@test.com",
+                "ticket_id": 1,
+                "text": "This is another comment",
+                "type": "WORKNOTE"
+            }
+        "Create a new Comment with both 'user_id' and 'user_email'":
+          value: |-
+            {
+                "user_id": 7,
+                "user_email": "testuser@test.com",
+                "ticket_id": 1,
+                "text": "Will need to check with HR",
                 "type": "WORKNOTE"
             }
 responses:

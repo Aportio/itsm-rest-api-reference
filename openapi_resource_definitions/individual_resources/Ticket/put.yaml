@@ -8,12 +8,21 @@ parameters:
     required: true
     description: The ID of the ticket to update.
     schema:
-      type: integer
+      type: string
+    example: "/tickets/3"
 requestBody:
   content:
     application/json:
       schema:
         type: object
+        required:
+          - short_title
+          - long_text
+          - user_id
+          - aportio_id
+          - customer_id
+          - classification
+          - status
         properties:
           short_title:
             type: string
@@ -27,11 +36,6 @@ requestBody:
             type: integer
           classification:
             type: object
-            properties:
-              l1:
-                type: string
-              l2:
-                type: string
           status:
             type: string
       examples:
@@ -115,5 +119,11 @@ responses:
                 "message": "The resource identified by the request is only capable of
                             generating response entities which have content characteristics not
                             acceptable according to the accept headers sent in the request.
-                            Supported entities are: application/json, text/html"
+                            Supported entities are: application/json"
+              }
+          "Missing 'Content-Type' header":
+            value: |
+              {
+                "message": "API only supports 'application/json' Content-Type, received:
+                            application/x-www-form-urlencoded"
               }

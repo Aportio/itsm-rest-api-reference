@@ -8,7 +8,8 @@ parameters:
     required: true
     description: The ID of the ticket to get.
     schema:
-      type: integer
+      type: string
+    example: "/tickets/15"
 responses:
   '200':
     description: Successful GET request for a specific ticket. Returns the ticket from the ticket table.

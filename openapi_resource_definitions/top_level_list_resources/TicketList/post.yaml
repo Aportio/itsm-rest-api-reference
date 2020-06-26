@@ -1,13 +1,25 @@
 tags:
 - Ticket
 summary: Create a new Ticket
-description: Create a new Ticket in the ticket table. The custom_fields object can contain any
-             other kind of object.
+description: |
+  Create a new Ticket in the ticket table.
+  
+  The `custom_fields` object can contain any other kinds of objects.
+
+  The `classification` object is required but it can be empty, as shown in the examples.
 requestBody:
   content:
     application/json:
       schema:
         type: object
+        required:
+          - user_id
+          - customer_id
+          - aportio_id
+          - short_title
+          - long_text
+          - status
+          - classification
         properties:
           short_title:
             type: string
@@ -23,16 +35,13 @@ requestBody:
             type: integer
           classification:
             type: object
-            properties:
-              l1:
-                type: string
           status:
             type: string
             enum:
               - "OPEN"
               - "CLOSED"
       examples:
-        'Create a new ticket with classification and custom fields':
+        'Create a new ticket with a classification and custom fields':
           value: |-
             {
                 "user_id": 1,
@@ -47,7 +56,7 @@ requestBody:
                     "something_else": [1, 2, "xyz"]
                 }
             }
-        'Create a new ticket with empty classification':
+        'Create a new ticket with no classification':
           value: |-
             {
                 "user_id": 2,

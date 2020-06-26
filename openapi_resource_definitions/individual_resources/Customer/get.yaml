@@ -9,6 +9,7 @@ parameters:
     description: The ID of the customer to get.
     schema:
       type: integer
+    example: "/customers/4"
 responses:
   '200':
     description: Successful GET request for a specific customer. Returns the customer from the customer table.

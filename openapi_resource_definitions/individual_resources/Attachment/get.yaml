@@ -9,6 +9,7 @@ parameters:
     description: The ID of the attachment to get.
     schema:
       type: integer
+    example: "/attachments/1"
 responses:
   '200':
     description: Successful GET request for a specific attachment. Returns the attachment from the attachments table.

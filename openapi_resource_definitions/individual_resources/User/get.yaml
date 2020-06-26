@@ -9,6 +9,7 @@ parameters:
     description: The ID of the user to get.
     schema:
       type: integer
+    example: "/users/5"
 responses:
   '200':
     description: Successful GET request for a specific user. Returns the user from users table.

@@ -48,31 +48,45 @@ from itsm_api    import views
 from ruamel.yaml import YAML
 
 
+def _replace_angle_brackets(url_string):
+    """
+    Replace angle brackets with braces in a given url.
+
+    Swaggerhub prefers URLs with variables to have curly braces instead of
+    angle brackets, so this replaces all instances of angle brackets with curly
+    braces. For example:
+
+    /users/<user_id> -> /users/{user_id}
+
+    """
+    return url_string.replace("<", "{").replace(">", "}")
+
+
 RESOURCE_PATH_LOOKUP = {
     # Root-level resource
-    "Root"                        : views.Root.URL,
+    "Root"                        : _replace_angle_brackets(views.Root.URL),
 
     # Top-level list resources
-    "UserList"                    : views.UserList.URL,
-    "CustomerList"                : views.CustomerList.URL,
-    "TicketList"                  : views.TicketList.URL,
-    "CommentList"                 : views.CommentList.URL,
-    "AttachmentList"              : views.AttachmentList.URL,
-    "CustomerUserAssociationList" : views.CustomerUserAssociationList.URL,
+    "UserList"                    : _replace_angle_brackets(views.UserList.URL),
+    "CustomerList"                : _replace_angle_brackets(views.CustomerList.URL),
+    "TicketList"                  : _replace_angle_brackets(views.TicketList.URL),
+    "CommentList"                 : _replace_angle_brackets(views.CommentList.URL),
+    "AttachmentList"              : _replace_angle_brackets(views.AttachmentList.URL),
+    "CustomerUserAssociationList" : _replace_angle_brackets(views.CustomerUserAssociationList.URL),
 
     # Individual resources
-    "User"                        : views.User.URL,
-    "Customer"                    : views.Customer.URL,
-    "Ticket"                      : views.Ticket.URL,
-    "Comment"                     : views.Comment.URL,
-    "Attachment"                  : views.Attachment.URL,
-    "CustomerUserAssociation"     : views.CustomerUserAssociation.URL,
+    "User"                        : _replace_angle_brackets(views.User.URL),
+    "Customer"                    : _replace_angle_brackets(views.Customer.URL),
+    "Ticket"                      : _replace_angle_brackets(views.Ticket.URL),
+    "Comment"                     : _replace_angle_brackets(views.Comment.URL),
+    "Attachment"                  : _replace_angle_brackets(views.Attachment.URL),
+    "CustomerUserAssociation"     : _replace_angle_brackets(views.CustomerUserAssociation.URL),
 
     # Second-level list resources
-    "UserCustomerList"            : views.UserCustomerList.URL,
-    "CustomerUserList"            : views.CustomerUserList.URL,
-    "CustomerTicketList"          : views.CustomerTicketList.URL,
-    "UserTicketList"              : views.UserTicketList.URL
+    "UserCustomerList"            : _replace_angle_brackets(views.UserCustomerList.URL),
+    "CustomerUserList"            : _replace_angle_brackets(views.CustomerUserList.URL),
+    "CustomerTicketList"          : _replace_angle_brackets(views.CustomerTicketList.URL),
+    "UserTicketList"              : _replace_angle_brackets(views.UserTicketList.URL)
 }
 
 # Allowed HTTP methods

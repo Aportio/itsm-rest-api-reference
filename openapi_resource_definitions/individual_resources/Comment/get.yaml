@@ -9,6 +9,7 @@ parameters:
     description: The ID of the comment to get.
     schema:
       type: integer
+    example: "/comments/7"
 responses:
   '200':
     description: Successful GET request for a specific comment. Returns the comment from the comments table.

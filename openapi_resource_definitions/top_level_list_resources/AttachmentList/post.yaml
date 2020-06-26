@@ -1,19 +1,27 @@
 tags:
 - Attachment
 summary: Create a new Attachment
-description: Create a new Attachment for a Ticket in the tickets table.
+description: |
+  Create a new Attachment for a Ticket in the tickets table.
+
+  `attachment_data` is the base64 encoded attachment as a string.
 requestBody:
   content:
     application/json:
       schema:
         type: object
+        required:
+          - ticket_id
+          - filename
+          - content_type
+          - attachment_data
         properties:
           filename:
             type: string
           content_type:
             type: string
           ticket_id:
-            type: integer
+            type: string
           attachment_data:
             type: string
       examples:
