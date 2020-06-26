@@ -1,7 +1,22 @@
 tags:
-- Users
-summary: GET Users resource
+- User
+summary: Get the Users resource
 description: Return the user table data.
+parameters:
+  - name: email
+    in: query
+    description: Search for a user with this email address.
+    required: false
+    schema:
+      type: string
+    example: "?email=someuser@aportio.com"
+  - name: custom_fields.*
+    in: query
+    description: Search for users that have this custom field.
+    required: false
+    schema:
+      type: string
+    example: "?custom_fields.foo=bar"
 responses:
   '200':
     description: Successful GET request. Returns user table data.
@@ -50,7 +65,7 @@ responses:
             total_queried:
               type: integer
         examples:
-          '0':
+          'Successful GET request':
             value: |
               {
                   "total_queried": 4,
@@ -115,4 +130,23 @@ responses:
                           "href": "/"
                       }
                   }
+              }
+  '406':
+    description: Not Acceptable. This usually means the 'Accept' header isn't set properly. 
+                 Acceptable headers are 'application/json' and 'text/html'.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          "Missing/incorrect 'Accept' header":
+            value: |
+              {
+                "message": "The resource identified by the request is only capable of
+                            generating response entities which have content characteristics not
+                            acceptable according to the accept headers sent in the request.
+                            Supported entities are: application/json, text/html"
               }

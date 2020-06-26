@@ -1,10 +1,10 @@
 tags:
 - Root
-summary: GET Root resource
-description: Return the root resource, which includes links to all collections.
+summary: Get the Root resource
+description: Return the root resource, which includes links to all the top-level collections.
 responses:
   '200':
-    description: Successful GET request. Returns resources.
+    description: Successful GET request. Returns top-level resources.
     content:
       application/json:
         schema:
@@ -49,7 +49,7 @@ responses:
                     href:
                       type: string
         examples:
-          '0':
+          'Successful GET request':
             value: |
               {
                   "_links": {
@@ -75,4 +75,23 @@ responses:
                           "href": "/customer_user_associations"
                       }
                   }
+              }
+  '406':
+    description: Not Acceptable. This usually means the 'Accept' header isn't set properly. 
+                 Acceptable headers are 'application/json' and 'text/html'.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          "Missing/incorrect 'Accept' header":
+            value: |
+              {
+                "message": "The resource identified by the request is only capable of
+                            generating response entities which have content characteristics not
+                            acceptable according to the accept headers sent in the request.
+                            Supported entities are: application/json, text/html"
               }

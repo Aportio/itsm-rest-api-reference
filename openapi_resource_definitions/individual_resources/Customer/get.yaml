@@ -1,10 +1,18 @@
 tags:
-  - Customers
-summary: GET a specific Customer
-description: Return details about a specific Customer from the customers table.
+  - Customer
+summary: Get a specific customer
+description: Return the details about a specific customer from the customers table.
+parameters:
+  - name: customer_id
+    in: path
+    required: true
+    description: The ID of the customer to get.
+    schema:
+      type: integer
+    example: "/customers/4"
 responses:
   '200':
-    description: Successful GET request. Returns customer from the customer table.
+    description: Successful GET request for a specific customer. Returns the customer from the customer table.
     content:
       application/json:
         schema:
@@ -47,7 +55,7 @@ responses:
             id:
               type: integer
         examples:
-          'Customer':
+          'A single customer returned':
             value: |
               {
                   "id": 2,
@@ -120,4 +128,38 @@ responses:
                           "href": "/customers/3"
                       }
                   }
+              }
+  '404':
+    description: The requested customer doesn't exist in the database.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          "Requesting a customer that doesn't exist":
+            value: |
+              {
+                "message": "Customer '999' not found!"
+              }
+  '406':
+    description: Not Acceptable. This usually means the 'Accept' header isn't set properly. 
+                 Acceptable headers are 'application/json' and 'text/html'.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          "Missing/incorrect 'Accept' header":
+            value: |
+              {
+                "message": "The resource identified by the request is only capable of
+                            generating response entities which have content characteristics not
+                            acceptable according to the accept headers sent in the request.
+                            Supported entities are: application/json, text/html"
               }

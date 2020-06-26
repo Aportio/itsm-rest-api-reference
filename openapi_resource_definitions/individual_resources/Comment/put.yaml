@@ -1,23 +1,50 @@
 tags:
-  - Comments
-summary: PUT an update to a single Comment
-description: Auto generated using Swagger Inspector
+  - Comment
+summary: Update a single comment
+description: |
+  Update the details of a specific comment in the comments table.
+  
+  Note that while our API allows for updating the type of comment (e.g. changing a COMMENT to
+  a WORKNOTE), it is understood that many ITSM systems may not allow this kind of change, and
+  therefore should return a 400 in that case.
+
+  Also, because not all ITSMs support commenting on behalf of users, a PUT request may or may
+  not contain the `user_id` or `user_email` field. For example, if an ITSM does not support
+  commenting on behalf of users, then `user_id` is not required in the PUT request, but
+  `user_email` must be provided, since that is what would have been used in the POST request to
+  create that comment. Refer to the examples to get an idea of how this can work.
+parameters:
+  - name: comment_id
+    in: path
+    required: true
+    description: The ID of the comment to update.
+    schema:
+      type: integer
+    example: "/comments/20"
 requestBody:
   content:
     application/json:
       schema:
         type: object
+        required:
+          - user_id
+          - user_email
+          - ticket_id
+          - text
+          - type
         properties:
           user_id:
             type: integer
+          user_email:
+            type: string
           text:
             type: string
           ticket_id:
-            type: integer
+            type: string
           type:
             type: string
       examples:
-        '0':
+        "Request body to update a comment (with 'user_id')":
           value: |-
             {
                 "user_id": 2,
@@ -25,9 +52,26 @@ requestBody:
                 "text": "Has there been any follow up?",
                 "type": "COMMENT"
             }
+        "Request body to update a comment (with 'user_email')":
+          value: |-
+            {
+                "user_email": "foo-user@test.com",
+                "ticket_id": 1,
+                "text": "Has there been any follow up?",
+                "type": "COMMENT"
+            }
+        "Request body to update a comment (with both 'user_id' and 'user_email')":
+          value: |-
+            {
+                "user_id": 7,
+                "user_email": "someuser@test.com",
+                "ticket_id": 1,
+                "text": "Has there been any follow up?",
+                "type": "COMMENT"
+            }
 responses:
   '200':
-    description: Auto generated using Swagger Inspector
+    description: Successful PUT request to update a comment.
     content:
       application/json:
         schema:
@@ -36,8 +80,75 @@ responses:
             msg:
               type: string
         examples:
-          '0':
+          'Successful PUT update':
             value: |
               {
                 "msg": "Ok"
+              }
+  '400':
+    description: Bad Request. This usually occurs if there's a missing mandatory key or if
+      a mandatory key is malformed. This should also be returned if the ITSM system doesn't
+      allow any changes to a comment type.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          "Mandatory key 'type' is missing":
+            value: |
+              {
+                "message": "Bad Request - missing mandatory key(s): type"
+              }
+          "Mandatory key 'type' is invalid":
+            value: |
+              {
+                "message": "Bad Request - key 'type': unknown comment type 'NOTE'"
+              }
+          "ITSM system doesn't allow the 'type' to be changed":
+            value: |
+              {
+                "message": "Bad Request - key 'type': changes are not permitted for the 'type' key"
+              }
+  '404':
+    description: The requested comment doesn't exist in the database.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          "Trying to update a comment that doesn't exist":
+            value: |
+              {
+                "message": "comment '999' not found!"
+              }
+  '406':
+    description: Not Acceptable. This usually means the 'Accept' header isn't set properly. 
+                 Acceptable headers are 'application/json' and 'text/html'.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          "Missing/incorrect 'Accept' header":
+            value: |
+              {
+                "message": "The resource identified by the request is only capable of
+                            generating response entities which have content characteristics not
+                            acceptable according to the accept headers sent in the request.
+                            Supported entities are: application/json"
+              }
+          "Missing 'Content-Type' header":
+            value: |
+              {
+                "message": "API only supports 'application/json' Content-Type, received:
+                            application/x-www-form-urlencoded"
               }

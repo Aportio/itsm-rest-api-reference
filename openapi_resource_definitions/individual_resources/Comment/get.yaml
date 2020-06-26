@@ -1,10 +1,18 @@
 tags:
-  - Comments
-summary: GET a single Comment
-description: Auto generated using Swagger Inspector
+  - Comment
+summary: Get a specific comment
+description: Return the details about a specific comment from the comments table.
+parameters:
+  - name: comment_id
+    in: path
+    required: true
+    description: The ID of the comment to get.
+    schema:
+      type: integer
+    example: "/comments/7"
 responses:
   '200':
-    description: Auto generated using Swagger Inspector
+    description: Successful GET request for a specific comment. Returns the comment from the comments table.
     content:
       application/json:
         schema:
@@ -104,7 +112,7 @@ responses:
             type:
               type: string
         examples:
-          '0':
+          'A single comment returned':
             value: |
               {
                   "user_id": 2,
@@ -162,4 +170,38 @@ responses:
                           "href": "/comments"
                       }
                   }
+              }
+  '404':
+    description: The requested comment doesn't exist in the database.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          "Requesting a comment that doesn't exist":
+            value: |
+              {
+                "message": "comment '999' not found!"
+              }
+  '406':
+    description: Not Acceptable. This usually means the 'Accept' header isn't set properly. 
+                 Acceptable headers are 'application/json' and 'text/html'.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          "Missing/incorrect 'Accept' header":
+            value: |
+              {
+                "message": "The resource identified by the request is only capable of
+                            generating response entities which have content characteristics not
+                            acceptable according to the accept headers sent in the request.
+                            Supported entities are: application/json, text/html"
               }

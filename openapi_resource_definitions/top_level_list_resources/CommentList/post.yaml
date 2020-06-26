@@ -1,23 +1,43 @@
 tags:
-- Comments
-summary: POST a new Comment
-description: Create a new Comment in the comments table.
+- Comment
+summary: Create a new Comment
+description: |
+  Create a new Comment for a Ticket in the comments table.
+
+  Note that it is understood that in general, not all ITSMs support commenting on behalf of
+  users, therefore `user_id` may not be applicable in a POST request for a comment.  In that
+  case, a `user_email` will be sent in the request body instead.
+
+  Both `user_id` and `user_email` can be supplied in a request, but it is NOT required to have
+  both present at the same time. However, it IS required for at least one of them to be present
+  in a POST request. Refer to the example request bodies for an idea about how this works.
 requestBody:
   content:
     application/json:
       schema:
         type: object
+        required:
+          - user_id
+          - user_email
+          - text
+          - type
+          - ticket_id
         properties:
           user_id:
             type: integer
+          user_email:
+            type: string
           text:
             type: string
           ticket_id:
-            type: integer
+            type: string
           type:
             type: string
+            enum:
+              - "COMMENT"
+              - "WORKNOTE"
       examples:
-        '0':
+        "Create a new Comment with 'user_id'":
           value: |-
             {
                 "user_id": 1,
@@ -25,9 +45,26 @@ requestBody:
                 "text": "This is another comment",
                 "type": "WORKNOTE"
             }
+        "Create a new Comment with 'user_email'":
+          value: |-
+            {
+                "user_email": "foouser@test.com",
+                "ticket_id": 1,
+                "text": "This is another comment",
+                "type": "WORKNOTE"
+            }
+        "Create a new Comment with both 'user_id' and 'user_email'":
+          value: |-
+            {
+                "user_id": 7,
+                "user_email": "testuser@test.com",
+                "ticket_id": 1,
+                "text": "Will need to check with HR",
+                "type": "WORKNOTE"
+            }
 responses:
   '201':
-    description: Successful POST request. Creates a Comment and returns the created comment's info.
+    description: Successful POST request. Creates a new Comment and returns the created comment's info.
     content:
       application/json:
         schema:
@@ -127,7 +164,7 @@ responses:
             type:
               type: string
         examples:
-          '0':
+          'Created Comment':
             value: |
               {
                 "_created": "2020-06-18T11:44:23.678125", 
@@ -184,4 +221,49 @@ responses:
                 "ticket_id": 1, 
                 "type": "WORKNOTE", 
                 "user_id": 1
+              }
+  '400':
+    description: Bad request. This usually occurs when a mandatory key is missing or is
+                 malformed in the request body.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          'Missing the "type" mandatory key':
+            value: |
+              {
+                "message": "Bad Request - missing mandatory key(s): type"
+              }
+          'Invalid "type"':
+            value: |
+              {
+                "message": "Bad Request - key 'type': unknown comment type 'NOTE'"
+              }
+  '406':
+    description: Not Acceptable. This usually occurs when a header is missing or malformed.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+        examples:
+          'Missing "Accept" header':
+            value: |
+              {
+                "message": "The resource identified by the request is only capable of
+                            generating response entities which have content characteristics
+                            not acceptable according to the accept headers sent in the
+                            request. Supported entities are: application/json"
+              }
+          'Missing "Content-Type" header':
+            value: |
+              {
+                "message": "API only supports 'application/json' Content-Type, received:
+                            application/x-www-form-urlencoded"
               }

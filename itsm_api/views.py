@@ -459,6 +459,10 @@ class ApiResourceList(ApiResource):
             # want pylint to complain about those, so we allow exceptions.
             # Perform a sanity check and produce a cleaned version of the input
             # pylint: disable=no-member
+            content_type = flask.request.headers.get('Content-Type')
+            if content_type != "application/json":
+                flask_restful.abort(406, message=f"API only supports 'application/json' "
+                                                 f"Content-Type, received: {content_type}")
             data = flask.request.json
             if not data:
                 raise Exception("expected request data")
