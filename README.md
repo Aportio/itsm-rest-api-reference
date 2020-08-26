@@ -212,6 +212,42 @@ resource is the `email` list of addresses. Any other attribute that might be use
 be mapped into the optional `custom_fields` dictionary that can be part of those resources.
 
 
+## Authentication
+
+The API specification does to mandate a particular kind of authentication. Aportio's client for
+this API is designed to be flexible and over time support different authentication mechanisms,
+as required by customers or 3rd parties who implement the generic API backend.
+
+Currently, Aportio's API client supports two authentication methods:
+
+* `None`: No keys or passwords of any kind are passed through. Obviously, this should not be
+  used in production, but may be useful during development.
+* `API-key`: A key/value pair is sent in an HTTP header as part of each REST request. The name
+  of the key (header) as well as the value is configurable.
+
+When a customer or 3rd party has implemented the generic API backend, they should let Aportio
+staff know the authentication type and any additional parameters, so that it can be configured
+by Aportio on its production system.
+
+For example, let's say the implementor of the backend API chooses `API-key` as the
+authentication method and requires a header named `x-my-auth-key` with a value of
+`abc123-some-secret-xyz`. After communicating those values to Aportio, the client will
+be configured to send this information with each request. It would appear similar to this:
+
+    GET /<some-url>
+    Accept: 'application/json'
+    Content-type: application/json
+    x-my-auth-key: abc123-some-secret-xyz
+
+    ...
+
+The backend implementation can then use this header to authenticate requests from the Aportio
+production site to the backend.
+
+Note that the reference implementation of the API backend in this repository here does not
+support or expect ANY authentication.
+
+
 ## Current limitations / TODO
 
 * Authentication of any kind is not yet implemented.
