@@ -214,7 +214,7 @@ be mapped into the optional `custom_fields` dictionary that can be part of those
 
 ## Authentication
 
-The API specification does to mandate a particular kind of authentication. Aportio's client for
+The API specification doesn't mandate a particular kind of authentication. Aportio's client for
 this API is designed to be flexible and over time support different authentication mechanisms,
 as required by customers or 3rd parties who implement the generic API backend.
 
@@ -250,7 +250,6 @@ support or expect ANY authentication.
 
 ## Current limitations / TODO
 
-* Authentication of any kind is not yet implemented.
 * Creation of customer resources is not supported. It is assumed that in a real world
 environment, this is done through the ITSM system's own UI or API.
 * Creation of users as well as creation of user/customer associations is only supported to
